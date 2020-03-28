@@ -1,4 +1,3 @@
-import com.sun.security.jgss.GSSUtil;
 import lombok.*;
 
 import javax.persistence.*;
@@ -11,14 +10,22 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Data
-@Builder(toBuilder = true)
+@Getter
+@Setter
 @Entity
 @Table(name = "leasing_deposits")
-@EqualsAndHashCode(exclude="statuses")
-@ToString(exclude = "statuses")
+@EqualsAndHashCode(exclude={"statuses", "transactions", "end_dates"})
+@ToString(exclude = {"statuses", "transactions", "end_dates"})
+@Builder(toBuilder = true)
+@NoArgsConstructor(staticName = "createNewLD")
 public class LD
 {
+/*
+	public static LD createNewLD()
+	{
+		return new LD();
+	}*/
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false, unique = true)
@@ -69,12 +76,12 @@ public class LD
 
 	private Date getFirstEndData(String SCENARIO_LOAD)
 	{
-		Date returnfirstEndDate;
+		Date returnfirstEndDate = Calendar.getInstance().getTime();
 
-		//Найдем первую дату истечения депозита
-		LocalDate sdLD = LocalDate.ofInstant(this.start_date.toInstant(), ZoneId.of("GMT"));
+/*		//Найдем первую дату истечения депозита
+		LocalDate sdLD = LocalDate.ofInstant(this.start_date.toInstant(), ZoneId.of("UTC"));
 		LocalDate endDateOfMonth = sdLD.withDayOfMonth(sdLD.lengthOfMonth());
-		Calendar c = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		Calendar c = Calendar.getInstance();
 		c.set(endDateOfMonth.getYear(), endDateOfMonth.getMonthValue()-1, endDateOfMonth.getDayOfMonth(), 0, 0, 0);
 		c.clear(Calendar.MILLISECOND);
 
@@ -87,7 +94,7 @@ public class LD
 				.collect(Collectors.toList());
 
 		if(ListEndDate.size() == 1) returnfirstEndDate = ListEndDate.get(0);
-		else returnfirstEndDate = this.start_date;
+		else returnfirstEndDate = this.start_date;*/
 
 		return returnfirstEndDate;
 	}

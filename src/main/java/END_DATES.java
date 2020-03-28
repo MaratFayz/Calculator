@@ -25,9 +25,9 @@ public class END_DATES
 	private SCENARIO scenario;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@JoinColumn(name = "period_id")
+	@JoinColumn(name = "period_id", nullable = false)
 	private PERIOD period;
 
-	@Column(name = "End_Date")
+	@Column(name = "End_Date", nullable = false)
 	private Date End_Date;
 }

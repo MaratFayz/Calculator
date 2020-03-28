@@ -10,12 +10,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.TimeZone;
 
 public class main
 {
 
 	public static void main(String[] args)
 	{
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
 		StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
 		Metadata metadata = new MetadataSources(registry).getMetadataBuilder().build();
 		SessionFactory sessionFactory = metadata.getSessionFactoryBuilder().build();

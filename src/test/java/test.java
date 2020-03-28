@@ -36,33 +36,68 @@ public class test extends TestCase
 	Session session;
 	Transaction transaction;
 
-	static SCENARIO currentScenarioFact;
+	static SCENARIO fact;
+	static CURRENCY usd;
+	static ENTITY C1001;
+	static COUNTERPARTNER CP;
+	static PERIOD per31_03_2017;
+	static PERIOD per31_08_2017;
+	static PERIOD per31_10_2017;
+	static PERIOD per30_11_2019;
+
+	static END_DATES ed_ld1_31032017_20102019;
+	static END_DATES ed_ld1_31082017_20122019;
+	static END_DATES ed_ld1_31102017_20112019;
+	static END_DATES ed_ld1_30112019_20122019;
+
+	static LD_STATUS lds;
+	static LD ld1;
 
 	List<LD> alLD = new ArrayList<>();
 	final String SCENARIO_LOAD = "FACT";
 	final String SCENARIO_SAVE = "FACT";
-	LocalDate EndDate = LocalDate.of(2020, 3, 31);
 
 	public void setUp()
 	{
-		this.currentScenarioFact = SCENARIO.builder()
-											.id(1)
-											.name("FACT")
-											.build();
-
 		registry = new StandardServiceRegistryBuilder().configure("Test_hibernate.cfg.xml").build();
 		metadata = new MetadataSources(registry).getMetadataBuilder().build();
 		sessionFactory = metadata.getSessionFactoryBuilder().build();
 		session = sessionFactory.openSession();
 		transaction = session.beginTransaction();
 
+		InitializeGeneraldata();
+
 		//----------------save test LD------------------------START
-		session.save(currentScenarioFact);
-		
-		session.save(getLD_1_NormalTestLD());
+		session.save(fact);
+		session.save(usd);
+		session.save(C1001);
+		session.save(CP);
+		session.save(per31_03_2017);
+		session.save(per31_08_2017);
+		session.save(per31_10_2017);
+		session.save(per30_11_2019);
+
+		create_LD_1_NormalTestLD();
+
+		session.save(ld1);
+		session.save(lds);
+		session.save(ed_ld1_31032017_20102019);
+		session.save(ed_ld1_31082017_20122019);
+		session.save(ed_ld1_31102017_20112019);
+		session.save(ed_ld1_30112019_20122019);
+
 		//----------------save test LD------------------------END
+		transaction.commit();
+		session.close();
+		sessionFactory.close();
 
 		//----------------get LDs from DB------------------------START
+		registry = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
+		metadata = new MetadataSources(registry).getMetadataBuilder().build();
+		sessionFactory = metadata.getSessionFactoryBuilder().build();
+		session = sessionFactory.openSession();
+		transaction = session.beginTransaction();
+
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 		CriteriaQuery<LD> cqLD = cb.createQuery(LD.class);
 		Root<LD> rootLD = cqLD.from(LD.class);
@@ -70,6 +105,7 @@ public class test extends TestCase
 		Query<LD> resQLD = session.createQuery(cqLD);
 		alLD = resQLD.getResultList();
 		//----------------get LDs from DB------------------------END
+
 		transaction.commit();
 		session.close();
 		sessionFactory.close();
@@ -101,118 +137,131 @@ public class test extends TestCase
 		assertEquals(100000.0, alLD.get(2).getDeposit_sum_discounted_on_firstEndDate());*//*
 	}*/
 
-	public static COUNTERPARTNER getCP()
+	public static COUNTERPARTNER getCP(int id, String name)
 	{
 		return COUNTERPARTNER.builder()
-								.id(1)
-								.name("ООО \"Авиакапитал-Сервис\"")
+								.id(id)
+								.name(name)
 								.build();
 	}
 
-	public static ENTITY getEN()
+	public static ENTITY getEN(int id, String code, String name)
 	{
 		return ENTITY.builder()
-				.id(1)
-				.code("C1001")
-				.name("Аэрофлот")
+				.id(id)
+				.code(code)
+				.name(name)
 				.build();
 	}
 
-	public static CURRENCY getCUR()
+	public static CURRENCY getCUR(int id, String name)
 	{
 		return CURRENCY.builder()
-				.id(1)
-				.short_name("USD")
+				.id(id)
+				.short_name(name)
 				.build();
 	}
 
-	public static SCENARIO getSC()
+	public static SCENARIO getSC(int id, String name)
 	{
-		return currentScenarioFact;
+		return SCENARIO.builder()
+				.id(id)
+				.name(name)
+				.build();
 	}
 
 	public static PERIOD getPer(int id, int day, int month, int year)
 	{
-		Calendar date = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-		date.set(year, month - 1, day, 0, 0, 0);
-		date.clear(Calendar.MILLISECOND);
-
 		return PERIOD.builder()
 					.id(id)
-					.date(date.getTime())
+					.date(getDate(day, month, year))
 					.build();
 	}
 
 	public static Date getDate(int day, int month, int year)
 	{
-		Calendar date = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
+		Calendar date = Calendar.getInstance();
 		date.set(year, month - 1, day, 0, 0, 0);
 		date.clear(Calendar.MILLISECOND);
 
 		return date.getTime();
 	}
 
-	public static LD getLD_1_NormalTestLD()
+	public static void InitializeGeneraldata()
+	{
+		fact = getSC(1, "FACT");
+		usd = getCUR(1, "USD");
+		C1001 = getEN(1, "C1001", "Аэрофлот");
+		CP = getCP(1, "ООО \"Авиакапитал-Сервис\"");
+
+		per31_03_2017 = getPer(1, 31, 3, 2017);
+		per31_08_2017 = getPer(2, 31, 8, 2017);
+		per31_10_2017 = getPer(3, 31, 10, 2017);
+		per30_11_2019 = getPer(4, 30, 11, 2019);
+	}
+
+	public static void create_LD_1_NormalTestLD()
 	{
 		//Депозит только для факта 1
-		LD ld = LD.builder()
+		ld1 = LD.builder()
 					.id(1)
-					.counterpartner(getCP())
-					.entity(getEN())
-					.currency(getCUR())
+					.counterpartner(CP)
+					.entity(C1001)
+					.currency(usd)
 					.deposit_sum_not_disc(BigDecimal.valueOf(100000))
 					.start_date(getDate(10, 3, 2017))
 					.percent(BigDecimal.valueOf(5.0))
 					.build();
 
-		LD_STATUS lds = LD_STATUS.builder()
+		lds = LD_STATUS.builder()
 					.id(1)
-					.ld(ld)
-					.scenario(getSC())
+					.ld(ld1)
+					.scenario(fact)
 					.is_created(STATUS_X.X)
 					.build();
 
-		ld.setStatuses(Set.of(lds));
+		ld1.setStatuses(Set.of(lds));
 
 
-		END_DATES edld31032017_20102019 = END_DATES.builder()
+		ed_ld1_31032017_20102019 = END_DATES.builder()
 							.id(1)
-							.ld(ld)
-							.scenario(getSC())
-							.period(getPer(1, 31, 3, 2017))
+							.ld(ld1)
+							.scenario(fact)
+							.period(per31_03_2017)
 							.End_Date(getDate(20, 10, 2019))
 							.build();
 
-		END_DATES edld31082017_20122019 = END_DATES.builder()
+		ed_ld1_31082017_20122019 = END_DATES.builder()
 							.id(2)
-							.ld(ld)
-							.scenario(getSC())
-							.period(getPer(2, 31, 8, 2017))
+							.ld(ld1)
+							.scenario(fact)
+							.period(per31_08_2017)
 							.End_Date(getDate(20, 12, 2019))
 							.build();
 
-		END_DATES edld31102017_20112019 = END_DATES.builder()
+		ed_ld1_31102017_20112019 = END_DATES.builder()
 							.id(3)
-							.ld(ld)
-							.scenario(getSC())
-							.period(getPer(3, 31, 10, 2017))
+							.ld(ld1)
+							.scenario(fact)
+							.period(per31_10_2017)
 							.End_Date(getDate(20, 11, 2019))
 							.build();
 
-		END_DATES edld30112019_20122019 = END_DATES.builder()
+		ed_ld1_30112019_20122019 = END_DATES.builder()
 							.id(4)
-							.ld(ld)
-							.scenario(getSC())
-							.period(getPer(4, 30, 11, 2019))
+							.ld(ld1)
+							.scenario(fact)
+							.period(per30_11_2019)
 							.End_Date(getDate(20, 12, 2019))
 							.build();
 
-		ld.setEnd_dates(Set.of(edld31032017_20102019,
-								edld31082017_20122019,
-								edld30112019_20122019,
-								edld31102017_20112019));
-
-		return ld;
+/*		ld1.setEnd_dates(Set.of(ed_ld1_31032017_20102019,
+								ed_ld1_31082017_20122019,
+								ed_ld1_30112019_20122019,
+								ed_ld1_31102017_20112019
+		));*/
 	}
 
 /*	public static LD getLD_2_DeletedTestLD()
