@@ -1,3 +1,11 @@
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -8,35 +16,19 @@ public class main
 
 	public static void main(String[] args)
 	{
-		String url = "jdbc:mysql://localhost:3306/ld?serverTimezone=UTC";
-		String user = "root";
-		String password = "ZZZXXX5!#~a";
+		StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
+		Metadata metadata = new MetadataSources(registry).getMetadataBuilder().build();
+		SessionFactory sessionFactory = metadata.getSessionFactoryBuilder().build();
 
-		try
-		{
-			Connection connection = DriverManager.getConnection(url, user, password);
+		Session session = sessionFactory.openSession();
+		Transaction transaction = session.beginTransaction();
 
-			Statement statement = connection.createStatement();
-			ResultSet rs = statement.executeQuery("SELECT * FROM currency"); //надо получить все ID депозитов, которые имеют меньше, чем должно быть проводок
+/*		Course course = session.get(Course.class, 1);
 
-			ResultSet LeasingDeposits = statement.executeQuery("SELECT * FROM leasing_deposits");
+		System.out.println(course.getName());*/
 
-
-			while(rs.next())
-			{
-				//запрос по каждому ID детальных проводок
-				System.out.println(rs.getString("idCURRENCY"));
-				System.out.println(rs.getString("CURRENCYcol"));
-				System.out.println("");
-			}
-
-			rs.close();
-			statement.close();
-			connection.close();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
+		transaction.commit();
+		session.close();
+		sessionFactory.close();
 	}
 }

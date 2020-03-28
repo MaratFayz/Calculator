@@ -5,7 +5,7 @@
     <session-factory>
         <!-- JDBC Database connection settings -->
         <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
-        <property name="connection.url">jdbc:mysql://localhost:3306/ld2?useSSL=FALSE&amp;serverTimezone=UTC</property>
+        <property name="connection.url">jdbc:mysql://localhost:3306/test_ld?useSSL=FALSE&amp;serverTimezone=UTC</property>
         <property name="connection.username">root</property>
         <property name="connection.password">ZZZXXX5!#~a</property>
         <!-- JDBC connection pool settings ... using built-in test pool -->
@@ -17,7 +17,7 @@
         <!-- Set the current session context -->
         <property name="current_session_context_class">thread</property>
         <!-- Drop and re-create the database schema on startup -->
-        <property name="hbm2ddl.auto">update</property>
+        <property name="hbm2ddl.auto">create</property>
 
         <mapping class="LD"></mapping>
         <mapping class="Transaction"></mapping>
