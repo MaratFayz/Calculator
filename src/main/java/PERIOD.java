@@ -1,13 +1,15 @@
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.Date;
 
 @Entity
 @Table(name = "period")
-@Data
-@Builder(toBuilder = true)
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
+@NoArgsConstructor()
 public class PERIOD
 {
 	@Id

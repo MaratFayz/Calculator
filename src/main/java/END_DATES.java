@@ -5,10 +5,11 @@ import java.util.Date;
 
 @Entity
 @Table(name = "END_DATES")
-@Data
-@Builder(toBuilder = true)
 @ToString(exclude = "ld")
 @EqualsAndHashCode(exclude = "ld")
+@Getter
+@Setter
+@NoArgsConstructor
 public class END_DATES
 {
 	@Id

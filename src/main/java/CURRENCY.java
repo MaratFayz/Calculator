@@ -1,13 +1,14 @@
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
-@Entity
-@Data
 @Table(name = "CURRENCY")
-@Builder(toBuilder = true)
+@Entity
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
+@NoArgsConstructor()
 public class CURRENCY
 {
 	@Id

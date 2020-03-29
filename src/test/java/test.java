@@ -139,43 +139,44 @@ public class test extends TestCase
 
 	public static COUNTERPARTNER getCP(int id, String name)
 	{
-		return COUNTERPARTNER.builder()
-								.id(id)
-								.name(name)
-								.build();
+		COUNTERPARTNER cp = new COUNTERPARTNER();
+		cp.setId(id);
+		cp.setName(name);
+		return cp;
 	}
 
 	public static ENTITY getEN(int id, String code, String name)
 	{
-		return ENTITY.builder()
-				.id(id)
-				.code(code)
-				.name(name)
-				.build();
+		ENTITY en = new ENTITY();
+		en.setId(id);
+		en.setCode(code);
+		en.setName(name);
+		return en;
 	}
 
 	public static CURRENCY getCUR(int id, String name)
 	{
-		return CURRENCY.builder()
-				.id(id)
-				.short_name(name)
-				.build();
+		CURRENCY c = new CURRENCY();
+		c.setId(id);
+		c.setShort_name(name);
+		return c;
 	}
 
 	public static SCENARIO getSC(int id, String name)
 	{
-		return SCENARIO.builder()
-				.id(id)
-				.name(name)
-				.build();
+		SCENARIO c = new SCENARIO();
+		c.setId(id);
+		c.setName(name);
+		return c;
 	}
 
 	public static PERIOD getPer(int id, int day, int month, int year)
 	{
-		return PERIOD.builder()
-					.id(id)
-					.date(getDate(day, month, year))
-					.build();
+		PERIOD period = new PERIOD();
+		period.setId(id);
+		period.setDate(getDate(day, month, year));
+
+		return period;
 	}
 
 	public static Date getDate(int day, int month, int year)
@@ -205,15 +206,14 @@ public class test extends TestCase
 	public static void create_LD_1_NormalTestLD()
 	{
 		//Депозит только для факта 1
-		ld1 = LD.builder()
-					.id(1)
-					.counterpartner(CP)
-					.entity(C1001)
-					.currency(usd)
-					.deposit_sum_not_disc(BigDecimal.valueOf(100000))
-					.start_date(getDate(10, 3, 2017))
-					.percent(BigDecimal.valueOf(5.0))
-					.build();
+		ld1 = new LD();
+		ld1.setId(1);
+		ld1.setCounterpartner(CP);
+		ld1.setEntity(C1001);
+		ld1.setCurrency(usd);
+		ld1.setDeposit_sum_not_disc(BigDecimal.valueOf(100000));
+		ld1.setStart_date(getDate(10, 3, 2017));
+		ld1.setPercent(BigDecimal.valueOf(5.0));
 
 		lds = LD_STATUS.builder()
 					.id(1)
@@ -225,37 +225,33 @@ public class test extends TestCase
 		ld1.setStatuses(Set.of(lds));
 
 
-		ed_ld1_31032017_20102019 = END_DATES.builder()
-							.id(1)
-							.ld(ld1)
-							.scenario(fact)
-							.period(per31_03_2017)
-							.End_Date(getDate(20, 10, 2019))
-							.build();
+		ed_ld1_31032017_20102019 = new END_DATES();
+		ed_ld1_31032017_20102019.setId(1);
+		ed_ld1_31032017_20102019.setLd(ld1);
+		ed_ld1_31032017_20102019.setScenario(fact);
+		ed_ld1_31032017_20102019.setPeriod(per31_03_2017);
+		ed_ld1_31032017_20102019.setEnd_Date(getDate(20, 10, 2019));
 
-		ed_ld1_31082017_20122019 = END_DATES.builder()
-							.id(2)
-							.ld(ld1)
-							.scenario(fact)
-							.period(per31_08_2017)
-							.End_Date(getDate(20, 12, 2019))
-							.build();
+		ed_ld1_31082017_20122019 = new END_DATES();
+		ed_ld1_31082017_20122019.setId(2);
+		ed_ld1_31082017_20122019.setLd(ld1);
+		ed_ld1_31082017_20122019.setScenario(fact);
+		ed_ld1_31082017_20122019.setPeriod(per31_08_2017);
+		ed_ld1_31082017_20122019.setEnd_Date(getDate(20, 12, 2019));
 
-		ed_ld1_31102017_20112019 = END_DATES.builder()
-							.id(3)
-							.ld(ld1)
-							.scenario(fact)
-							.period(per31_10_2017)
-							.End_Date(getDate(20, 11, 2019))
-							.build();
+		ed_ld1_31102017_20112019 = new END_DATES();
+		ed_ld1_31102017_20112019.setId(3);
+		ed_ld1_31102017_20112019.setLd(ld1);
+		ed_ld1_31102017_20112019.setScenario(fact);
+		ed_ld1_31102017_20112019.setPeriod(per31_10_2017);
+		ed_ld1_31102017_20112019.setEnd_Date(getDate(20, 11, 2019));
 
-		ed_ld1_30112019_20122019 = END_DATES.builder()
-							.id(4)
-							.ld(ld1)
-							.scenario(fact)
-							.period(per30_11_2019)
-							.End_Date(getDate(20, 12, 2019))
-							.build();
+		ed_ld1_30112019_20122019 = new END_DATES();
+		ed_ld1_30112019_20122019.setId(4);
+		ed_ld1_30112019_20122019.setLd(ld1);
+		ed_ld1_30112019_20122019.setScenario(fact);
+		ed_ld1_30112019_20122019.setPeriod(per30_11_2019);
+		ed_ld1_30112019_20122019.setEnd_Date(getDate(20, 12, 2019));
 
 /*		ld1.setEnd_dates(Set.of(ed_ld1_31032017_20102019,
 								ed_ld1_31082017_20122019,

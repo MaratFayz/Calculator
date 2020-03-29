@@ -16,16 +16,9 @@ import java.util.stream.Stream;
 @Table(name = "leasing_deposits")
 @EqualsAndHashCode(exclude={"statuses", "transactions", "end_dates"})
 @ToString(exclude = {"statuses", "transactions", "end_dates"})
-@Builder(toBuilder = true)
-@NoArgsConstructor(staticName = "createNewLD")
+@NoArgsConstructor()
 public class LD
 {
-/*
-	public static LD createNewLD()
-	{
-		return new LD();
-	}*/
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false, unique = true)
