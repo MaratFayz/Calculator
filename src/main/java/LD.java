@@ -4,17 +4,14 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "leasing_deposits")
-@EqualsAndHashCode(exclude={"statuses", "transactions", "end_dates"})
 @ToString(exclude = {"statuses", "transactions", "end_dates"})
 @NoArgsConstructor()
 public class LD
@@ -24,134 +21,80 @@ public class LD
 	@Column(name = "id", nullable = false, unique = true)
 	private int id;
 
-	@OneToMany(mappedBy = "ld")
+	@OneToMany(mappedBy = "ld", fetch = FetchType.EAGER)
 	@Column(name = "ld_status_id", nullable = false)
 	private Set<LD_STATUS> statuses;
 
 	@ManyToOne
-	@JoinColumn(name = "entity_id")
+	@JoinColumn(name = "entity_id", nullable = false)
 	private ENTITY entity;
 
 	@ManyToOne
-	@JoinColumn(name = "counterpartner_id")
+	@JoinColumn(name = "counterpartner_id", nullable = false)
 	private COUNTERPARTNER counterpartner;
 
 	@ManyToOne
-	@JoinColumn(name = "currency_id")
+	@JoinColumn(name = "currency_id", nullable = false)
 	private CURRENCY currency;
 
-	private Date start_date;
+	@Column(name = "start_date", nullable = false, columnDefinition = "DATE")
+	private ZonedDateTime start_date;
+
+	@Column(name = "deposit_sum_not_disc", nullable = false)
 	private BigDecimal deposit_sum_not_disc;
 
 	@Transient
 	private BigDecimal percent;
 
-	@OneToMany(mappedBy = "ld", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "ld", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private Set<Transaction> transactions;
 
-	@OneToMany(mappedBy = "ld", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "ld", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private Set<END_DATES> end_dates;
 
 	@Transient
 	private BigDecimal deposit_sum_discounted_on_firstEndDate;
+	@Transient
+	private ZonedDateTime firstEndDate;
+	@Transient
+	private int LDdurationDays;
+	@Transient
+	private int LDdurationMonths;
 
-	public void calculate(String SCENARIO_LOAD)
+	public void calculate(List<DEPOSIT_RATES> LDRateL)
 	{
-		Date firstEndDate = getFirstEndData(SCENARIO_LOAD);
-		int LDduration = (int) Duration.between(start_date.toInstant(), firstEndDate.toInstant()).toDays();
-
-		BigDecimal percentPerDay = BigDecimal.valueOf(StrictMath.pow(this.percent.divide(BigDecimal.valueOf(100)).add(BigDecimal.ONE).doubleValue(), (double) 1 / (double) 365)).setScale(32, RoundingMode.UP).subtract(BigDecimal.ONE);
-		BigDecimal discSum = this.deposit_sum_not_disc.setScale(32).divide(BigDecimal.ONE.add(percentPerDay).pow(LDduration), RoundingMode.UP);
-
+		if(LDRateL.size() == 1)
+		{
+			this.percent = LDRateL.get(0).getRATE();
+			BigDecimal percentPerDay = BigDecimal.valueOf(StrictMath.pow(this.percent.divide(BigDecimal.valueOf(100)).add(BigDecimal.ONE).doubleValue(), (double) 1 / (double) 365)).setScale(32, RoundingMode.UP).subtract(BigDecimal.ONE);
+			deposit_sum_discounted_on_firstEndDate = this.deposit_sum_not_disc.setScale(32).divide(BigDecimal.ONE.add(percentPerDay).pow(LDdurationDays), RoundingMode.UP);
+		}
+		else
+		{
+			System.out.println("Обнаружено более 1 ставки. Ошибка. Расчет не будет произведен");
+		}
 
 		System.out.println("d = ");
 	}
 
-	private Date getFirstEndData(String SCENARIO_LOAD)
+	public void countFirstEndDataAndDuration(String SCENARIO_LOAD)
 	{
-		Date returnfirstEndDate = Calendar.getInstance().getTime();
+		//Найдем первую дату истечения депозита
+		ZonedDateTime endDateOfMonth = this.start_date.withDayOfMonth(this.start_date.toLocalDate().lengthOfMonth());
 
-/*		//Найдем первую дату истечения депозита
-		LocalDate sdLD = LocalDate.ofInstant(this.start_date.toInstant(), ZoneId.of("UTC"));
-		LocalDate endDateOfMonth = sdLD.withDayOfMonth(sdLD.lengthOfMonth());
-		Calendar c = Calendar.getInstance();
-		c.set(endDateOfMonth.getYear(), endDateOfMonth.getMonthValue()-1, endDateOfMonth.getDayOfMonth(), 0, 0, 0);
-		c.clear(Calendar.MILLISECOND);
+		System.out.println(endDateOfMonth);
+		end_dates.stream().forEach(e -> System.out.println(e));
 
-		System.out.println(c.getTime().getTime());
-		end_dates.stream().forEach(e -> System.out.println(e.getPeriod().getDate().getTime()));
-
-		List<Date> ListEndDate = end_dates.stream().filter(element -> element.getScenario().getName().equals(SCENARIO_LOAD))
-				.filter(element -> element.getPeriod().getDate().equals(c.getTime()))
+		List<ZonedDateTime> ListEndDate = end_dates.stream().filter(element -> element.getScenario().getName().equals(SCENARIO_LOAD))
+				.filter(element -> element.getPeriod().getDate().equals(endDateOfMonth))
 				.map(end_date -> end_date.getEnd_Date())
 				.collect(Collectors.toList());
 
-		if(ListEndDate.size() == 1) returnfirstEndDate = ListEndDate.get(0);
-		else returnfirstEndDate = this.start_date;*/
+		if(ListEndDate.size() == 1) this.firstEndDate = ListEndDate.get(0);
+		else this.firstEndDate = this.start_date;
 
-		return returnfirstEndDate;
+		LDdurationDays = (int) Duration.between(this.start_date, this.firstEndDate).toDays();
+		LDdurationMonths = (int) Math.round(LDdurationDays / ((double) 365/ (double) 12));
 	}
 
 }
-
-
-/*	public BigDecimal countDiscountedValue()
-	{
-	*//*		BigDecimal percent = BigDecimal.valueOf(15.0);
-		percent = percent.divide(BigDecimal.valueOf(100.0)).add(BigDecimal.ONE);
-
-		int periodsYears = 10;
-
-		BigDecimal coefDY = BigDecimal.ONE.setScale(32).divide(percent, RoundingMode.UP);
-
-		Locale x = Locale.getDefault();
-		String[] y = Locale.getISOCountries();
-		Locale[] z = Locale.getAvailableLocales();
-		Locale t = Locale.forLanguageTag("ru").;
-		DecimalFormat df = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.forLanguageTag("ru"));
-		//df.setRoundingMode(RoundingMode.UP);
-		//df.applyPattern("# ##0.0000000000#");
-
-		for (int i=1; i <= periodsYears; i++) System.out.println(df.format(coefDY.pow(i)));
-
-
-		LocalDate ld = LocalDate.now();
-		LocalDate end = ld.withDayOfMonth(ld.lengthOfMonth()).withDayOfYear(300);
-
-
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-		System.out.println(ld.format(dtf));
-		System.out.println(end);
-		System.out.println(end.getDayOfMonth() - ld.getDayOfMonth());
-
-		System.out.println(Duration.between(ld.atStartOfDay(), end.atStartOfDay()).toDays());*//*
-	}
-
-	*//*		BigDecimal percent = BigDecimal.valueOf(15.0);
-		percent = percent.divide(BigDecimal.valueOf(100.0)).add(BigDecimal.ONE);
-
-		int periodsYears = 10;
-
-		BigDecimal coefDY = BigDecimal.ONE.setScale(32).divide(percent, RoundingMode.UP);
-
-		Locale x = Locale.getDefault();
-		String[] y = Locale.getISOCountries();
-		Locale[] z = Locale.getAvailableLocales();
-		Locale t = Locale.forLanguageTag("ru").;
-		DecimalFormat df = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.forLanguageTag("ru"));
-		//df.setRoundingMode(RoundingMode.UP);
-		//df.applyPattern("# ##0.0000000000#");
-
-		for (int i=1; i <= periodsYears; i++) System.out.println(df.format(coefDY.pow(i)));
-
-
-		LocalDate ld = LocalDate.now();
-		LocalDate end = ld.withDayOfMonth(ld.lengthOfMonth()).withDayOfYear(300);
-
-
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-		System.out.println(ld.format(dtf));
-		System.out.println(end);
-		System.out.println(end.getDayOfMonth() - ld.getDayOfMonth());
-
-		System.out.println(Duration.between(ld.atStartOfDay(), end.atStartOfDay()).toDays());*/

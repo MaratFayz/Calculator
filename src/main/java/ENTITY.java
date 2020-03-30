@@ -6,7 +6,6 @@ import javax.persistence.*;
 @Table(name = "ENTITY")
 @Getter
 @Setter
-@EqualsAndHashCode
 @ToString
 @NoArgsConstructor
 public class ENTITY

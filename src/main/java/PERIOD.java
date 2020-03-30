@@ -1,13 +1,13 @@
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "period")
 @Getter
 @Setter
-@EqualsAndHashCode
 @ToString
 @NoArgsConstructor()
 public class PERIOD
@@ -17,6 +17,6 @@ public class PERIOD
 	@Column(name = "id", nullable = false, unique = true)
 	private int id;
 
-	@Column(name = "date")
-	private Date date;
+	@Column(name = "date", nullable = false, unique = true)
+	private ZonedDateTime date;
 }

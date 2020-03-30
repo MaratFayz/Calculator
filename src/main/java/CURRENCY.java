@@ -6,7 +6,6 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-@EqualsAndHashCode
 @ToString
 @NoArgsConstructor()
 public class CURRENCY

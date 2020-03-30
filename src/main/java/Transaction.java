@@ -1,30 +1,53 @@
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "transactions")
-@Data
-@Builder(toBuilder = true)
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor()
+@IdClass(value = Transaction.KeyInTransaction.class)
 public class Transaction
 {
-	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false, unique = true)
 	private int id;
 
+	@Id
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JoinColumn(name = "ld_id", nullable = false)
 	private LD ld;
 
+	@Id
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JoinColumn(name = "scenario_id")
 	private SCENARIO scenario;
 
-//	CALCULATION_TIME datetime PK
-//	STATUS enum('DELETED CUR PER','ACTUAL','STORNO CUR PER','STORNO AFT CLOSED PER') PK
+	@Id
+	private ZonedDateTime CALCULATION_TIME;
+
+	@Id
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "period_id", nullable = false)
+	private PERIOD period;
+
+	@Data
+	public static class KeyInTransaction implements Serializable
+	{
+		static final long serialVersionUID = 6L;
+
+		private LD ld;
+		private SCENARIO scenario;
+		private PERIOD period;
+		private ZonedDateTime CALCULATION_TIME;
+	}
+
+
+//	STATUS enum('DELETED CUR PER','ACTUAL CUR PER','ACTUAL AFT CLOSED PER','STORNO CUR PER','STORNO AFT CLOSED PER') PK
 //	DISC_SUM_AT_START_DATE double
 //	USER varchar(45)
 //	CHANGE_NEW_DISCONT double

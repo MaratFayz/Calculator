@@ -27,6 +27,10 @@
         <mapping class="ENTITY"></mapping>
         <mapping class="SCENARIO"></mapping>
         <mapping class="PERIOD"></mapping>
+        <mapping class="PERIODS_CLOSED"></mapping>
         <mapping class="LD_STATUS"></mapping>
+        <mapping class="EXCHANGE_RATE"></mapping>
+        <mapping class="DEPOSIT_RATES"></mapping>
+        <mapping class="DURATION"></mapping>
     </session-factory>
 </hibernate-configuration>
