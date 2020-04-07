@@ -30,7 +30,10 @@ public class EXCHANGE_RATE
 	@Id
 	private ZonedDateTime date;
 
+	@Column(columnDefinition = "DECIMAL(31,12)")
 	private BigDecimal rate_at_date;
+
+	@Column(columnDefinition = "DECIMAL(31,12)")
 	private BigDecimal average_rate_for_month;
 
 	@Data

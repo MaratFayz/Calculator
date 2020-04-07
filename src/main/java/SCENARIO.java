@@ -17,4 +17,7 @@ public class SCENARIO
 
 	@Column(name = "name", nullable = false)
 	private String name;
+
+	@Column(name = "storno_status", nullable = false)
+	private STORNO_SCENARIO_STATUS status;
 }

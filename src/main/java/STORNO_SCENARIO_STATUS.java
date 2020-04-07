@@ -1,0 +1,5 @@
+public enum STORNO_SCENARIO_STATUS
+{
+	FULL,
+	ADDITION
+}

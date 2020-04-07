@@ -1,0 +1,5 @@
+public enum TRAN_PER
+{
+	CURRENT_PERIOD,
+	AFTER_CLOSING_PERIOD
+}

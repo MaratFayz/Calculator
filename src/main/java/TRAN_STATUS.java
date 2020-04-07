@@ -1,0 +1,6 @@
+public enum TRAN_STATUS
+{
+	ACTUAL,
+	STORNO,
+	DELETED
+}

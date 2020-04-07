@@ -20,7 +20,7 @@
         <property name="hbm2ddl.auto">create</property>
 
         <mapping class="LD"></mapping>
-        <mapping class="Transaction"></mapping>
+        <mapping class="LD_ENTRY"></mapping>
         <mapping class="END_DATES"></mapping>
         <mapping class="COUNTERPARTNER"></mapping>
         <mapping class="CURRENCY"></mapping>
@@ -28,9 +28,10 @@
         <mapping class="SCENARIO"></mapping>
         <mapping class="PERIOD"></mapping>
         <mapping class="PERIODS_CLOSED"></mapping>
-        <mapping class="LD_STATUS"></mapping>
         <mapping class="EXCHANGE_RATE"></mapping>
         <mapping class="DEPOSIT_RATES"></mapping>
         <mapping class="DURATION"></mapping>
+        <mapping class="IFRS_ACCOUNT"></mapping>
+        <mapping class="LDENTRY_IN_IFRS_ACC"></mapping>
     </session-factory>
 </hibernate-configuration>
