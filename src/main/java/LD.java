@@ -16,6 +16,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CyclicBarrier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Getter
 @Setter
@@ -95,44 +96,67 @@ public class LD implements Runnable
 	@Transient
 	private SessionFactory sessionFactory;
 	@Transient
-	private String scenarioFrom;
-	@Transient
-	private String scenarioTo;
+	private SCENARIO scenarioTo;
 	@Transient
 	List<LD_ENTRY> CalculatedTransactions;
 
 
-	public void registerGeneralData(GeneralDataKeeper GeneralDataKeeper, CyclicBarrier cyclicBarrier, SessionFactory sessionFactory, String scenarioFrom, String scenarioTo)
+	public void registerGeneralData(GeneralDataKeeper GeneralDataKeeper, CyclicBarrier cyclicBarrier, SessionFactory sessionFactory, SCENARIO scenarioTo)
 	{
 		this.GeneralDataKeeper = GeneralDataKeeper;
 		this.cyclicBarrier = cyclicBarrier;
 		this.sessionFactory = sessionFactory;
-		this.scenarioFrom = scenarioFrom;
 		this.scenarioTo = scenarioTo;
 	}
 
-	public void calculate(ZonedDateTime firstOpenPeriod, String SCENARIO_LOAD, List<PERIOD> periods, String SCENARIO_SAVE, List<SCENARIO> scenarios, List<EXCHANGE_RATE> AllExRates, CopyOnWriteArrayList<IFRS_ACCOUNT> AllIFRSAccounts, Session session)
+	public void calculate(ZonedDateTime firstOpenPeriod, Session session)
 	{
-		this.TMEndDate = this.createPeriodsWithEndDatesForAllsLDLife(SCENARIO_LOAD, SCENARIO_SAVE);
-		this.countFirstEndData(SCENARIO_LOAD, SCENARIO_SAVE);
-		BigDecimal LDRateL = this.getLDRate(session, this.scenarioFrom);
-		this.firstOpenPeriodUTC = firstOpenPeriod.withHour(0).withMinute(0).withSecond(0).withZoneSameLocal(ZoneId.of("UTC"));
+		if(this.getIs_deleted() != STATUS_X.X)
+		{
+			final int numberDaysInYear = 365;
 
-		this.min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month = this.countActualClosingDateForTheFirstOpenPeriod(firstOpenPeriod, SCENARIO_LOAD, SCENARIO_SAVE);
-		//дата не учитывает случай, если сначала не было транзакций, потом были, потом снова нет.
-		//предположение: транзакции есть всегда сначала
-		this.LastPeriodWithTransactionUTC = this.countLastPeriodWithTransaction(firstOpenPeriod, SCENARIO_LOAD);
-		
-		this.percentPerDay = BigDecimal.valueOf(StrictMath.pow(LDRateL.divide(BigDecimal.valueOf(100)).add(BigDecimal.ONE).doubleValue(), (double) 1 / (double) 365)).setScale(32, RoundingMode.UP).subtract(BigDecimal.ONE);
-		deposit_sum_discounted_on_firstEndDate = this.deposit_sum_not_disc.setScale(32).divide(BigDecimal.ONE.add(percentPerDay).pow(LDdurationDays), RoundingMode.UP);
+			this.TMEndDate = this.createPeriodsWithEndDatesForAllsLDLife(this.scenario, this.scenarioTo);
+			this.countFirstEndData();
 
-		CalculatedTransactions = new ArrayList<>();
-		CalculatedTransactions.addAll(StornoLastEntries(scenarios, SCENARIO_SAVE));
-		CalculatedTransactions.addAll(countTransactionsForLD(session, periods, scenarios, SCENARIO_SAVE, AllExRates, SCENARIO_LOAD));
-		this.countLDENTRY_IN_IFRS_ACC(session, CalculatedTransactions, AllIFRSAccounts);
+			this.setLDdurationDays(countLDDurationInDays(this.start_date, this.firstEndDate));
+			this.setLDdurationMonths(countLDDurationInMonth(this.start_date, this.firstEndDate));
+
+			BigDecimal LDYearPercent = this.getLDRate(session, this.scenario.getName());
+			this.firstOpenPeriodUTC = firstOpenPeriod.withHour(0).withMinute(0).withSecond(0).withZoneSameLocal(ZoneId.of("UTC"));
+
+			this.min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month = this.countActualClosingDateForTheFirstOpenPeriod(firstOpenPeriod);
+			//дата не учитывает случай, если сначала не было транзакций, потом были, потом снова нет.
+			//предположение: транзакции есть всегда сначала
+			this.LastPeriodWithTransactionUTC = this.countLastPeriodWithTransaction(this.scenario);
+
+			this.percentPerDay = getPercentPerDay(LDYearPercent);
+
+			if (this.getLDdurationDays() > numberDaysInYear)
+				deposit_sum_discounted_on_firstEndDate = countDiscountedValueFromStartDateToNeededDate(this.firstEndDate, this.start_date);
+			else
+				deposit_sum_discounted_on_firstEndDate = this.deposit_sum_not_disc;
+
+			CalculatedTransactions = new ArrayList<>();
+			CalculatedTransactions.addAll(changeStatusInLastEntries(this.scenarioTo, session, TRAN_STATUS.STORNO));
+			CalculatedTransactions.addAll(countTransactionsForLD(session, this.GeneralDataKeeper.getAllPeriods(), this.scenarioTo, this.GeneralDataKeeper.getAllExRates()));
+			this.countLDENTRY_IN_IFRS_ACC(session, CalculatedTransactions, this.GeneralDataKeeper.getAllIFRSAccounts());
+		}
+		else
+		{
+			changeStatusInLastEntries(scenarioTo, session, TRAN_STATUS.DELETED);
+		}
 	}
 
-	private void countLDENTRY_IN_IFRS_ACC(Session session, List<LD_ENTRY> entries, CopyOnWriteArrayList<IFRS_ACCOUNT> allIFRSAccounts)
+	private BigDecimal getPercentPerDay(BigDecimal yearPercent)
+	{
+		BigDecimal percentPerDay = BigDecimal.ZERO;
+		final int numberDaysInYear = 365;
+
+		percentPerDay = BigDecimal.valueOf(StrictMath.pow(yearPercent.divide(BigDecimal.valueOf(100)).add(BigDecimal.ONE).doubleValue(), (double) 1 / (double) numberDaysInYear)).setScale(32, RoundingMode.UP).subtract(BigDecimal.ONE);
+		return percentPerDay;
+	}
+
+	private void countLDENTRY_IN_IFRS_ACC(Session session, List<LD_ENTRY> entries, List<IFRS_ACCOUNT> allIFRSAccounts)
 	{
 		for (LD_ENTRY entry : entries)
 		{
@@ -140,12 +164,12 @@ public class LD implements Runnable
 			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=N5", true, entry.getDeposit_sum_not_disc_RUB_REG_LD_1_N());
 			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=M5", false, entry.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M());
 			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=M5", true, entry.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M());
-			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=U5 + Reg.LD.1=V5", true, entry.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().add(entry.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V()));
-			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=U5", false, entry.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U());
-			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=V5", false, entry.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V());
-			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=W5 + Reg.LD.1=X5", true, entry.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().add(entry.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X()));
-			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=W5", false, entry.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W());
-			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=X5", false, entry.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X());
+			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=U5 + Reg.LD.1=V5", true, entry.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().add(entry.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U()));
+			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=U5", false, entry.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X());
+			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=V5", false, entry.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U());
+			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=W5 + Reg.LD.1=X5", true, entry.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().add(entry.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W()));
+			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=W5", false, entry.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V());
+			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.1=X5", false, entry.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W());
 			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.2=M5", false, entry.getAMORT_DISCONT_CURRENT_PERIOD_RUB_REG_LD_2_M());
 			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.2=M5", true, entry.getAMORT_DISCONT_CURRENT_PERIOD_RUB_REG_LD_2_M());
 			entry_2_IFRSAcc_and_save2DB(entry, session, allIFRSAccounts, "Reg.LD.3=N5", false, entry.getREVAL_LD_BODY_PLUS_REG_LD_3_N());
@@ -176,7 +200,7 @@ public class LD implements Runnable
 		}
 	}
 
-	private void entry_2_IFRSAcc_and_save2DB(LD_ENTRY entry, Session session, CopyOnWriteArrayList<IFRS_ACCOUNT> allIFRSAccounts, String AccMappedByFormula, boolean isInverse, BigDecimal sum)
+	private void entry_2_IFRSAcc_and_save2DB(LD_ENTRY entry, Session session, List<IFRS_ACCOUNT> allIFRSAccounts, String AccMappedByFormula, boolean isInverse, BigDecimal sum)
 	{
 		Transaction HibernateTransaction = session.beginTransaction();
 
@@ -198,50 +222,52 @@ public class LD implements Runnable
 		HibernateTransaction.commit();
 	}
 
-	private List<LD_ENTRY> StornoLastEntries(List<SCENARIO> scenarios, String SCENARIO_SAVE)
+	private List<LD_ENTRY> changeStatusInLastEntries(SCENARIO scenarioWhereToChangeStatusInEntries, Session session, TRAN_STATUS newStatus)
 	{
 		List<LD_ENTRY> WhereToSaveStornoTransactions = new ArrayList<>();
 
-		SCENARIO scSAVE = scenarios.stream().filter(sc -> sc.getName().equals(SCENARIO_SAVE)).collect(Collectors.toList()).get(0);
+		Stream<LD_ENTRY> stream_ActualEntries = this.transactions.stream().filter(transaction -> {
+			if(transaction.getStatus().equals(TRAN_STATUS.ACTUAL))
+				return true;
+			else
+				return false;
+		});
 
-		if(scSAVE.getStatus().equals(STORNO_SCENARIO_STATUS.ADDITION))
+		if(newStatus == TRAN_STATUS.STORNO)
 		{
-			this.transactions.stream().filter(transaction -> {
-				if(transaction.getStatus().equals(TRAN_STATUS.ACTUAL) &&
-						transaction.getPeriod().getDate().toLocalDate().equals(firstOpenPeriodUTC) &&
-						transaction.getScenario().equals(scSAVE))
+			stream_ActualEntries = stream_ActualEntries.filter(transaction ->
+			{
+				if (transaction.getScenario().equals(scenarioWhereToChangeStatusInEntries))
 					return true;
 				else
 					return false;
-			}).forEach(transaction -> {
-				transaction.setStatus(TRAN_STATUS.STORNO);
-				WhereToSaveStornoTransactions.add(transaction);
 			});
+
+			if (scenarioWhereToChangeStatusInEntries.getStatus().equals(STORNO_SCENARIO_STATUS.ADDITION))
+				stream_ActualEntries = stream_ActualEntries.filter(transaction ->
+						transaction.getPeriod().getDate().toLocalDate().equals(firstOpenPeriodUTC));
+
 		}
-		else if(scSAVE.getStatus().equals(STORNO_SCENARIO_STATUS.FULL))
-		{
-			this.transactions.stream().filter(transaction -> {
-				if(transaction.getStatus().equals(TRAN_STATUS.ACTUAL) &&
-						transaction.getScenario().equals(scSAVE))
-					return true;
-				else
-					return false;
-			}).forEach(transaction -> {
-				transaction.setStatus(TRAN_STATUS.STORNO);
+
+		stream_ActualEntries.forEach(transaction -> {
+				Transaction HibernateTransaction = session.beginTransaction();
+
+				transaction.setStatus(newStatus);
 				WhereToSaveStornoTransactions.add(transaction);
+
+				session.save(transaction);
+				HibernateTransaction.commit();
 			});
-		}
 
 		return WhereToSaveStornoTransactions;
 	}
 
-	private List<LD_ENTRY> countTransactionsForLD(Session session, List<PERIOD> periods, List<SCENARIO> scenarios, String SCENARIO_SAVE, List<EXCHANGE_RATE> allExRates, String SCENARIO_LOAD)
+	private List<LD_ENTRY> countTransactionsForLD(Session session, List<PERIOD> periods, SCENARIO scSAVE, List<EXCHANGE_RATE> allExRates)
 	{
 		List<LD_ENTRY> WhereToSaveNewTransactions = new ArrayList<>();
 
 		LocalDate firstPeriodWithoutTransaction = this.LastPeriodWithTransactionUTC.toLocalDate();
 		LocalDate min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month_InDays = min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month.toLocalDate();
-		SCENARIO scSAVE = scenarios.stream().filter(sc -> sc.getName().equals(SCENARIO_SAVE)).collect(Collectors.toList()).get(0);
 
 		BigDecimal exRateAtStartDate = allExRates.stream()
 				.filter(er -> er.getDate().isEqual(this.start_date))
@@ -266,13 +292,13 @@ public class LD implements Runnable
 			t.setPeriod(periods.stream().filter(period -> period.getDate().isEqual(finalClosingdate)).collect(Collectors.toList()).get(0));
 			t.setScenario(scSAVE);
 			t.setStatus(TRAN_STATUS.ACTUAL);
-			t.setDISCONT_AT_START_DATE_cur(this.deposit_sum_discounted_on_firstEndDate.subtract(this.deposit_sum_not_disc));
-			t.setDISCONT_AT_START_DATE_RUB(t.getDISCONT_AT_START_DATE_cur().multiply(exRateAtStartDate));
+			t.setDISCONT_AT_START_DATE_cur_REG_LD_1_K(this.deposit_sum_discounted_on_firstEndDate.subtract(this.deposit_sum_not_disc));
+			t.setDISCONT_AT_START_DATE_RUB_REG_LD_1_L(t.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().multiply(exRateAtStartDate));
 
 			if(closingdate.isEqual(this.startDateWithlastDayOfStartingMonth))
 			{
 				t.setDeposit_sum_not_disc_RUB_REG_LD_1_N(this.deposit_sum_not_disc.multiply(exRateAtStartDate));
-				t.setDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M(t.getDISCONT_AT_START_DATE_RUB());
+				t.setDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M(t.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L());
 			}
 			else
 			{
@@ -283,20 +309,30 @@ public class LD implements Runnable
 			ZonedDateTime PrevClosingDate = finalClosingdate.minusMonths(1).withDayOfMonth(finalClosingdate.minusMonths(1).toLocalDate().lengthOfMonth());
 			if(PrevClosingDate.isAfter(this.startDateWithlastDayOfStartingMonth.atStartOfDay(ZoneId.of("UTC"))) && !this.TMEndDate.floorEntry(PrevClosingDate).getValue().isEqual(t.getEnd_date_at_this_period()))
 			{
-				int LDdurationDaysForNewEndDate = (int) Duration.between(this.start_date, t.getEnd_date_at_this_period()).toDays();
-				BigDecimal deposit_sum_discounted_on_End_date_at_this_period = this.deposit_sum_not_disc.setScale(32).divide(BigDecimal.ONE.add(percentPerDay).pow(LDdurationDaysForNewEndDate), RoundingMode.UP);
+				BigDecimal deposit_sum_discounted_on_End_date_at_this_period = BigDecimal.ZERO;
+
+				if(this.getLDdurationDays() > 365)
+					deposit_sum_discounted_on_End_date_at_this_period = countDiscountedValueFromStartDateToNeededDate(t.getEnd_date_at_this_period(), this.start_date);
+				else
+					deposit_sum_discounted_on_End_date_at_this_period = this.getDeposit_sum_not_disc();
 
 				t.setDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P(deposit_sum_discounted_on_End_date_at_this_period.subtract(this.deposit_sum_not_disc));
 				t.setDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q(t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().multiply(exRateAtStartDate));
 
-				//Поиск последнего периода с суммой в поле корректировки дисконта в рублях
-				if(findLastRevaluationOfDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions).equals(BigDecimal.ZERO))
+				if(this.getLDdurationDays() > 365)
 				{
-					t.setDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R(t.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().subtract(t.getDISCONT_AT_START_DATE_RUB()));
+					//Поиск последнего периода с суммой в поле корректировки дисконта в рублях
+					if (findLastRevaluationOfDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions).equals(BigDecimal.ZERO))
+					{
+						t.setDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R(t.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().subtract(t.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L()));
+					} else
+					{
+						t.setDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R(t.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().subtract(findLastRevaluationOfDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions)));
+					}
 				}
 				else
 				{
-					t.setDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R(t.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().subtract(findLastRevaluationOfDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions)));
+					t.setDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R(BigDecimal.ZERO);
 				}
 
 				//Поиск последнего периода с суммой в поле корректировки дисконта в валюте
@@ -309,13 +345,19 @@ public class LD implements Runnable
 
 				if(List_curExOnPrevClosingDate.size() > 0) curExOnPrevClosingDate = List_curExOnPrevClosingDate.get(0);
 
-				if(findLastCalculatedDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions).equals(BigDecimal.ZERO))
+				if(this.getLDdurationDays() > 365)
 				{
-					t.setREVAL_CORR_DISC_rub_REG_LD_1_S(t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().subtract(t.getDISCONT_AT_START_DATE_cur()).multiply(curExOnPrevClosingDate.subtract(exRateAtStartDate)));
+					if (findLastCalculatedDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions).equals(BigDecimal.ZERO))
+					{
+						t.setREVAL_CORR_DISC_rub_REG_LD_1_S(t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().subtract(t.getDISCONT_AT_START_DATE_cur_REG_LD_1_K()).multiply(curExOnPrevClosingDate.subtract(exRateAtStartDate)));
+					} else
+					{
+						t.setREVAL_CORR_DISC_rub_REG_LD_1_S(t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().subtract(findLastCalculatedDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions)).multiply(curExOnPrevClosingDate.subtract(exRateAtStartDate)));
+					}
 				}
 				else
 				{
-					t.setREVAL_CORR_DISC_rub_REG_LD_1_S(t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().subtract(findLastCalculatedDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions)).multiply(curExOnPrevClosingDate.subtract(exRateAtStartDate)));
+					t.setREVAL_CORR_DISC_rub_REG_LD_1_S(BigDecimal.ZERO);
 				}
 
 				ZonedDateTime endDateAtPrevClosingDate = this.TMEndDate.floorEntry(PrevClosingDate).getValue();
@@ -326,23 +368,26 @@ public class LD implements Runnable
 				BigDecimal before_DiscSumWithAccumAm = countDiscountedValueFromStartDateToNeededDate(endDateAtPrevClosingDate, PrevClosingDate);
 				BigDecimal before_Discount_cur = before_DiscSumWithAccumAm.subtract(before_DiscSumAtStartDate);
 
-				t.setCORR_ACC_AMORT_DISC_rub_REG_LD_1_T(after_Discount_cur.subtract(before_Discount_cur).multiply(curExOnPrevClosingDate));
-
-				if(t.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().compareTo(BigDecimal.ZERO) < 0)
-				{
-					t.setCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V(t.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().add(t.getREVAL_CORR_DISC_rub_REG_LD_1_S()));
-					t.setCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X(BigDecimal.ZERO);
-
-					t.setCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W(t.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T());
-					t.setCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U(BigDecimal.ZERO);
-				}
+				if(this.getLDdurationDays() > 365)
+					t.setCORR_ACC_AMORT_DISC_rub_REG_LD_1_T(after_Discount_cur.subtract(before_Discount_cur).multiply(curExOnPrevClosingDate));
 				else
-				{
-					t.setCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X(t.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().add(t.getREVAL_CORR_DISC_rub_REG_LD_1_S()));
-					t.setCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V(BigDecimal.ZERO);
+					t.setCORR_ACC_AMORT_DISC_rub_REG_LD_1_T(BigDecimal.ZERO);
 
-					t.setCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U(t.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T());
-					t.setCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W(BigDecimal.ZERO);
+				if(t.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().compareTo(BigDecimal.ZERO) < 0)
+				{
+					t.setCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U(t.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().add(t.getREVAL_CORR_DISC_rub_REG_LD_1_S()));
+					t.setCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W(BigDecimal.ZERO);
+
+					t.setCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V(t.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T());
+					t.setCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X(BigDecimal.ZERO);
+				}
+				else if (t.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().compareTo(BigDecimal.ZERO) > 0)
+				{
+					t.setCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W(t.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().add(t.getREVAL_CORR_DISC_rub_REG_LD_1_S()));
+					t.setCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U(BigDecimal.ZERO);
+
+					t.setCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X(t.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T());
+					t.setCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V(BigDecimal.ZERO);
 				}
 			}
 			else
@@ -350,12 +395,12 @@ public class LD implements Runnable
 				t.setREVAL_CORR_DISC_rub_REG_LD_1_S(BigDecimal.ZERO);
 				t.setDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P(BigDecimal.ZERO);
 				t.setDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q(BigDecimal.ZERO);
-				t.setDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R(BigDecimal.ZERO);
+				t.setDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R(BigDecimal.ZERO);
 				t.setDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P(BigDecimal.ZERO);
-				t.setCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U(BigDecimal.ZERO);
-				t.setCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W(BigDecimal.ZERO);
-				t.setCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X(BigDecimal.ZERO);
-				t.setCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V(BigDecimal.ZERO);
+				t.setCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X(BigDecimal.ZERO);
+				t.setCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V(BigDecimal.ZERO);
+				t.setCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W(BigDecimal.ZERO);
+				t.setCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U(BigDecimal.ZERO);
 				t.setCORR_ACC_AMORT_DISC_rub_REG_LD_1_T(BigDecimal.ZERO);
 			}
 
@@ -365,26 +410,33 @@ public class LD implements Runnable
 					.filter(er -> er.getCurrency().equals(this.getCurrency()))
 					.map(er -> er.getAverage_rate_for_month()).collect(Collectors.toList()).get(0);
 
-			if(t.getEnd_date_at_this_period().isAfter(finalClosingdate))
+			if(this.getLDdurationDays() > 365)
 			{
-				t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(countDiscountFromStartDateToNeededDate(t.getEnd_date_at_this_period(), finalClosingdate));
-				t.setACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(countAccumDiscountInRub(t.getEnd_date_at_this_period(), finalClosingdate, allExRates));
+				if (t.getEnd_date_at_this_period().isAfter(finalClosingdate))
+				{
+					t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(countDiscountFromStartDateToNeededDate(t.getEnd_date_at_this_period(), finalClosingdate));
+					t.setACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(countAccumDiscountInRub(t.getEnd_date_at_this_period(), finalClosingdate, allExRates));
+				} else
+				{
+					t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(countDiscountFromStartDateToNeededDate(t.getEnd_date_at_this_period(), t.getEnd_date_at_this_period()));
+					t.setACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(countAccumDiscountInRub(t.getEnd_date_at_this_period(), t.getEnd_date_at_this_period(), allExRates));
+				}
+
+				if (PrevClosingDate.isAfter(this.start_date.withZoneSameLocal(ZoneId.of("UTC"))) || PrevClosingDate.isEqual(this.start_date.withZoneSameLocal(ZoneId.of("UTC"))))
+				{
+					t.setACCUM_AMORT_DISCONT_START_PERIOD_cur_REG_LD_2_H(countDiscountFromStartDateToNeededDate(t.getEnd_date_at_this_period(), PrevClosingDate));
+
+					t.setACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K(countAccumDiscountInRub(t.getEnd_date_at_this_period(), PrevClosingDate, allExRates));
+				} else
+				{
+					t.setACCUM_AMORT_DISCONT_START_PERIOD_cur_REG_LD_2_H(BigDecimal.ZERO);
+					t.setACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K(BigDecimal.ZERO);
+				}
 			}
 			else
 			{
-				t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(countDiscountFromStartDateToNeededDate(t.getEnd_date_at_this_period(), t.getEnd_date_at_this_period()));
-				t.setACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(countAccumDiscountInRub(t.getEnd_date_at_this_period(), t.getEnd_date_at_this_period(), allExRates));
-			}
-
-			if(PrevClosingDate.isAfter(this.start_date.withZoneSameLocal(ZoneId.of("UTC"))) || PrevClosingDate.isEqual(this.start_date.withZoneSameLocal(ZoneId.of("UTC"))))
-			{
-				t.setACCUM_AMORT_DISCONT_START_PERIOD_cur_REG_LD_2_H(countDiscountFromStartDateToNeededDate(t.getEnd_date_at_this_period(), PrevClosingDate));
-
-				SCENARIO scLOAD = scenarios.stream().filter(sc -> sc.getName().equals(SCENARIO_LOAD)).collect(Collectors.toList()).get(0);
-				t.setACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K(countAccumDiscountInRub(t.getEnd_date_at_this_period(), PrevClosingDate, allExRates));
-			}
-			else
-			{
+				t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(BigDecimal.ZERO);
+				t.setACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.ZERO);
 				t.setACCUM_AMORT_DISCONT_START_PERIOD_cur_REG_LD_2_H(BigDecimal.ZERO);
 				t.setACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K(BigDecimal.ZERO);
 			}
@@ -402,7 +454,7 @@ public class LD implements Runnable
 			{
 				if (findLastCalculatedDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions).equals(BigDecimal.ZERO))
 				{
-					t.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(this.getDeposit_sum_not_disc().add(t.getDISCONT_AT_START_DATE_cur()));
+					t.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(this.getDeposit_sum_not_disc().add(t.getDISCONT_AT_START_DATE_cur_REG_LD_1_K()));
 				} else
 				{
 					t.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(this.getDeposit_sum_not_disc().add(findLastCalculatedDiscount(scSAVE, finalClosingdate, WhereToSaveNewTransactions)));
@@ -512,9 +564,9 @@ public class LD implements Runnable
 				t.setADVANCE_CURRENTPERIOD_REG_LD_3_AE(BigDecimal.ZERO);
 			}
 
-			if(findLastTransaction(SCENARIO_LOAD, PrevClosingDate, WhereToSaveNewTransactions).size() > 0)
+			if(findLastTransaction(this.scenario, PrevClosingDate, WhereToSaveNewTransactions).size() > 0)
 			{
-				LD_ENTRY lde = findLastTransaction(SCENARIO_LOAD, PrevClosingDate, WhereToSaveNewTransactions).get(0);
+				LD_ENTRY lde = findLastTransaction(this.scenario, PrevClosingDate, WhereToSaveNewTransactions).get(0);
 				t.setTERMRECLASS_BODY_PREVPERIOD_REG_LD_3_AC(lde.getTERMRECLASS_BODY_CURRENTPERIOD_REG_LD_3_AA());
 				t.setTERMRECLASS_PERCENT_PREVPERIOD_REG_LD_3_AD(lde.getTERMRECLASS_PERCENT_CURRENTPERIOD_REG_LD_3_AB());
 				t.setADVANCE_PREVPERIOD_REG_LD_3_AF(lde.getADVANCE_CURRENTPERIOD_REG_LD_3_AE());
@@ -582,7 +634,7 @@ public class LD implements Runnable
 		return countDiscountedValueFromStartDateToNeededDate(endDate, neededDate).subtract(countDiscountedValueFromStartDateToNeededDate(endDate, this.start_date));
 	}
 
-	private List<LD_ENTRY> findLastTransaction(String scenario, ZonedDateTime PrevClosingDate, List<LD_ENTRY> CalculatedTransactions)
+	private List<LD_ENTRY> findLastTransaction(SCENARIO scenario, ZonedDateTime PrevClosingDate, List<LD_ENTRY> CalculatedTransactions)
 	{
 		List<LD_ENTRY> allT = CalculatedTransactions;
 		allT.addAll(this.transactions);
@@ -590,7 +642,7 @@ public class LD implements Runnable
 		List<LD_ENTRY> LastTransaction = allT.stream()
 				.filter(transaction -> {
 					if(transaction.getStatus().equals(TRAN_STATUS.ACTUAL) &&
-							transaction.getScenario().getName().equals(scenario))
+							transaction.getScenario().equals(scenario))
 						return true;
 					else
 						return false;
@@ -664,7 +716,7 @@ public class LD implements Runnable
 		return LastRevaluation;
 	}
 
-	private ZonedDateTime countActualClosingDateForTheFirstOpenPeriod(ZonedDateTime firstOpenPeriod, String SCENARIO_LOAD, String SCENARIO_SAVE)
+	private ZonedDateTime countActualClosingDateForTheFirstOpenPeriod(ZonedDateTime firstOpenPeriod)
 	{
 		ZonedDateTime lastEndDateLDForFirstOpenPeriod = this.TMEndDate.floorEntry(firstOpenPeriod).getValue();
 
@@ -675,7 +727,7 @@ public class LD implements Runnable
 		return min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month;
 	}
 
-	private ZonedDateTime countLastPeriodWithTransaction(ZonedDateTime firstOpenPeriod, String SCENARIO_SAVE)
+	private ZonedDateTime countLastPeriodWithTransaction(SCENARIO SCENARIO_FROM)
 	{
 		ZonedDateTime LastPeriodWithTransactionUTC = this.startDateWithlastDayOfStartingMonth.atStartOfDay(ZoneId.of("UTC"));
 
@@ -686,7 +738,7 @@ public class LD implements Runnable
 			LocalDate finalClosingdate = closingdate;
 			if(this.transactions.stream().reduce(0,
 													(result, transaction) -> {
-														if(transaction.getScenario().getName().equals(SCENARIO_SAVE) &&
+														if(transaction.getScenario().equals(SCENARIO_FROM) &&
 															transaction.getStatus().equals(TRAN_STATUS.ACTUAL) &&
 															transaction.getPeriod().getDate().equals(finalClosingdate))
 														{
@@ -705,7 +757,7 @@ public class LD implements Runnable
 		return LastPeriodWithTransactionUTC;
 	}
 
-	private void countFirstEndData(String SCENARIO_LOAD, String SCENARIO_SAVE)
+	private void countFirstEndData()
 	{
 		this.startDateWithlastDayOfStartingMonth = this.start_date.toLocalDate().withDayOfMonth(this.start_date.toLocalDate().lengthOfMonth());
 
@@ -736,12 +788,21 @@ public class LD implements Runnable
 		return LDdurationMonths;
 	}
 
-	private TreeMap<ZonedDateTime, ZonedDateTime> createPeriodsWithEndDatesForAllsLDLife(String SCENARIO_LOAD, String SCENARIO_SAVE)
+	private TreeMap<ZonedDateTime, ZonedDateTime> createPeriodsWithEndDatesForAllsLDLife(SCENARIO SCENARIO_LOAD, SCENARIO SCENARIO_SAVE)
 	{
-		TreeMap<ZonedDateTime, ZonedDateTime> TMEndDate = end_dates.stream().filter(element -> element.getScenario().getName().equals(SCENARIO_LOAD) || element.getScenario().getName().equals(SCENARIO_SAVE))
+		TreeMap<ZonedDateTime, ZonedDateTime> TMEndDate = end_dates.stream().filter(element -> element.getScenario().equals(SCENARIO_LOAD) || element.getScenario().equals(SCENARIO_SAVE))
 				.collect(TreeMap::new,
 						(tm, end_date) -> {
-							tm.put(end_date.getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC")), end_date.getEnd_Date().withZoneSameInstant(ZoneId.of("UTC")));
+								if(tm.containsKey(end_date.getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC"))))
+								{
+									List<END_DATES> led = end_dates.stream().filter(element -> element.getScenario().equals(SCENARIO_SAVE) && element.getEnd_Date().isEqual(end_date.getEnd_Date())).collect(Collectors.toList());
+									if(led.size() == 1)
+										tm.put(end_date.getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC")), led.get(0).getEnd_Date());
+									else
+										tm.put(end_date.getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC")), end_date.getEnd_Date().withZoneSameInstant(ZoneId.of("UTC")));
+								}
+								else
+									tm.put(end_date.getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC")), end_date.getEnd_Date().withZoneSameInstant(ZoneId.of("UTC")));
 						}, (tm1, tm2) -> tm1.putAll(tm2));
 
 		return TMEndDate;
@@ -765,16 +826,16 @@ public class LD implements Runnable
 								cb.equal(rootLDRates.get("scenario").get("name"), SCENARIO)
 						));
 		Query<DEPOSIT_RATES> LDRate = session.createQuery(cqLDRate);
-		List<DEPOSIT_RATES> LDRateL = LDRate.getResultList();
+		List<DEPOSIT_RATES> LDYearPercent = LDRate.getResultList();
 
-		if(!(LDRateL.size() == 0))
+		if(!(LDYearPercent.size() == 1))
 			new IllegalArgumentException("There is no ONE rate for " + "\n" +
 										"entity = " + this.getEntity().getCode() + "\n" +
 										"for date = " + this.getStart_date() + "\n" +
 										"for currency = " + this.getCurrency().getShort_name() + "\n" +
 										"for duration = " + this.getLDdurationMonths());
 
-		return LDRateL.get(0).getRATE();
+		return LDYearPercent.get(0).getRATE();
 	}
 
 	@Override
@@ -784,14 +845,7 @@ public class LD implements Runnable
 		{
 			Session session = this.sessionFactory.openSession();
 
-			this.calculate(GeneralDataKeeper.getFirstOpenPeriod(),
-					this.scenarioFrom,
-					GeneralDataKeeper.getAllPeriods(),
-					this.scenarioTo,
-					GeneralDataKeeper.getAllScenarios(),
-					GeneralDataKeeper.getAllExRates(),
-					GeneralDataKeeper.getAllIFRSAccounts(),
-					session);
+			this.calculate(GeneralDataKeeper.getFirstOpenPeriod(), session);
 
 			session.close();
 		}

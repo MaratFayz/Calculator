@@ -8,6 +8,7 @@ import javax.persistence.*;
 @Setter
 @ToString
 @NoArgsConstructor()
+@EqualsAndHashCode
 public class SCENARIO
 {
 	@Id

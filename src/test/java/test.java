@@ -15,10 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 //перечень тестов:
@@ -60,11 +57,7 @@ public class test extends TestCase
 
 	static ZonedDateTime firstOpenPeriod;
 
-	LinkedList<LD> AllLD_SC_FROM = new LinkedList<>();
-	LinkedList<LD> AllLD_SC_TO = new LinkedList<>();
-	List<PERIOD> AllPeriods = new ArrayList<>();
-	List<SCENARIO> AllScenarios = new ArrayList<>();
-	List<EXCHANGE_RATE> AllExRates = new ArrayList<>();
+	LinkedList<LD> LDs = new LinkedList<>();
 	GeneralDataKeeper GDK;
 
 	final String SCENARIO_LOAD = "FACT";
@@ -91,33 +84,19 @@ public class test extends TestCase
 		metadata = new MetadataSources(registry).getMetadataBuilder().build();
 		sessionFactory = metadata.getSessionFactoryBuilder().build();
 
-		GDK = new GeneralDataKeeper(sessionFactory, SCENARIO_LOAD, SCENARIO_SAVE);
-		CyclicBarrier cyclicBarrier = new CyclicBarrier(GDK.getAll_LD_in_scenarioFrom().size() + 1);
+		GDK = GeneralDataKeeper.getInstance(sessionFactory, SCENARIO_LOAD, SCENARIO_SAVE);
+		CyclicBarrier cyclicBarrier = new CyclicBarrier(GDK.getLDs().size() + 1);
 		ExecutorService threadExecutor = Executors.newFixedThreadPool(10);
 
-		AllLD_SC_FROM = new LinkedList<>(GDK.getAll_LD_in_scenarioFrom());
+		LDs = GDK.getLDs();
 
-		for (LD ld : AllLD_SC_FROM)
+		for (LD ld : LDs)
 		{
-			ld.registerGeneralData(GDK, cyclicBarrier, sessionFactory, SCENARIO_LOAD, SCENARIO_SAVE);
+			ld.registerGeneralData(GDK, cyclicBarrier, sessionFactory, GDK.getTo());
 			threadExecutor.execute(ld);
 		}
 
 		cyclicBarrier.await();
-
-		if(GDK.getAll_LD_in_scenarioTo().size() > 0)
-		{
-			cyclicBarrier = new CyclicBarrier(GDK.getAll_LD_in_scenarioTo().size() + 1);
-
-			AllLD_SC_TO = new LinkedList<>(GDK.getAll_LD_in_scenarioTo());
-
-			for (LD ld : AllLD_SC_TO)
-			{
-				//расчет для второго сценария
-			}
-
-			cyclicBarrier.await();
-		}
 
 		sessionFactory.close();
 		threadExecutor.shutdown();
@@ -126,25 +105,25 @@ public class test extends TestCase
 	public void test1_NominalValue()
 	{
 		//Если более года:
-		assertEquals(BigDecimal.valueOf(100000.00).setScale(2), AllLD_SC_FROM.get(0).getDeposit_sum_not_disc());
+		assertEquals(BigDecimal.valueOf(100000.00).setScale(2), LDs.get(0).getDeposit_sum_not_disc());
 
 /*		//Если удаленный:
-		assertEquals(100000.0, AllLD_SC_FROM.get(1).getDeposit_sum_not_disc());
+		assertEquals(100000.0, LDs.get(1).getDeposit_sum_not_disc());
 
 		//Если менее года:
-		assertEquals(100000.0, AllLD_SC_FROM.get(2).getDeposit_sum_not_disc());*/
+		assertEquals(100000.0, LDs.get(2).getDeposit_sum_not_disc());*/
 	}
 
 	public void test2_CalculatingDiscountedValue()
 	{
 		//Если более года:
-		assertEquals(BigDecimal.valueOf(88027.34).setScale(2), AllLD_SC_FROM.get(0).getDeposit_sum_discounted_on_firstEndDate().setScale(2, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(88027.34).setScale(2), LDs.get(0).getDeposit_sum_discounted_on_firstEndDate().setScale(2, RoundingMode.HALF_UP));
 
 /*		//Если удаленный:
-		assertEquals(100000.0, AllLD_SC_FROM.get(1).getDeposit_sum_discounted_on_firstEndDate());
+		assertEquals(100000.0, LDs.get(1).getDeposit_sum_discounted_on_firstEndDate());
 
 		//Если менее года:
-		assertEquals(100000.0, AllLD_SC_FROM.get(2).getDeposit_sum_discounted_on_firstEndDate());*/
+		assertEquals(100000.0, LDs.get(2).getDeposit_sum_discounted_on_firstEndDate());*/
 	}
 
 	public void test3_FirstOpenPeriodGlobal()
@@ -154,747 +133,747 @@ public class test extends TestCase
 
 	public void test4_FirstPeriodWithOutTransaction()
 	{
-		assertEquals(getDate(31,3,2017), AllLD_SC_FROM.get(0).getLastPeriodWithTransactionUTC());
+		assertEquals(getDate(31,3,2017), LDs.get(0).getLastPeriodWithTransactionUTC());
 	}
 
 	public void test5_NumberOfNewTransactions()
 	{
-		assertEquals(33, AllLD_SC_FROM.get(0).getCalculatedTransactions().size());
+		assertEquals(33, LDs.get(0).getCalculatedTransactions().size());
 	}
 
 	public void test6_Reg_LD_1()
 	{
 		//31.03.2017
-		var LD1_31032017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31032017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 3, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31032017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31032017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31032017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31032017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(-704373), LD1_31032017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(5883180), LD1_31032017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 10, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31032017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31032017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.04.2017
-		var LD1_30042017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30042017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 4, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30042017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30042017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30042017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30042017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 10, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30042017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30042017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.05.2017
-		var LD1_31052017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31052017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 5, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31052017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31052017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31052017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31052017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 10, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31052017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31052017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.06.2017
-		var LD1_30062017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30062017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 6, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30062017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30062017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30062017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30062017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 10, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30062017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30062017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.07.2017
-		var LD1_31072017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31072017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 7, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31072017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31072017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31072017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31072017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 10, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31072017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31072017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.08.2017
-		var LD1_31082017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31082017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 8, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31082017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31082017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31082017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31082017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 12, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31082017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.valueOf(-12688), LD1_31082017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(-746430), LD1_31082017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-42056), LD1_31082017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-42056), LD1_31082017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(-509), LD1_31082017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(-821), LD1_31082017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-42565), LD1_31082017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-821), LD1_31082017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-42565), LD1_31082017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-821), LD1_31082017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.09.2017
-		var LD1_30092017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30092017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 9, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30092017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30092017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30092017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30092017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 12, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30092017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30092017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.10.2017
-		var LD1_31102017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31102017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 10, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31102017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31102017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31102017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31102017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31102017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.valueOf(-12337), LD1_31102017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(-725789), LD1_31102017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(20641), LD1_31102017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(20641), LD1_31102017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(-286), LD1_31102017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(563), LD1_31102017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(20355), LD1_31102017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(563), LD1_31102017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(20355), LD1_31102017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(563), LD1_31102017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.11.2017
-		var LD1_30112017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30112017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 11, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30112017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30112017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30112017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30112017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30112017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30112017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.12.2017
-		var LD1_31122017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31122017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 12, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31122017.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31122017.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31122017.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31122017.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122017.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122017.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31122017.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31122017.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122017.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122017.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122017.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122017.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122017.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122017.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122017.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122017.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122017.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122017.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.01.2018
-		var LD1_31012018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31012018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 1, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31012018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31012018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31012018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31012018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31012018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31012018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//28.02.2018
-		var LD1_28022018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_28022018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(28, 2, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_28022018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_28022018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_28022018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_28022018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_28022018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_28022018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.03.2018
-		var LD1_31032018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31032018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 3, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31032018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31032018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31032018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31032018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31032018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31032018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.04.2018
-		var LD1_30042018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30042018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 4, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30042018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30042018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30042018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30042018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30042018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30042018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.05.2018
-		var LD1_31052018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31052018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 5, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31052018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31052018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31052018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31052018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31052018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31052018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.06.2018
-		var LD1_30062018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30062018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 6, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30062018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30062018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30062018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30062018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30062018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30062018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.07.2018
-		var LD1_31072018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31072018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 7, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31072018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31072018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31072018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31072018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31072018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31072018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.08.2018
-		var LD1_31082018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31082018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 8, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31082018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31082018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31082018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31082018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31082018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31082018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.09.2018
-		var LD1_30092018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30092018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 9, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30092018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30092018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30092018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30092018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30092018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30092018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.10.2018
-		var LD1_31102018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31102018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 10, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31102018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31102018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31102018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31102018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31102018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31102018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.11.2018
-		var LD1_30112018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30112018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 11, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30112018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30112018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30112018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30112018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30112018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30112018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.12.2018
-		var LD1_31122018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31122018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 12, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31122018.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31122018.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31122018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31122018.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122018.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122018.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31122018.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31122018.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122018.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122018.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122018.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122018.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31122018.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122018.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31122018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122018.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122018.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122018.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31122018.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.01.2019
-		var LD1_31012019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31012019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 1, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31012019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31012019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31012019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31012019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31012019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31012019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31012019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31012019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31012019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//28.02.2019
-		var LD1_28022019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_28022019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(28, 2, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_28022019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_28022019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_28022019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_28022019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_28022019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_28022019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_28022019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_28022019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_28022019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.03.2019
-		var LD1_31032019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31032019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 3, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31032019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31032019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31032019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31032019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31032019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31032019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31032019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31032019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31032019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.04.2019
-		var LD1_30042019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30042019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 4, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30042019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30042019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30042019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30042019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30042019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30042019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30042019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30042019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30042019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.05.2019
-		var LD1_31052019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31052019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 5, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31052019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31052019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31052019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31052019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31052019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31052019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31052019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31052019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31052019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.06.2019
-		var LD1_30062019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30062019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 6, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30062019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30062019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30062019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30062019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30062019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30062019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30062019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30062019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30062019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.07.2019
-		var LD1_31072019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31072019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 7, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31072019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31072019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31072019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31072019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31072019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31072019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31072019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31072019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31072019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.08.2019
-		var LD1_31082019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31082019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 8, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31082019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31082019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31082019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31082019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31082019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31082019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31082019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31082019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31082019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.09.2019
-		var LD1_30092019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30092019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 9, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30092019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30092019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30092019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30092019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30092019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_30092019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30092019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30092019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30092019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//31.10.2019
-		var LD1_31102019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31102019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 10, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_31102019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_31102019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_31102019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_31102019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31102019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.ZERO, LD1_31102019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 
 		//30.11.2019
-		var LD1_30112019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30112019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 11, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
 				.collect(Collectors.toList()).get(0);
 
-		assertEquals(BigDecimal.valueOf(-11973), LD1_30112019.getDISCONT_AT_START_DATE_cur().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(-704373), LD1_30112019.getDISCONT_AT_START_DATE_RUB().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-11973), LD1_30112019.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(-704373), LD1_30112019.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.ZERO, LD1_30112019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(ZonedDateTime.of(2019, 11, 3, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_30112019.getEnd_date_at_this_period());
 		assertEquals(BigDecimal.valueOf(-12137), LD1_30112019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(-714056), LD1_30112019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(11733), LD1_30112019.getDISC_DIFF_BETW_DISC_SUM_AT_NEW_END_DATE_AT_START_DATE_rub_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(11733), LD1_30112019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(1743), LD1_30112019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
 		assertEquals(BigDecimal.valueOf(1855), LD1_30112019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_forIFRSAcc_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.ZERO, LD1_30112019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(13476), LD1_30112019.getCORR_NEW_DATE_LESS_DISCONT_RUB_forIFRSAcc_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-		assertEquals(BigDecimal.valueOf(1855), LD1_30112019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_forIFRSAcc_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.ZERO, LD1_30112019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(13476), LD1_30112019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
+		assertEquals(BigDecimal.valueOf(1855), LD1_30112019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
 	}
 
 	public void test7_Reg_LD_2()
 	{
 		//31.03.2017
-		var LD1_31032017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31032017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 3, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -908,7 +887,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(14379), LD1_31032017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.04.2017
-		var LD1_30042017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30042017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 4, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -922,7 +901,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(34396), LD1_30042017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.05.2017
-		var LD1_31052017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31052017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 5, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -936,7 +915,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(55436), LD1_31052017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.06.2017
-		var LD1_30062017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30062017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 6, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -950,7 +929,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(76117), LD1_30062017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.07.2017
-		var LD1_31072017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31072017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 7, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -964,7 +943,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(98258), LD1_31072017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.08.2017
-		var LD1_31082017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31082017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 8, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -978,7 +957,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(119504), LD1_31082017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.09.2017
-		var LD1_30092017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30092017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 9, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -992,7 +971,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(140222), LD1_30092017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.10.2017
-		var LD1_31102017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31102017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 10, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1006,7 +985,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(162381), LD1_31102017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.11.2017
-		var LD1_30112017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30112017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 11, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1020,7 +999,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(183798), LD1_30112017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.12.2017
-		var LD1_31122017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31122017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 12, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1034,7 +1013,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(205894), LD1_31122017.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.01.2018
-		var LD1_31012018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31012018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 1, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1048,7 +1027,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(227400), LD1_31012018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//28.02.2018
-		var LD1_28022018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_28022018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(28, 2, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1062,7 +1041,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(246910), LD1_28022018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.03.2018
-		var LD1_31032018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31032018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 3, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1076,7 +1055,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(268680), LD1_31032018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.04.2018
-		var LD1_30042018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30042018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 4, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1090,7 +1069,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(291106), LD1_30042018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.05.2018
-		var LD1_31052018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31052018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 5, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1104,7 +1083,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(315046), LD1_31052018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.06.2018
-		var LD1_30062018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30062018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 6, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1118,7 +1097,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(338497), LD1_30062018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.07.2018
-		var LD1_31072018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31072018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 7, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1132,7 +1111,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(362894), LD1_31072018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.08.2018
-		var LD1_31082018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31082018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 8, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1146,7 +1125,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(388655), LD1_31082018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.09.2018
-		var LD1_30092018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30092018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 9, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1160,7 +1139,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(414269), LD1_30092018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.10.2018
-		var LD1_31102018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31102018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 10, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1174,7 +1153,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(440148), LD1_31102018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.11.2018
-		var LD1_30112018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30112018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 11, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1188,7 +1167,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(465295), LD1_30112018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.12.2018
-		var LD1_31122018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31122018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 12, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1202,7 +1181,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(491386), LD1_31122018.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.01.2019
-		var LD1_31012019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31012019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 1, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1216,7 +1195,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(517585), LD1_31012019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//28.02.2019
-		var LD1_28022019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_28022019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(28, 2, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1230,7 +1209,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(541342), LD1_28022019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.03.2019
-		var LD1_31032019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31032019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 3, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1244,7 +1223,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(567749), LD1_31032019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.04.2019
-		var LD1_30042019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30042019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 4, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1258,7 +1237,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(593409), LD1_30042019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.05.2019
-		var LD1_31052019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31052019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 5, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1272,7 +1251,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(620032), LD1_31052019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.06.2019
-		var LD1_30062019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30062019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 6, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1286,7 +1265,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(645901), LD1_30062019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.07.2019
-		var LD1_31072019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31072019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 7, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1300,7 +1279,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(672742), LD1_31072019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.08.2019
-		var LD1_31082019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31082019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 8, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1314,7 +1293,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(699694), LD1_31082019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.09.2019
-		var LD1_30092019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30092019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 9, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1328,7 +1307,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(725884), LD1_30092019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//31.10.2019
-		var LD1_31102019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31102019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 10, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1342,7 +1321,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(753057), LD1_31102019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
 
 		//30.11.2019
-		var LD1_30112019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30112019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 11, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1359,7 +1338,7 @@ public class test extends TestCase
 	public void test8_Reg_LD_3()
 	{
 		//31.03.2017
-		var LD1_31032017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31032017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 3, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1387,7 +1366,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31032017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.04.2017
-		var LD1_30042017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30042017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 4, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1415,7 +1394,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_30042017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.05.2017
-		var LD1_31052017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31052017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 5, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1443,7 +1422,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31052017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.06.2017
-		var LD1_30062017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30062017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 6, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1471,7 +1450,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_30062017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.07.2017
-		var LD1_31072017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31072017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 7, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1499,7 +1478,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31072017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.08.2017
-		var LD1_31082017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31082017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 8, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1527,7 +1506,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31082017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.09.2017
-		var LD1_30092017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30092017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 9, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1555,7 +1534,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_30092017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.10.2017
-		var LD1_31102017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31102017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 10, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1583,7 +1562,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31102017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.11.2017
-		var LD1_30112017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30112017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 11, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1611,7 +1590,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_30112017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.12.2017
-		var LD1_31122017 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31122017 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 12, 2017).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1639,7 +1618,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31122017.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.01.2018
-		var LD1_31012018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31012018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 1, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1667,7 +1646,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31012018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//28.02.2018
-		var LD1_28022018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_28022018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(28, 2, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1695,7 +1674,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_28022018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.03.2018
-		var LD1_31032018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31032018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 3, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1723,7 +1702,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31032018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.04.2018
-		var LD1_30042018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30042018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 4, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1751,7 +1730,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_30042018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.05.2018
-		var LD1_31052018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31052018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 5, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1779,7 +1758,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31052018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.06.2018
-		var LD1_30062018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30062018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 6, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1807,7 +1786,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_30062018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.07.2018
-		var LD1_31072018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31072018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 7, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1835,7 +1814,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31072018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.08.2018
-		var LD1_31082018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31082018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 8, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1863,7 +1842,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31082018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.09.2018
-		var LD1_30092018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30092018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 9, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1891,7 +1870,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_30092018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.10.2018
-		var LD1_31102018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31102018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 10, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1919,7 +1898,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_31102018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.11.2018
-		var LD1_30112018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30112018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 11, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1947,7 +1926,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.ZERO, LD1_30112018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.12.2018
-		var LD1_31122018 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31122018 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 12, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -1975,7 +1954,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_31122018.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.01.2019
-		var LD1_31012019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31012019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 1, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2003,7 +1982,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_31012019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//28.02.2019
-		var LD1_28022019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_28022019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(28, 2, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2031,7 +2010,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_28022019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.03.2019
-		var LD1_31032019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31032019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 3, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2059,7 +2038,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_31032019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.04.2019
-		var LD1_30042019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30042019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 4, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2087,7 +2066,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_30042019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.05.2019
-		var LD1_31052019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31052019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 5, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2115,7 +2094,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_31052019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.06.2019
-		var LD1_30062019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30062019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 6, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2143,7 +2122,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_30062019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.07.2019
-		var LD1_31072019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31072019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 7, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2171,7 +2150,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_31072019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.08.2019
-		var LD1_31082019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31082019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 8, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2199,7 +2178,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_31082019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.09.2019
-		var LD1_30092019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30092019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 9, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2227,7 +2206,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_30092019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//31.10.2019
-		var LD1_31102019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_31102019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(31, 10, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2255,7 +2234,7 @@ public class test extends TestCase
 		assertEquals(BigDecimal.valueOf(5178807), LD1_31102019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));
 
 		//30.11.2019
-		var LD1_30112019 = AllLD_SC_FROM.get(0).getCalculatedTransactions().stream()
+		var LD1_30112019 = LDs.get(0).getCalculatedTransactions().stream()
 				.filter(tr -> tr.getPeriod().getDate().isEqual(getDate(30, 11, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
 				.filter(tr -> tr.getScenario().getName().equals("FACT"))
 				.filter(tr -> tr.getStatus().equals(TRAN_STATUS.ACTUAL))
@@ -2383,8 +2362,8 @@ public class test extends TestCase
 	{
 		fact = getSC(1, "FACT", STORNO_SCENARIO_STATUS.ADDITION);
 		usd = getCUR(1, "USD");
-		C1001 = getEN(1, "C1001", "Аэрофлот");
-		CP = getCP(1, "ООО \"Авиакапитал-Сервис\"");
+		C1001 = getEN(1, "C1001", "Компания-1");
+		CP = getCP(1, "ООО \"Лизинговая компания\"");
 
 		periods.put(getDate(31, 3, 2017), getPer(1, 31, 3, 2017));
 		periods.put(getDate(30, 4, 2017), getPer(2, 30, 4, 2017));
@@ -2696,8 +2675,6 @@ public class test extends TestCase
 		session.save(A0102010100_F5000);
 		session.save(A0203010200_F5000);
 		session.save(A0102010200_F5000);
-
-
 
 		int i=1;
 		for(PERIOD p : periods.values())
