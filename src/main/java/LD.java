@@ -1,4 +1,5 @@
 import lombok.*;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -80,8 +81,6 @@ public class LD implements Runnable
 	@Transient
 	private ZonedDateTime LastPeriodWithTransactionUTC;
 	@Transient
-	private ZonedDateTime firstOpenPeriodUTC;
-	@Transient
 	private ZonedDateTime min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month;
 	@Transient
 	private TreeMap<ZonedDateTime, ZonedDateTime> TMEndDate;
@@ -99,7 +98,8 @@ public class LD implements Runnable
 	private SCENARIO scenarioTo;
 	@Transient
 	List<LD_ENTRY> CalculatedTransactions;
-
+	@Transient
+	final int numberDaysInYear = 365;
 
 	public void registerGeneralData(GeneralDataKeeper GeneralDataKeeper, CyclicBarrier cyclicBarrier, SessionFactory sessionFactory, SCENARIO scenarioTo)
 	{
@@ -113,16 +113,14 @@ public class LD implements Runnable
 	{
 		if(this.getIs_deleted() != STATUS_X.X)
 		{
-			final int numberDaysInYear = 365;
-
 			this.TMEndDate = this.createPeriodsWithEndDatesForAllsLDLife(this.scenario, this.scenarioTo);
-			this.countFirstEndData();
+			this.startDateWithlastDayOfStartingMonth = start_date.toLocalDate().withDayOfMonth(start_date.toLocalDate().lengthOfMonth());
+			this.firstEndDate = this.countFirstEndData(this.TMEndDate, this.startDateWithlastDayOfStartingMonth);
 
 			this.setLDdurationDays(countLDDurationInDays(this.start_date, this.firstEndDate));
-			this.setLDdurationMonths(countLDDurationInMonth(this.start_date, this.firstEndDate));
+			this.setLDdurationMonths(countLDDurationInMonth(this.start_date, this.firstEndDate, this.numberDaysInYear));
 
-			BigDecimal LDYearPercent = this.getLDRate(session, this.scenario.getName());
-			this.firstOpenPeriodUTC = firstOpenPeriod.withHour(0).withMinute(0).withSecond(0).withZoneSameLocal(ZoneId.of("UTC"));
+			BigDecimal LDYearPercent = getLDRate(session, this.scenario);
 
 			this.min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month = this.countActualClosingDateForTheFirstOpenPeriod(firstOpenPeriod);
 			//дата не учитывает случай, если сначала не было транзакций, потом были, потом снова нет.
@@ -245,7 +243,7 @@ public class LD implements Runnable
 
 			if (scenarioWhereToChangeStatusInEntries.getStatus().equals(STORNO_SCENARIO_STATUS.ADDITION))
 				stream_ActualEntries = stream_ActualEntries.filter(transaction ->
-						transaction.getPeriod().getDate().toLocalDate().equals(firstOpenPeriodUTC));
+						transaction.getPeriod().getDate().toLocalDate().equals(GeneralDataKeeper.getFirstOpenPeriod()));
 
 		}
 
@@ -279,11 +277,11 @@ public class LD implements Runnable
 			Transaction HibernateTransaction = session.beginTransaction();
 
 			closingdate = closingdate.withDayOfMonth(closingdate.lengthOfMonth());
-			ZonedDateTime finalClosingdate = ZonedDateTime.of(closingdate.getYear(), closingdate.getMonthValue(), closingdate.getDayOfMonth(), 0, 0, 0, 0, ZoneId.of("UTC"));
+			ZonedDateTime finalClosingdate = ZonedDateTime.of(closingdate, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
 
 			LD_ENTRY t = new LD_ENTRY();
 
-			if(finalClosingdate.isBefore(firstOpenPeriodUTC)) t.setStatus_EntryMadeDuringOrAfterClosedPeriod(TRAN_PER.AFTER_CLOSING_PERIOD);
+			if(finalClosingdate.isBefore(GeneralDataKeeper.getFirstOpenPeriod())) t.setStatus_EntryMadeDuringOrAfterClosedPeriod(TRAN_PER.AFTER_CLOSING_PERIOD);
 			else t.setStatus_EntryMadeDuringOrAfterClosedPeriod(TRAN_PER.CURRENT_PERIOD);
 
 			t.setLd(this);
@@ -749,7 +747,7 @@ public class LD implements Runnable
 													},
 													(res1, res2) -> res1 + res2) > 0)
 			{
-				LastPeriodWithTransactionUTC = ZonedDateTime.from(closingdate).withMinute(0).withHour(0).withSecond(0).withZoneSameLocal(ZoneId.of("UTC"));
+				LastPeriodWithTransactionUTC = ZonedDateTime.of(closingdate, LocalTime.MIDNIGHT,ZoneId.of("UTC"));
 				break;
 			}
 		}
@@ -757,16 +755,14 @@ public class LD implements Runnable
 		return LastPeriodWithTransactionUTC;
 	}
 
-	private void countFirstEndData()
+	private ZonedDateTime countFirstEndData(TreeMap<ZonedDateTime, ZonedDateTime> TMEndDate, LocalDate startDateWithlastDayOfStartingMonth)
 	{
-		this.startDateWithlastDayOfStartingMonth = this.start_date.toLocalDate().withDayOfMonth(this.start_date.toLocalDate().lengthOfMonth());
-
-		List<ZonedDateTime> ListWithOneEndDateOnLastDayOfLDStarting = TMEndDate.keySet().stream().filter(date -> date.toLocalDate().isEqual(this.startDateWithlastDayOfStartingMonth)).collect(Collectors.toList());
+		List<ZonedDateTime> ListWithOneEndDateOnLastDayOfLDStarting = TMEndDate.keySet().stream().filter(date -> date.toLocalDate().isEqual(startDateWithlastDayOfStartingMonth)).collect(Collectors.toList());
 
 		if (!(ListWithOneEndDateOnLastDayOfLDStarting.size() == 0))
-			new IllegalArgumentException("There no ONE end date for " + this.startDateWithlastDayOfStartingMonth);
+			new IllegalArgumentException("There no ONE end date for " + startDateWithlastDayOfStartingMonth);
 
-		this.firstEndDate = this.TMEndDate.get(ListWithOneEndDateOnLastDayOfLDStarting.get(0));
+		return TMEndDate.get(ListWithOneEndDateOnLastDayOfLDStarting.get(0));
 	}
 
 	private int countLDDurationInDays(ZonedDateTime start_date, ZonedDateTime EndDate)
@@ -776,14 +772,13 @@ public class LD implements Runnable
 		return LDdurationDays;
 	}
 
-	private int countLDDurationInMonth(ZonedDateTime start_date, ZonedDateTime EndDate)
+	private int countLDDurationInMonth(ZonedDateTime start_date, ZonedDateTime EndDate, int numberDaysInYear)
 	{
-		final int DAYS_IN_YEARS = 365;
-		final int MONTHS_IN_YEARS = 12;
+		final int MONTHS_IN_YEAR = 12;
 
 		int LDdurationInDays = countLDDurationInDays(start_date, EndDate);
 
-		int LDdurationMonths = (int) Math.round(LDdurationInDays / ((double) DAYS_IN_YEARS/ (double) MONTHS_IN_YEARS));
+		int LDdurationMonths = (int) Math.round(LDdurationInDays / ((double) numberDaysInYear/ (double) MONTHS_IN_YEAR));
 
 		return LDdurationMonths;
 	}
@@ -795,10 +790,7 @@ public class LD implements Runnable
 						(tm, end_date) -> {
 								if(tm.containsKey(end_date.getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC"))))
 								{
-									List<END_DATES> led = end_dates.stream().filter(element -> element.getScenario().equals(SCENARIO_SAVE) && element.getEnd_Date().isEqual(end_date.getEnd_Date())).collect(Collectors.toList());
-									if(led.size() == 1)
-										tm.put(end_date.getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC")), led.get(0).getEnd_Date());
-									else
+									if(end_date.getScenario().equals(SCENARIO_SAVE))
 										tm.put(end_date.getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC")), end_date.getEnd_Date().withZoneSameInstant(ZoneId.of("UTC")));
 								}
 								else
@@ -808,7 +800,7 @@ public class LD implements Runnable
 		return TMEndDate;
 	}
 
-	public BigDecimal getLDRate(Session session, String SCENARIO)
+	public BigDecimal getLDRate(Session session, SCENARIO SCENARIO_FROM)
 	{
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 
@@ -823,7 +815,7 @@ public class LD implements Runnable
 								cb.equal(rootLDRates.get("currency"), this.getCurrency()),
 								cb.lessThanOrEqualTo(rootLDRates.get("duration").get("MIN_MONTH"), this.getLDdurationMonths()),
 								cb.greaterThanOrEqualTo(rootLDRates.get("duration").get("MAX_MONTH"), this.getLDdurationMonths()),
-								cb.equal(rootLDRates.get("scenario").get("name"), SCENARIO)
+								cb.equal(rootLDRates.get("scenario"), SCENARIO_FROM)
 						));
 		Query<DEPOSIT_RATES> LDRate = session.createQuery(cqLDRate);
 		List<DEPOSIT_RATES> LDYearPercent = LDRate.getResultList();
@@ -841,13 +833,13 @@ public class LD implements Runnable
 	@Override
 	public void run()
 	{
+		Session session = null;
+
 		try
 		{
-			Session session = this.sessionFactory.openSession();
+			session = this.sessionFactory.openSession();
 
 			this.calculate(GeneralDataKeeper.getFirstOpenPeriod(), session);
-
-			session.close();
 		}
 		catch(Exception allException)
 		{
@@ -857,9 +849,10 @@ public class LD implements Runnable
 		{
 			try
 			{
+				session.close();
 				this.cyclicBarrier.await();
 			}
-			catch (InterruptedException | BrokenBarrierException e)
+			catch (InterruptedException | BrokenBarrierException | HibernateException e)
 			{
 				e.printStackTrace();
 			}

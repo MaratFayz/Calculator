@@ -10,8 +10,6 @@ import javax.persistence.criteria.Root;
 import java.time.*;
 import java.time.chrono.ChronoZonedDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Getter
 @Setter
@@ -36,8 +34,11 @@ public class GeneralDataKeeper
 
 	private GeneralDataKeeper(SessionFactory sessionFactory, String scenarioFrom, String scenarioTo)
 	{
-		if(Instance != null)
-			new IllegalAccessException("It's not legal to use constructor in singleton");
+		Class<?> callerClass = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).getCallerClass();
+
+		if (GeneralDataKeeper.class != callerClass) {
+			throw new IllegalAccessError("It's not legal to use constructor in singleton");
+		}
 
 		Session session = sessionFactory.openSession();
 		CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -56,7 +57,7 @@ public class GeneralDataKeeper
 		session.close();
 	}
 
-	private static SCENARIO getScenarioWithName(CriteriaBuilder cb, Session session, String scenarioToFind)
+	private SCENARIO getScenarioWithName(CriteriaBuilder cb, Session session, String scenarioToFind)
 	{
 		SCENARIO scenario;
 
@@ -74,7 +75,7 @@ public class GeneralDataKeeper
 		return scenario;
 	}
 
-	public static ZonedDateTime getFirstOpenPeriod(CriteriaBuilder cb, Session session, SCENARIO scenarioWhereFindFirstOpenPeriod)
+	private ZonedDateTime getFirstOpenPeriod(CriteriaBuilder cb, Session session, SCENARIO scenarioWhereFindFirstOpenPeriod)
 	{
 		CriteriaQuery<Object[]> cqOpenPer = cb.createQuery(Object[].class);
 		Root<PERIOD> rootPer = cqOpenPer.from(PERIOD.class);
@@ -98,7 +99,7 @@ public class GeneralDataKeeper
 			SCENARIO sc = (SCENARIO) objects[2];
 
 			if(pc.getISCLOSED() == null && sc.equals(scenarioWhereFindFirstOpenPeriod))
-				if(p.getDate().isBefore(firstOpenPeriod)) firstOpenPeriod = p.getDate().withHour(0).withMinute(0).withSecond(0).withZoneSameLocal(ZoneId.of("UTC"));
+				if(p.getDate().isBefore(firstOpenPeriod)) firstOpenPeriod = ZonedDateTime.of(p.getDate().toLocalDate(), LocalTime.MIDNIGHT, ZoneId.of("UTC"));
 		}
 
 		if(standard.isEqual(firstOpenPeriod))
@@ -107,7 +108,7 @@ public class GeneralDataKeeper
 		return firstOpenPeriod;
 	}
 
-	public static LinkedList<LD> getLDsForScenario(CriteriaBuilder cb, Session session, SCENARIO scenarioWhereFindLDs)
+	private LinkedList<LD> getLDsForScenario(CriteriaBuilder cb, Session session, SCENARIO scenarioWhereFindLDs)
 	{
 		LinkedList<LD> allLD = new LinkedList<>();
 
@@ -120,7 +121,7 @@ public class GeneralDataKeeper
 		return allLD;
 	}
 
-	public List<PERIOD> getAllPeriods(CriteriaBuilder cb, Session session)
+	private List<PERIOD> getAllPeriods(CriteriaBuilder cb, Session session)
 	{
 		List<PERIOD> allPeriods = new ArrayList<>();
 
@@ -131,20 +132,10 @@ public class GeneralDataKeeper
 		allPeriods = new ArrayList<PERIOD>(resQPeriods.getResultList());
 
 		//check periods
-		Optional<ZonedDateTime> theMinDateInLDs = this.LDs.stream().map(ld -> ld.getStart_date()).min(ChronoZonedDateTime::compareTo);
-
-		if(!theMinDateInLDs.isPresent())
-			new IllegalArgumentException("There is no ONE date for leasing_deposits");
-
 		TreeSet<ZonedDateTime> datesInPeriods = allPeriods.stream().map(period -> period.getDate()).collect(TreeSet::new,
 				(ts, date) -> ts.add(date), (ts1, ts2) -> ts1.addAll(ts2));
 
-		TreeSet<ZonedDateTime> reqPeriods = new TreeSet<>();
-		reqPeriods.add(theMinDateInLDs.get());
-		ZonedDateTime theMinDateInLDs_withlastDayOfMonth = theMinDateInLDs.get().withDayOfMonth(theMinDateInLDs.get().toLocalDate().lengthOfMonth());
-		theMinDateInLDs_withlastDayOfMonth.toLocalDate().datesUntil(this.firstOpenPeriod.toLocalDate(), Period.ofMonths(1))
-														.map(localDate -> ZonedDateTime.of(localDate, LocalTime.MIN, ZoneId.of("UTC")))
-														.forEach(date -> reqPeriods.add(date));
+		TreeSet<ZonedDateTime> reqPeriods = allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod();
 
 		reqPeriods.add(this.firstOpenPeriod);
 
@@ -156,30 +147,37 @@ public class GeneralDataKeeper
 		return allPeriods;
 	}
 
-	public List<EXCHANGE_RATE> getAllExRates(CriteriaBuilder cb, Session session, SCENARIO from, SCENARIO to)
+	private TreeSet<ZonedDateTime> allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod()
+	{
+		Optional<ZonedDateTime> TheEarliestDateInLDs = this.LDs.stream().map(ld -> ld.getStart_date()).min(ChronoZonedDateTime::compareTo);
+		TreeSet<ZonedDateTime> allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod = new TreeSet<>();
+
+		if(!TheEarliestDateInLDs.isPresent())
+			new IllegalArgumentException("There is no ONE date for leasing_deposits");
+
+		ZonedDateTime theMinDateInLDs_withlastDayOfMonth = TheEarliestDateInLDs.get().withDayOfMonth(TheEarliestDateInLDs.get().toLocalDate().lengthOfMonth());
+
+		theMinDateInLDs_withlastDayOfMonth.toLocalDate().datesUntil(this.firstOpenPeriod.toLocalDate(), Period.ofMonths(1))
+				.map(localDate -> ZonedDateTime.of(localDate, LocalTime.MIN, ZoneId.of("UTC")))
+				.forEach(date -> allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod.add(date));
+
+		return allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod;
+	}
+
+	private List<EXCHANGE_RATE> getAllExRates(CriteriaBuilder cb, Session session, SCENARIO from, SCENARIO to)
 	{
 		List<EXCHANGE_RATE> AllExRates = new ArrayList<>();
 
-		List<CURRENCY> ldEXRs = LDs.stream().map(ld -> ld.getCurrency()).collect(Collectors.toList());
-
 		CriteriaQuery<EXCHANGE_RATE> cqExRates = cb.createQuery(EXCHANGE_RATE.class);
 		Root<EXCHANGE_RATE> rootExRates = cqExRates.from(EXCHANGE_RATE.class);
-		cqExRates.select(rootExRates).where(
-				cb.or(cb.equal(rootExRates.get("scenario"), from), cb.equal(rootExRates.get("scenario"), to)),
-				cb.isMember(rootExRates.get("currency"), ldEXRs));
+		cqExRates.select(rootExRates);
 		Query<EXCHANGE_RATE> resQExRates = session.createQuery(cqExRates);
 		AllExRates = new ArrayList<EXCHANGE_RATE>(resQExRates.getResultList());
-
-		//сделать сращивание двух сценариев
-
-		//сделать фильтр по валютам депозитов
-
-		//проверка наличия всех требуемых курсов
 
 		return AllExRates;
 	}
 
-	public static List<IFRS_ACCOUNT> getAllIFRSAccounts(CriteriaBuilder cb, Session session)
+	private List<IFRS_ACCOUNT> getAllIFRSAccounts(CriteriaBuilder cb, Session session)
 	{
 		List<IFRS_ACCOUNT> AllIFRSAccounts = new ArrayList<>();
 
