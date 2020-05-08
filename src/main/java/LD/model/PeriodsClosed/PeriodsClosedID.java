@@ -19,10 +19,10 @@ public class PeriodsClosedID implements Serializable
 {
 	static final Long serialVersionUID = 2L;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Scenario scenario;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinColumn(name = "period_id", nullable = false)
 	private Period period;
 }

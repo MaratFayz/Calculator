@@ -36,6 +36,8 @@ public class CurrencyServiceImpl implements CurrencyService
 	@Override
 	public Currency updateCurrency(Long id, Currency currency)
 	{
+		currency.setId(id);
+
 		Currency currencyToUpdate = getCurrency(id);
 
 		BeanUtils.copyProperties(currency, currencyToUpdate);

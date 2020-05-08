@@ -1,11 +1,12 @@
 package LD.model.ExchangeRate;
 
+import LD.config.DateFormat;
 import LD.service.CurrencyService;
 import LD.service.ScenarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import static LD.config.DataParsing.parsingDate;
+import static LD.config.DateFormat.parsingDate;
 
 @Component
 public class ExchangeRateTransform
@@ -25,6 +26,17 @@ public class ExchangeRateTransform
 				.exchangeRateID(erID)
 				.rate_at_date(exchangeRateDTO.getRate_at_date())
 				.average_rate_for_month(exchangeRateDTO.getAverage_rate_for_month())
+				.build();
+	}
+
+	public ExchangeRateDTO ExchangeRate_to_ExchangeRateDTO(ExchangeRate exchangeRate)
+	{
+		return ExchangeRateDTO.builder()
+				.currency(exchangeRate.getExchangeRateID().getCurrency().getId())
+				.scenario(exchangeRate.getExchangeRateID().getScenario().getId())
+				.date(DateFormat.formatDate(exchangeRate.getExchangeRateID().getDate()))
+				.rate_at_date(exchangeRate.getRate_at_date())
+				.average_rate_for_month(exchangeRate.getAverage_rate_for_month())
 				.build();
 	}
 

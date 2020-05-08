@@ -4,20 +4,18 @@ import LD.model.PeriodsClosed.PeriodsClosed;
 import LD.model.PeriodsClosed.PeriodsClosedDTO;
 import LD.model.PeriodsClosed.PeriodsClosedID;
 import LD.model.PeriodsClosed.PeriodsClosedTransform;
-import LD.model.PeriodsClosed.PeriodsClosedTransform;
-import LD.service.PeriodsClosedService;
 import LD.service.PeriodsClosedService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.extern.java.Log;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @RestController
@@ -33,7 +31,7 @@ public class PeriodsClosedController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех периодов и их статусов закрытия", response = ResponseEntity.class)
-	public List<PeriodsClosed> getAllPeriodsClosed()
+	public List<PeriodsClosedDTO> getAllPeriodsClosed()
 	{
 		return periodsClosedService.getAllPeriodsClosed();
 	}
@@ -50,6 +48,20 @@ public class PeriodsClosedController
 		PeriodsClosed periodClosed = periodsClosedService.getPeriodsClosed(id);
 		log.info("(getPeriodsClosed): periodClosed was taken: " + periodClosed);
 		return new ResponseEntity(periodClosed, HttpStatus.OK);
+	}
+
+	@GetMapping("{scenario_id}")
+	@ApiOperation(value = "Получение по сценарию периода закрытия", response = ResponseEntity.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Период закрытия в сценарии существует, возвращается в ответе."),
+			@ApiResponse(code = 500, message = "Нет последнего закрытого периода в сценарии")
+	})
+	public ResponseEntity getPeriodsClosed(@PathVariable Long scenario_id)
+	{
+		log.info("(getPeriodsClosed): запрос для id сценария {}", scenario_id);
+		String result = periodsClosedService.getDateFirstOpenPeriodForScenario(scenario_id);
+		log.info("(getPeriodsClosed): результат запроса первого открытого периода для id сценария {} => {}", scenario_id, result);
+		return new ResponseEntity(result, HttpStatus.OK);
 	}
 
 	@PostMapping

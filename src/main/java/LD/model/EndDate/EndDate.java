@@ -1,6 +1,7 @@
 package LD.model.EndDate;
 
 import LD.model.LeasingDeposit.LeasingDeposit;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -24,5 +25,6 @@ public class EndDate
 
 	@ManyToOne(cascade = CascadeType.ALL)
 	@MapsId(value = "leasingDeposit_id")
+	@JsonIgnore
 	private LeasingDeposit leasingDeposit;
 }

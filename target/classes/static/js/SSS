@@ -1,0 +1,31 @@
+Vue.component('DataTableForDataRight', {
+    props: ['showingData'],
+    template: '<table>' +
+//                   '<tr>' +
+//                        '<th v-for="key in showingKeys">' +
+//                              '{{ key }}' +
+//                        '</th>' +
+//                   '</tr>' +
+                   '<tr v-for="data in showingData">' +
+                       '<td v-for="key1 in showingKeys">' +
+                             '{{ data.key1 }}' +
+                       '</td>' +
+                        '<td>' +
+                             '<button v-bind:value="data.id" class="editButton" @click=changeData()>' +
+                                 'E' +
+                             '</button>' +
+                        '</td>' +
+                        '<td>' +
+                              '<button v-bind:value="data.id" class="deleteButton" @click=deleteData()>' +
+                                  'X' +
+                              '</button>' +
+                        '</td>' +
+                   '</tr>' +
+               '</table>',
+    methods: {
+        changeData: function() {
+        },
+        deleteData: function() {
+        }
+    }
+});

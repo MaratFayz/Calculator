@@ -29,7 +29,7 @@ public class LeasingDepositController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех лизинговых депозитов", response = ResponseEntity.class)
-	public List<LeasingDeposit> getAllLeasingDeposits()
+	public List<LeasingDepositDTO> getAllLeasingDeposits()
 	{
 		return leasingDepositService.getAllLeasingDeposits();
 	}

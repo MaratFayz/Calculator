@@ -1,12 +1,13 @@
 package LD.service;
 
 import LD.model.LeasingDeposit.LeasingDeposit;
+import LD.model.LeasingDeposit.LeasingDepositDTO;
 
 import java.util.List;
 
 public interface LeasingDepositService
 {
-	List<LeasingDeposit> getAllLeasingDeposits();
+	List<LeasingDepositDTO> getAllLeasingDeposits();
 
 	LeasingDeposit getLeasingDeposit(Long id);
 

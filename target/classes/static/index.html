@@ -7,19 +7,42 @@
     <link rel="stylesheet" type="text/css" href="/css/style.css">
 </head>
 <body>
+    <div>
+        <form action="/logout" method="post">
+            <input type="submit" value="Sign Out">
+        </form>
+    </div>
+
     <h1> Калькулятор лизинговых депозитов </h1>
 
-    <div id="ld" class="demo">
-        <button
-                v-for="tab in tabs"
-                v-bind:value="tab.id"
-                v-bind:class="['tab-button', { active: currentTab === tab }]"
-                v-on:click="currentTab = tab.id"
-        >
-            {{ tab.name }}
-        </button>
+    <div id="ld" class="webAppMain">
+        <div>
+            <p>Выбранный сценарий-источник </p>
+            <select v-model="selectedScenario">
+                <option v-for="scenario in allScenarios"> {{ scenario.name }} </option>
+            </select>
+        </div>
 
-        <component v-bind:is="currentTabComponent" class="tab"></component>
+        <div>
+            <p>Период расчета для сценария-источника:</p>
+            <select disabled>
+                <option> {{ closedPeriod }} </option>
+            </select>
+        </div>
+
+        <div>
+            <button
+                    v-for="tab in tabs"
+                    v-bind:value="tab.id"
+                    v-bind:class="['tab-button', { active: currentTab === tab.id }]"
+                    v-on:click="currentTab = tab.id"
+            >
+                {{ tab.name }}
+            </button>
+        </div>
+        <br>
+
+        <div> <component v-bind:is="currentTabComponent" class="tab"></component> </div>
     </div>
 
     <script src="js/script.js"></script>

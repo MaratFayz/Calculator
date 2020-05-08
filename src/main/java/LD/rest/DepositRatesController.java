@@ -30,7 +30,7 @@ public class DepositRatesController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех ставок депозитов", response = ResponseEntity.class)
-	public List<DepositRate> getAllDepositRates()
+	public List<DepositRateDTO> getAllDepositRates()
 	{
 		return depositRatesService.getAllDepositRates();
 	}

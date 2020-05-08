@@ -933,7 +933,8 @@ public class EntryCalculator implements Callable<List<Entry>>
 
 	private TreeMap<ZonedDateTime, ZonedDateTime> createPeriodsWithEndDatesForAllsLDLife(Scenario Scenario_LOAD, Scenario Scenario_SAVE)
 	{
-		TreeMap<ZonedDateTime, ZonedDateTime> TMEndDate = leasingDepositToCalculate.getEnd_dates().stream().filter(element -> element.getEndDateID().getScenario().equals(Scenario_LOAD) || element.getEndDateID().getScenario().equals(Scenario_SAVE))
+		TreeMap<ZonedDateTime, ZonedDateTime> TMEndDate = leasingDepositToCalculate.getEnd_dates().stream()
+				.filter(element -> element.getEndDateID().getScenario().equals(Scenario_LOAD) || element.getEndDateID().getScenario().equals(Scenario_SAVE))
 				.collect(TreeMap::new,
 						(tm, end_date) -> {
 							if(tm.containsKey(end_date.getEndDateID().getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC"))))

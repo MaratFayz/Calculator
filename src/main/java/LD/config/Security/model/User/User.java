@@ -27,18 +27,8 @@ public class User implements UserDetails
 
 	private String password;
 
-	@Transient
-	private String password2;
-
 	@ManyToMany(fetch = FetchType.EAGER)
 	private Set<Role> roles;
-
-//	private boolean canView;
-//	private boolean canAdd;
-//	private boolean canEdit;
-//	private boolean canCalculate;
-//	private boolean canAdministrate;
-//	private boolean canDelete;
 
 	private boolean isExpired;
 	private boolean isLocked;
@@ -65,24 +55,24 @@ public class User implements UserDetails
 	@Override
 	public boolean isAccountNonExpired()
 	{
-		return true; //!isExpired;
+		return !isExpired;
 	}
 
 	@Override
 	public boolean isAccountNonLocked()
 	{
-		return true; //!isLocked;
+		return !isLocked;
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired()
 	{
-		return true; //!isExpired;
+		return !isExpired;
 	}
 
 	@Override
 	public boolean isEnabled()
 	{
-		return true;//isEnabled;
+		return isEnabled;
 	}
 }

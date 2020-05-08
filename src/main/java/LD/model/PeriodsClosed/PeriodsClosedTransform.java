@@ -23,6 +23,15 @@ public class PeriodsClosedTransform
 				.build();
 	}
 
+	public PeriodsClosedDTO PeriodsClosed_to_PeriodsClosedDTO(PeriodsClosed periodsClosed)
+	{
+		return PeriodsClosedDTO.builder()
+				.period(periodsClosed.getPeriodsClosedID().getPeriod().getId())
+				.scenario(periodsClosed.getPeriodsClosedID().getScenario().getId())
+				.ISCLOSED(periodsClosed.getISCLOSED())
+				.build();
+	}
+
 	public PeriodsClosedID PeriodsClosedDTO_to_PeriodsClosedID(Long scenario_id, Long period_id)
 	{
 		return PeriodsClosedID.builder()

@@ -35,7 +35,7 @@ public class EndDateController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех конечных дат по лизинговым депозитам")
-	public List<EndDate> getAllEndDates()
+	public List<EndDateDTO> getAllEndDates()
 	{
 		return endDateService.getAllEndDates();
 	}

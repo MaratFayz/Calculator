@@ -1,15 +1,18 @@
 package LD.service;
 
 import LD.model.PeriodsClosed.PeriodsClosed;
+import LD.model.PeriodsClosed.PeriodsClosedDTO;
 import LD.model.PeriodsClosed.PeriodsClosedID;
 
 import java.util.List;
 
 public interface PeriodsClosedService
 {
-	List<PeriodsClosed> getAllPeriodsClosed();
+	List<PeriodsClosedDTO> getAllPeriodsClosed();
 
 	PeriodsClosed getPeriodsClosed(PeriodsClosedID id);
+
+	String getDateFirstOpenPeriodForScenario(Long scenario_id);
 
 	PeriodsClosed saveNewPeriodsClosed(PeriodsClosed periodClosed);
 

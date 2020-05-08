@@ -30,7 +30,7 @@ public class ExchangeRateController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех курсов валют", response = ResponseEntity.class)
-	public List<ExchangeRate> getAllExchangeRates()
+	public List<ExchangeRateDTO> getAllExchangeRates()
 	{
 		return exchangeRateService.getAllExchangeRates();
 	}

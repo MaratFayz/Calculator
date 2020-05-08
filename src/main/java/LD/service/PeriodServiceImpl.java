@@ -1,6 +1,7 @@
 package LD.service;
 
 import LD.model.Period.Period;
+import LD.model.Period.PeriodDTO;
 import LD.repository.PeriodRepository;
 import LD.rest.exceptions.NotFoundException;
 import org.springframework.beans.BeanUtils;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PeriodServiceImpl implements PeriodService
@@ -16,9 +18,11 @@ public class PeriodServiceImpl implements PeriodService
 	PeriodRepository periodRepository;
 
 	@Override
-	public List<Period> getAllPeriods()
+	public List<PeriodDTO> getAllPeriods()
 	{
-		return periodRepository.findAll();
+		return periodRepository.findAll().stream()
+				.map(per -> PeriodDTO.Period_to_PeriodDTO(per))
+				.collect(Collectors.toList());
 	}
 
 	@Override

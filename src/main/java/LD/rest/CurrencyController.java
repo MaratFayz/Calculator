@@ -71,6 +71,7 @@ public class CurrencyController
 		log.info("(update): Поступил объект currencyDTO", currencyDTO);
 
 		Currency currency = CurrencyDTO.CurrencyDTO_to_Currency(currencyDTO);
+
 		Currency updatedCurrency = currencyService.updateCurrency(id, currency);
 		return new ResponseEntity(updatedCurrency, HttpStatus.OK);
 	}

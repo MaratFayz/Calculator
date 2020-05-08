@@ -1,7 +1,9 @@
 package LD.service;
 
 import LD.model.ExchangeRate.ExchangeRate;
+import LD.model.ExchangeRate.ExchangeRateDTO;
 import LD.model.ExchangeRate.ExchangeRateID;
+import LD.model.ExchangeRate.ExchangeRateTransform;
 import LD.repository.ExchangeRateRepository;
 import LD.rest.exceptions.NotFoundException;
 import org.springframework.beans.BeanUtils;
@@ -9,17 +11,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ExchangeRateServiceImpl implements ExchangeRateService
 {
 	@Autowired
 	ExchangeRateRepository exchangeRateRepository;
+	@Autowired
+	ExchangeRateTransform exchangeRateTransform;
 
 	@Override
-	public List<ExchangeRate> getAllExchangeRates()
+	public List<ExchangeRateDTO> getAllExchangeRates()
 	{
-		return exchangeRateRepository.findAll();
+		return exchangeRateRepository.findAll()
+				.stream()
+				.map(er -> exchangeRateTransform.ExchangeRate_to_ExchangeRateDTO(er))
+				.collect(Collectors.toList());
 	}
 
 	@Override

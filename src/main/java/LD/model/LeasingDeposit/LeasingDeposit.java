@@ -7,6 +7,7 @@ import LD.model.EndDate.EndDate;
 import LD.model.Entry.Entry;
 import LD.model.Enums.STATUS_X;
 import LD.model.Scenario.Scenario;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -47,7 +48,7 @@ public class LeasingDeposit
 	@Column(name = "deposit_sum_not_disc", nullable = false)
 	private BigDecimal deposit_sum_not_disc;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "scenario_id", nullable = false)
 	private Scenario scenario;
 
@@ -60,6 +61,7 @@ public class LeasingDeposit
 	private STATUS_X is_deleted;
 
 	@OneToMany(mappedBy = "leasingDeposit", fetch = FetchType.EAGER)
+	@JsonIgnore
 	private Set<Entry> entries;
 
 	@OneToMany(mappedBy = "leasingDeposit", fetch = FetchType.EAGER)

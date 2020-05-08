@@ -1,12 +1,13 @@
 package LD.service;
 
 import LD.model.Period.Period;
+import LD.model.Period.PeriodDTO;
 
 import java.util.List;
 
 public interface PeriodService
 {
-	List<Period> getAllPeriods();
+	List<PeriodDTO> getAllPeriods();
 
 	Period getPeriod(Long id);
 

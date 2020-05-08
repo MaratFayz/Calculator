@@ -31,7 +31,7 @@ public class PeriodController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех периодов", response = ResponseEntity.class)
-	public List<Period> getAllPeriods()
+	public List<PeriodDTO> getAllPeriods()
 	{
 		return periodService.getAllPeriods();
 	}

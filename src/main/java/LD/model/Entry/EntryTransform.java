@@ -6,7 +6,7 @@ import LD.service.ScenarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import static LD.config.DataParsing.parsingDate;
+import static LD.config.DateFormat.parsingDate;
 
 @Component
 public class EntryTransform

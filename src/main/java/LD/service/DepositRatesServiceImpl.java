@@ -1,7 +1,9 @@
 package LD.service;
 
 import LD.model.DepositRate.DepositRate;
+import LD.model.DepositRate.DepositRateDTO;
 import LD.model.DepositRate.DepositRateID;
+import LD.model.DepositRate.DepositRateTransform;
 import LD.repository.DepositRatesRepository;
 import LD.rest.exceptions.NotFoundException;
 import org.springframework.beans.BeanUtils;
@@ -9,17 +11,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DepositRatesServiceImpl implements DepositRatesService
 {
 	@Autowired
 	DepositRatesRepository depositRatesRepository;
+	@Autowired
+	DepositRateTransform depositRateTransform;
 
 	@Override
-	public List<DepositRate> getAllDepositRates()
+	public List<DepositRateDTO> getAllDepositRates()
 	{
-		return depositRatesRepository.findAll();
+		return depositRatesRepository.findAll()
+				.stream()
+				.map(dr -> depositRateTransform.DepositRates_to_DepositRatesDTO(dr))
+				.collect(Collectors.toList());
 	}
 
 	@Override
