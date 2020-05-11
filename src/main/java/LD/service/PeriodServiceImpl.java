@@ -1,7 +1,7 @@
 package LD.service;
 
 import LD.model.Period.Period;
-import LD.model.Period.PeriodDTO;
+import LD.model.Period.PeriodDTO_out;
 import LD.repository.PeriodRepository;
 import LD.rest.exceptions.NotFoundException;
 import org.springframework.beans.BeanUtils;
@@ -18,10 +18,10 @@ public class PeriodServiceImpl implements PeriodService
 	PeriodRepository periodRepository;
 
 	@Override
-	public List<PeriodDTO> getAllPeriods()
+	public List<PeriodDTO_out> getAllPeriods()
 	{
 		return periodRepository.findAll().stream()
-				.map(per -> PeriodDTO.Period_to_PeriodDTO(per))
+				.map(per -> PeriodDTO_out.Period_to_PeriodDTO_out(per))
 				.collect(Collectors.toList());
 	}
 
@@ -40,6 +40,8 @@ public class PeriodServiceImpl implements PeriodService
 	@Override
 	public Period updatePeriod(Long id, Period period)
 	{
+		period.setId(id);
+
 		Period periodToUpdate = getPeriod(id);
 
 		BeanUtils.copyProperties(period, periodToUpdate);

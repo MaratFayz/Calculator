@@ -8,14 +8,18 @@ import java.time.format.DateTimeFormatter;
 
 public class DateFormat
 {
+	static final String dateformat = "dd-MM-yyyy";
+
 	public static ZonedDateTime parsingDate(String dateTime)
 	{
-		return ZonedDateTime.parse(dateTime); //format 2020-04-24T23:56:19+00:00[UTC]
+		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(dateformat);
+		LocalDate localDate = LocalDate.parse(dateTime, dateTimeFormatter);
+		return ZonedDateTime.of(localDate, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
 	}
 
 	public static String formatDate(ZonedDateTime dateTime)
 	{
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dateformat);
 		dateTime.format(dtf);
 
 		return dateTime.format(dtf);

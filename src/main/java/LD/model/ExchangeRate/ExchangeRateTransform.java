@@ -16,22 +16,22 @@ public class ExchangeRateTransform
 	@Autowired
 	ScenarioService scenarioService;
 
-	public ExchangeRate ExchangeRateDTO_to_ExchangeRate(ExchangeRateDTO exchangeRateDTO)
+	public ExchangeRate ExchangeRateDTO_to_ExchangeRate(ExchangeRateDTO_in exchangeRateDTO_in)
 	{
-		ExchangeRateID erID = ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO.getScenario(),
-																	exchangeRateDTO.getCurrency(),
-																	exchangeRateDTO.getDate());
+		ExchangeRateID erID = ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO_in.getScenario(),
+																	exchangeRateDTO_in.getCurrency(),
+																	exchangeRateDTO_in.getDate());
 
 		return ExchangeRate.builder()
 				.exchangeRateID(erID)
-				.rate_at_date(exchangeRateDTO.getRate_at_date())
-				.average_rate_for_month(exchangeRateDTO.getAverage_rate_for_month())
+				.rate_at_date(exchangeRateDTO_in.getRate_at_date())
+				.average_rate_for_month(exchangeRateDTO_in.getAverage_rate_for_month())
 				.build();
 	}
 
-	public ExchangeRateDTO ExchangeRate_to_ExchangeRateDTO(ExchangeRate exchangeRate)
+	public ExchangeRateDTO_in ExchangeRate_to_ExchangeRateDTO(ExchangeRate exchangeRate)
 	{
-		return ExchangeRateDTO.builder()
+		return ExchangeRateDTO_in.builder()
 				.currency(exchangeRate.getExchangeRateID().getCurrency().getId())
 				.scenario(exchangeRate.getExchangeRateID().getScenario().getId())
 				.date(DateFormat.formatDate(exchangeRate.getExchangeRateID().getDate()))

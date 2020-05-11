@@ -1,6 +1,6 @@
 package LD.rest;
 
-import LD.model.Company.CompanyDTO;
+import LD.model.Company.CompanyDTO_in;
 import LD.model.Company.Company;
 import LD.service.CompanyService;
 import io.swagger.annotations.Api;
@@ -55,9 +55,9 @@ public class CompanyController
 	@PostMapping
 	@ApiOperation(value = "Сохранение новой компании", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новая компания была сохранена.")
-	public ResponseEntity saveNewCompany(@RequestBody CompanyDTO companyDTO)
+	public ResponseEntity saveNewCompany(@RequestBody CompanyDTO_in companyDTOOut)
 	{
-		Company company = CompanyDTO.CompanyDTO_to_Company(companyDTO);
+		Company company = CompanyDTO_in.CompanyDTO_in_to_Company(companyDTOOut);
 		Company newCompany = companyService.saveNewCompany(company);
 		return new ResponseEntity(newCompany, HttpStatus.OK);
 	}
@@ -65,11 +65,11 @@ public class CompanyController
 	@PutMapping("{id}")
 	@ApiOperation(value = "Изменение значений компании", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Компания была изменена.")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody CompanyDTO companyDTO)
+	public ResponseEntity update(@PathVariable Long id, @RequestBody CompanyDTO_in companyDTOOut)
 	{
-		log.info("(update): Поступил объект companyDTO", companyDTO);
+		log.info("(update): Поступил объект companyDTOOut", companyDTOOut);
 
-		Company company = CompanyDTO.CompanyDTO_to_Company(companyDTO);
+		Company company = CompanyDTO_in.CompanyDTO_in_to_Company(companyDTOOut);
 		Company updatedCompany = companyService.updateCompany(id, company);
 		return new ResponseEntity(updatedCompany, HttpStatus.OK);
 	}

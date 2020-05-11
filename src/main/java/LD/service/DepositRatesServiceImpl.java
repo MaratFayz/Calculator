@@ -1,7 +1,7 @@
 package LD.service;
 
 import LD.model.DepositRate.DepositRate;
-import LD.model.DepositRate.DepositRateDTO;
+import LD.model.DepositRate.DepositRateDTO_out;
 import LD.model.DepositRate.DepositRateID;
 import LD.model.DepositRate.DepositRateTransform;
 import LD.repository.DepositRatesRepository;
@@ -22,11 +22,11 @@ public class DepositRatesServiceImpl implements DepositRatesService
 	DepositRateTransform depositRateTransform;
 
 	@Override
-	public List<DepositRateDTO> getAllDepositRates()
+	public List<DepositRateDTO_out> getAllDepositRates()
 	{
 		return depositRatesRepository.findAll()
 				.stream()
-				.map(dr -> depositRateTransform.DepositRates_to_DepositRatesDTO(dr))
+				.map(dr -> depositRateTransform.DepositRates_to_DepositRatesDTO_out(dr))
 				.collect(Collectors.toList());
 	}
 

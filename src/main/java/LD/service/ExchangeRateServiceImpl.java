@@ -1,7 +1,7 @@
 package LD.service;
 
 import LD.model.ExchangeRate.ExchangeRate;
-import LD.model.ExchangeRate.ExchangeRateDTO;
+import LD.model.ExchangeRate.ExchangeRateDTO_in;
 import LD.model.ExchangeRate.ExchangeRateID;
 import LD.model.ExchangeRate.ExchangeRateTransform;
 import LD.repository.ExchangeRateRepository;
@@ -22,7 +22,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService
 	ExchangeRateTransform exchangeRateTransform;
 
 	@Override
-	public List<ExchangeRateDTO> getAllExchangeRates()
+	public List<ExchangeRateDTO_in> getAllExchangeRates()
 	{
 		return exchangeRateRepository.findAll()
 				.stream()

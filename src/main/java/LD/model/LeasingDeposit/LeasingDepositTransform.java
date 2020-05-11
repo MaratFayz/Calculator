@@ -8,6 +8,8 @@ import LD.service.ScenarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.ZonedDateTime;
+
 import static LD.config.DateFormat.parsingDate;
 
 @Component
@@ -22,23 +24,24 @@ public class LeasingDepositTransform
 	@Autowired
 	ScenarioService scenarioService;
 
-	public LeasingDeposit LeasingDepositDTO_to_LeasingDeposit(LeasingDepositDTO leasingDepositDTO)
+	public LeasingDeposit LeasingDepositDTO_in_to_LeasingDeposit(LeasingDepositDTO_in leasingDepositDTO_in)
 	{
 		return LeasingDeposit.builder()
-				.company(companyService.getCompany(leasingDepositDTO.getCompany()))
-				.counterpartner(counterpartnerService.getCounterpartner(leasingDepositDTO.getCounterpartner()))
-				.currency(currencyService.getCurrency(leasingDepositDTO.getCurrency()))
-				.start_date(parsingDate(leasingDepositDTO.getStart_date()))
-				.deposit_sum_not_disc(leasingDepositDTO.getDeposit_sum_not_disc())
-				.scenario(scenarioService.getScenario(leasingDepositDTO.getScenario()))
-				.is_created(leasingDepositDTO.getIs_created())
-				.is_deleted(leasingDepositDTO.getIs_deleted())
+				.company(companyService.getCompany(leasingDepositDTO_in.getCompany()))
+				.counterpartner(counterpartnerService.getCounterpartner(leasingDepositDTO_in.getCounterpartner()))
+				.currency(currencyService.getCurrency(leasingDepositDTO_in.getCurrency()))
+				.start_date(parsingDate(leasingDepositDTO_in.getStart_date()))
+				.deposit_sum_not_disc(leasingDepositDTO_in.getDeposit_sum_not_disc())
+				.scenario(scenarioService.getScenario(leasingDepositDTO_in.getScenario()))
+				.is_created(leasingDepositDTO_in.getIs_created())
+				.is_deleted(leasingDepositDTO_in.getIs_deleted())
 				.build();
 	}
 
-	public LeasingDepositDTO LeasingDeposit_to_LeasingDepositDTO(LeasingDeposit leasingDeposit)
+	public LeasingDepositDTO_out LeasingDeposit_to_LeasingDepositDTO_out(LeasingDeposit leasingDeposit)
 	{
-		return LeasingDepositDTO.builder()
+		return LeasingDepositDTO_out.builder()
+				.id(leasingDeposit.getId())
 				.company(leasingDeposit.getCompany().getId())
 				.counterpartner(leasingDeposit.getCounterpartner().getId())
 				.currency(leasingDeposit.getCurrency().getId())
@@ -47,6 +50,22 @@ public class LeasingDepositTransform
 				.scenario(leasingDeposit.getScenario().getId())
 				.is_created(leasingDeposit.getIs_created())
 				.is_deleted(leasingDeposit.getIs_deleted())
+				.build();
+	}
+
+	public LeasingDepositDTO_out_onPeriodFor2Scenarios LeasingDeposit_to_LeasingDepositDTO_out_onPeriodFor2Scenarios(LeasingDeposit leasingDeposit, ZonedDateTime endDate)
+	{
+		return LeasingDepositDTO_out_onPeriodFor2Scenarios.builder()
+				.id(leasingDeposit.getId())
+				.company(leasingDeposit.getCompany().getId())
+				.counterpartner(leasingDeposit.getCounterpartner().getId())
+				.currency(leasingDeposit.getCurrency().getId())
+				.start_date(DateFormat.formatDate(leasingDeposit.getStart_date()))
+				.deposit_sum_not_disc(leasingDeposit.getDeposit_sum_not_disc())
+				.scenario(leasingDeposit.getScenario().getId())
+				.is_created(leasingDeposit.getIs_created())
+				.is_deleted(leasingDeposit.getIs_deleted())
+				.endDate(DateFormat.formatDate(endDate))
 				.build();
 	}
 }

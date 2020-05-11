@@ -36,6 +36,8 @@ public class ScenarioServiceImpl implements ScenarioService
 	@Override
 	public Scenario updateScenario(Long id, Scenario scenario)
 	{
+		scenario.setId(id);
+
 		Scenario scenarioToUpdate = getScenario(id);
 
 		BeanUtils.copyProperties(scenario, scenarioToUpdate);

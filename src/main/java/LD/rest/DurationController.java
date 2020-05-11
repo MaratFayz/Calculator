@@ -1,6 +1,6 @@
 package LD.rest;
 
-import LD.model.Duration.DurationDTO;
+import LD.model.Duration.DurationDTO_in;
 import LD.model.Duration.Duration;
 import LD.service.DurationService;
 import io.swagger.annotations.Api;
@@ -52,9 +52,9 @@ public class DurationController
 	@PostMapping
 	@ApiOperation(value = "Сохранение новой длительности", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новая длительность была сохранена.")
-	public ResponseEntity saveNewDuration(@RequestBody DurationDTO durationDTO)
+	public ResponseEntity saveNewDuration(@RequestBody DurationDTO_in durationDTOIn)
 	{
-		Duration duration = DurationDTO.DurationDTO_to_Duration(durationDTO);
+		Duration duration = DurationDTO_in.DurationDTO_in_to_Duration(durationDTOIn);
 		Duration newDuration = durationService.saveNewDuration(duration);
 		return new ResponseEntity(newDuration, HttpStatus.OK);
 	}
@@ -62,11 +62,11 @@ public class DurationController
 	@PutMapping("{id}")
 	@ApiOperation(value = "Изменение значений длительности", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Длительность была изменена.")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody DurationDTO durationDTO)
+	public ResponseEntity update(@PathVariable Long id, @RequestBody DurationDTO_in durationDTOIn)
 	{
-		log.info("(update): Поступил объект durationDTO", durationDTO);
+		log.info("(update): Поступил объект durationDTOIn", durationDTOIn);
 
-		Duration duration = DurationDTO.DurationDTO_to_Duration(durationDTO);
+		Duration duration = DurationDTO_in.DurationDTO_in_to_Duration(durationDTOIn);
 		Duration updatedDuration = durationService.updateDuration(id, duration);
 		return new ResponseEntity(updatedDuration, HttpStatus.OK);
 	}

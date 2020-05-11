@@ -1,7 +1,7 @@
 package LD.rest;
 
 
-import LD.model.Currency.CurrencyDTO;
+import LD.model.Currency.CurrencyDTO_in;
 import LD.model.Currency.Currency;
 import LD.service.CurrencyService;
 import io.swagger.annotations.Api;
@@ -56,9 +56,9 @@ public class CurrencyController
 	@PostMapping
 	@ApiOperation(value = "Сохранение новой валюты", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новая валюта была сохранена.")
-	public ResponseEntity saveNewCurrency(@RequestBody CurrencyDTO currencyDTO)
+	public ResponseEntity saveNewCurrency(@RequestBody CurrencyDTO_in currencyDTOIn)
 	{
-		Currency currency = CurrencyDTO.CurrencyDTO_to_Currency(currencyDTO);
+		Currency currency = CurrencyDTO_in.CurrencyDTO_in_to_Currency(currencyDTOIn);
 		Currency newCurrency = currencyService.saveNewCurrency(currency);
 		return new ResponseEntity(newCurrency, HttpStatus.OK);
 	}
@@ -66,12 +66,11 @@ public class CurrencyController
 	@PutMapping("{id}")
 	@ApiOperation(value = "Изменение значений валюты", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Валюта была изменена.")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody CurrencyDTO currencyDTO)
+	public ResponseEntity update(@PathVariable Long id, @RequestBody CurrencyDTO_in currencyDTOIn)
 	{
-		log.info("(update): Поступил объект currencyDTO", currencyDTO);
+		log.info("(update): Поступил объект currencyDTOIn", currencyDTOIn);
 
-		Currency currency = CurrencyDTO.CurrencyDTO_to_Currency(currencyDTO);
-
+		Currency currency = CurrencyDTO_in.CurrencyDTO_in_to_Currency(currencyDTOIn);
 		Currency updatedCurrency = currencyService.updateCurrency(id, currency);
 		return new ResponseEntity(updatedCurrency, HttpStatus.OK);
 	}

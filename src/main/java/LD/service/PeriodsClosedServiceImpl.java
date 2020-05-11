@@ -2,7 +2,7 @@ package LD.service;
 
 import LD.config.DateFormat;
 import LD.model.PeriodsClosed.PeriodsClosed;
-import LD.model.PeriodsClosed.PeriodsClosedDTO;
+import LD.model.PeriodsClosed.PeriodsClosedDTO_in;
 import LD.model.PeriodsClosed.PeriodsClosedID;
 import LD.model.PeriodsClosed.PeriodsClosedTransform;
 import LD.model.Scenario.Scenario;
@@ -15,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +29,7 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService
 	PeriodsClosedTransform periodsClosedTransform;
 
 	@Override
-	public List<PeriodsClosedDTO> getAllPeriodsClosed()
+	public List<PeriodsClosedDTO_in> getAllPeriodsClosed()
 	{
 		return periodsClosedRepository.findAll().stream()
 				.map(pc -> periodsClosedTransform.PeriodsClosed_to_PeriodsClosedDTO(pc))

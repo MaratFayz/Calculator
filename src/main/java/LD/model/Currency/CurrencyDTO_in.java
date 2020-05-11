@@ -6,14 +6,14 @@ import lombok.*;
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class CurrencyDTO
+public class CurrencyDTO_in
 {
 	private String short_name;
 
-	public static Currency CurrencyDTO_to_Currency(CurrencyDTO currencyDTO)
+	public static Currency CurrencyDTO_in_to_Currency(CurrencyDTO_in currencyDTO_In)
 	{
 		return Currency.builder()
-						.short_name(currencyDTO.getShort_name())
+						.short_name(currencyDTO_In.getShort_name())
 						.build();
 	}
 }

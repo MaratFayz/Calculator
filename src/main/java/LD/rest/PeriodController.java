@@ -1,7 +1,8 @@
 package LD.rest;
 
 import LD.model.Period.Period;
-import LD.model.Period.PeriodDTO;
+import LD.model.Period.PeriodDTO_in;
+import LD.model.Period.PeriodDTO_out;
 import LD.service.PeriodService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,7 +32,7 @@ public class PeriodController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех периодов", response = ResponseEntity.class)
-	public List<PeriodDTO> getAllPeriods()
+	public List<PeriodDTO_out> getAllPeriods()
 	{
 		return periodService.getAllPeriods();
 	}
@@ -52,9 +53,9 @@ public class PeriodController
 	@PostMapping
 	@ApiOperation(value = "Сохранение нового периода", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новый период был сохранен.")
-	public ResponseEntity saveNewPeriod(@RequestBody PeriodDTO periodDTO)
+	public ResponseEntity saveNewPeriod(@RequestBody PeriodDTO_in periodDTOIn)
 	{
-		Period period = PeriodDTO.PeriodDTO_to_Period(periodDTO);
+		Period period = PeriodDTO_in.PeriodDTO_to_Period(periodDTOIn);
 		Period newPeriod = periodService.saveNewPeriod(period);
 		return new ResponseEntity(newPeriod, HttpStatus.OK);
 	}
@@ -62,11 +63,11 @@ public class PeriodController
 	@PutMapping("{id}")
 	@ApiOperation(value = "Изменение значений периода", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Период был изменен.")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody PeriodDTO periodDTO)
+	public ResponseEntity update(@PathVariable Long id, @RequestBody PeriodDTO_in periodDTOIn)
 	{
-		log.info("(update): Поступил объект periodDTO", periodDTO);
+		log.info("(update): Поступил объект periodDTOIn", periodDTOIn);
 
-		Period period = PeriodDTO.PeriodDTO_to_Period(periodDTO);
+		Period period = PeriodDTO_in.PeriodDTO_to_Period(periodDTOIn);
 		Period updatedPeriod = periodService.updatePeriod(id, period);
 		return new ResponseEntity(updatedPeriod, HttpStatus.OK);
 	}

@@ -1,32 +1,18 @@
 package LD.rest;
 
-import LD.model.Entry.Entry;
-import LD.model.Entry.EntryDTO;
-import LD.model.Entry.EntryID;
-import LD.model.Entry.EntryTransform;
-import LD.model.ExchangeRate.ExchangeRate;
-import LD.model.ExchangeRate.ExchangeRateDTO;
-import LD.model.ExchangeRate.ExchangeRateID;
-import LD.model.LeasingDeposit.LeasingDeposit;
-import LD.model.LeasingDeposit.LeasingDepositDTO;
-import LD.model.Period.Period;
-import LD.model.Scenario.Scenario;
+import LD.model.Entry.*;
 import LD.service.EntryService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.CascadeType;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -48,9 +34,33 @@ public class EntryController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех транзакций по лизинговым депозитам")
-	public List<Entry> getAllEntries()
+	public List<EntryDTO_out> getAllEntries()
 	{
 		return entryService.getAllLDEntries();
+	}
+
+	@GetMapping("/regld1")
+	@ApiOperation(value = "Получение всех транзакций по лизинговым депозитам для формы Reg.LD.1 для сценария-получателя")
+	public List<EntryDTO_out_RegLD1> getAllEntries_RegLD1(@RequestParam @NonNull Long scenarioFromId,
+														  @RequestParam @NonNull Long scenarioToId)
+	{
+		return entryService.getAllLDEntries_RegLD1(scenarioToId);
+	}
+
+	@GetMapping("/regld2")
+	@ApiOperation(value = "Получение всех транзакций по лизинговым депозитам для формы Reg.LD.2 для сценария-получателя")
+	public List<EntryDTO_out_RegLD2> getAllEntries_RegLD2(@RequestParam @NonNull Long scenarioFromId,
+														  @RequestParam @NonNull Long scenarioToId)
+	{
+		return entryService.getAllLDEntries_RegLD2(scenarioToId);
+	}
+
+	@GetMapping("/regld3")
+	@ApiOperation(value = "Получение всех транзакций по лизинговым депозитам для формы Reg.LD.3 для сценария-получателя")
+	public List<EntryDTO_out_RegLD3> getAllEntries_RegLD3(@RequestParam @NonNull Long scenarioFromId,
+														  @RequestParam @NonNull Long scenarioToId)
+	{
+		return entryService.getAllLDEntries_RegLD3(scenarioToId);
 	}
 
 	@GetMapping("{leasingDeposit_id}/{scenario_id}/{period_id}/{CALCULATION_TIME}")
@@ -63,16 +73,16 @@ public class EntryController
 						  @PathVariable Long period_id,
 						  @PathVariable String CALCULATION_TIME)
 	{
-		EntryID id = entryTransform.EntryDTO_to_EntryID(scenario_id, leasingDeposit_id, period_id, CALCULATION_TIME);
+		EntryID id = entryTransform.getEntryID(scenario_id, leasingDeposit_id, period_id, CALCULATION_TIME);
 		return entryService.getEntry(id);
 	}
 
 	@PostMapping
 	@ApiOperation(value = "Сохранение новой транзакции", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новая транзакция была сохранена.")
-	public ResponseEntity saveNewEntry(@RequestBody EntryDTO entryDTO)
+	public ResponseEntity saveNewEntry(@RequestBody EntryDTO_in entryDTO_in)
 	{
-		Entry entry = entryTransform.EntryDTO_to_Entry(entryDTO);
+		Entry entry = entryTransform.EntryDTO_in_to_Entry(entryDTO_in);
 		Entry newEntry = entryService.saveEntry(entry);
 		return new ResponseEntity(newEntry, HttpStatus.OK);
 	}
@@ -102,36 +112,40 @@ public class EntryController
 		return new ResponseEntity(HttpStatus.OK);
 	}
 
-	@PutMapping("{leasingDeposit_id}/{scenario_id}/{period_id}/{CALCULATION_TIME}")
+	@PutMapping
 	@ApiOperation(value = "Изменение значений транзакции", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Транзакция была изменена.")
-	public ResponseEntity update(@PathVariable Long leasingDeposit_id,
-								 @PathVariable Long scenario_id,
-								 @PathVariable Long period_id,
-								 @PathVariable String CALCULATION_TIME,
-								 @RequestBody EntryDTO entryDTO)
+	public ResponseEntity update(@RequestBody EntryDTO_in entryDTO_in)
 	{
-		log.info("(update): Поступил объект entryDTO", entryDTO);
+		log.info("(update): Поступил объект entryDTO_in = {}", entryDTO_in);
 
-		Entry entry = entryTransform.EntryDTO_to_Entry(entryDTO);
+		Entry entry = entryTransform.EntryDTO_in_to_Entry(entryDTO_in);
 
-		EntryID id = entryTransform.EntryDTO_to_EntryID(scenario_id, leasingDeposit_id, period_id, CALCULATION_TIME);
+		EntryID id = entryTransform.getEntryID(entryDTO_in.getScenario(),
+				entryDTO_in.getLeasingDeposit(),
+				entryDTO_in.getPeriod(),
+				entryDTO_in.getCALCULATION_TIME());
+
 		Entry updatedEntry = entryService.update(id, entry);
 		return new ResponseEntity(updatedEntry, HttpStatus.OK);
 	}
 
-	@DeleteMapping("{leasingDeposit_id}/{scenario_id}/{period_id}/{CALCULATION_TIME}")
+	@DeleteMapping
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Транзакция была успешно удалена"),
 			@ApiResponse(code = 404, message = "Транзакция не была обнаружена")
 	})
-	public ResponseEntity delete(@PathVariable Long leasingDeposit_id,
-								 @PathVariable Long scenario_id,
-								 @PathVariable Long period_id,
-								 @PathVariable String CALCULATION_TIME)
+	public ResponseEntity delete(@RequestBody EntryDTO_in entryDTO_in)
 	{
-		EntryID id = entryTransform.EntryDTO_to_EntryID(scenario_id, leasingDeposit_id, period_id, CALCULATION_TIME);
+		log.info("Поступил такой DTO = {}", entryDTO_in);
+		EntryID id = entryTransform.getEntryID(entryDTO_in.getScenario(),
+				entryDTO_in.getLeasingDeposit(),
+				entryDTO_in.getPeriod(),
+				entryDTO_in.getCALCULATION_TIME());
+
+		log.info("id стал равен = {}", id);
+
 		return entryService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
 	}
 }

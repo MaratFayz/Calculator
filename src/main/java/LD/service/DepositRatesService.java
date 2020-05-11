@@ -1,14 +1,14 @@
 package LD.service;
 
 import LD.model.DepositRate.DepositRate;
-import LD.model.DepositRate.DepositRateDTO;
+import LD.model.DepositRate.DepositRateDTO_out;
 import LD.model.DepositRate.DepositRateID;
 
 import java.util.List;
 
 public interface DepositRatesService
 {
-	List<DepositRateDTO> getAllDepositRates();
+	List<DepositRateDTO_out> getAllDepositRates();
 
 	DepositRate getDepositRate(DepositRateID id);
 

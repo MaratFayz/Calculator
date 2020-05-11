@@ -6,20 +6,17 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ScenarioDTO
+public class ScenarioDTO_in
 {
-	private Long id;
-
 	private String name;
 
 	private ScenarioStornoStatus status;
 
-	public static Scenario ScenarioDTO_to_Scenario(ScenarioDTO ScenarioDTO)
+	public static Scenario ScenarioDTO_to_Scenario(ScenarioDTO_in ScenarioDTO_in)
 	{
 		return Scenario.builder()
-				.id(ScenarioDTO.getId())
-				.name(ScenarioDTO.getName())
-				.status(ScenarioDTO.getStatus())
+				.name(ScenarioDTO_in.getName())
+				.status(ScenarioDTO_in.getStatus())
 				.build();
 	}
 }

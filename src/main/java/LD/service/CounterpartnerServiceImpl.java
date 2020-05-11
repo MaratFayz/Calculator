@@ -30,6 +30,8 @@ public class CounterpartnerServiceImpl implements CounterpartnerService
 	@Override
 	public Counterpartner updateCounterpartner(Long id, Counterpartner counterpartner)
 	{
+		counterpartner.setId(id);
+
 		Counterpartner counterpartnerToUpdate = getCounterpartner(id);
 
 		BeanUtils.copyProperties(counterpartner, counterpartnerToUpdate);

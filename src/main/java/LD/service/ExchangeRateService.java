@@ -1,14 +1,14 @@
 package LD.service;
 
 import LD.model.ExchangeRate.ExchangeRate;
-import LD.model.ExchangeRate.ExchangeRateDTO;
+import LD.model.ExchangeRate.ExchangeRateDTO_in;
 import LD.model.ExchangeRate.ExchangeRateID;
 
 import java.util.List;
 
 public interface ExchangeRateService
 {
-	List<ExchangeRateDTO> getAllExchangeRates();
+	List<ExchangeRateDTO_in> getAllExchangeRates();
 
 	ExchangeRate getExchangeRate(ExchangeRateID id);
 

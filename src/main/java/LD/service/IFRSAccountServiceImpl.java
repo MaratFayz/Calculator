@@ -36,6 +36,8 @@ public class IFRSAccountServiceImpl implements IFRSAccountService
 	@Override
 	public IFRSAccount updateIFRSAccount(Long id, IFRSAccount ifrsAccount)
 	{
+		ifrsAccount.setId(id);
+
 		IFRSAccount ifrsAccountToUpdate = getIFRSAccount(id);
 
 		BeanUtils.copyProperties(ifrsAccount, ifrsAccountToUpdate);

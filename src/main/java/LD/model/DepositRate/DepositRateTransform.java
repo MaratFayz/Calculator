@@ -20,25 +20,25 @@ public class DepositRateTransform
 	@Autowired
 	ScenarioService scenarioService;
 
-	public DepositRate DepositRatesDTO_to_DepositRates(DepositRateDTO depositRateDTO)
+	public DepositRate DepositRatesDTO_in_to_DepositRates(DepositRateDTO_in depositRateDTO_in)
 	{
-		DepositRateID entryIFRSAccID = DepositRatesDTO_to_DepositRatesID(
-				depositRateDTO.getCompany(),
-				depositRateDTO.getCurrency(),
-				depositRateDTO.getDuration(),
-				depositRateDTO.getScenario(),
-				depositRateDTO.getSTART_PERIOD(),
-				depositRateDTO.getEND_PERIOD());
+		DepositRateID entryIFRSAccID = getDepositRatesID(
+				depositRateDTO_in.getCompany(),
+				depositRateDTO_in.getCurrency(),
+				depositRateDTO_in.getDuration(),
+				depositRateDTO_in.getScenario(),
+				depositRateDTO_in.getSTART_PERIOD(),
+				depositRateDTO_in.getEND_PERIOD());
 
 		return DepositRate.builder()
 				.depositRateID(entryIFRSAccID)
-				.RATE(depositRateDTO.getRATE())
+				.RATE(depositRateDTO_in.getRATE())
 				.build();
 	}
 
-	public DepositRateDTO DepositRates_to_DepositRatesDTO(DepositRate depositRate)
+	public DepositRateDTO_out DepositRates_to_DepositRatesDTO_out(DepositRate depositRate)
 	{
-		return DepositRateDTO.builder()
+		return DepositRateDTO_out.builder()
 				.company(depositRate.depositRateID.getCompany().getId())
 				.currency(depositRate.depositRateID.getCurrency().getId())
 				.duration(depositRate.depositRateID.getDuration().getId())
@@ -49,7 +49,7 @@ public class DepositRateTransform
 				.build();
 	}
 
-	public DepositRateID DepositRatesDTO_to_DepositRatesID(Long company_id, Long currency_id, Long duration_id, Long scenario_id, String startDate, String endDate)
+	public DepositRateID getDepositRatesID(Long company_id, Long currency_id, Long duration_id, Long scenario_id, String startDate, String endDate)
 	{
 		return DepositRateID.builder()
 				.company(companyService.getCompany(company_id))

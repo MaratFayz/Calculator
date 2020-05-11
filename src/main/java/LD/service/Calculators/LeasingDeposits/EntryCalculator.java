@@ -66,7 +66,7 @@ public class EntryCalculator implements Callable<List<Entry>>
 		{
 			log.info("Депозит не является удалённым");
 
-			this.tm_endDatesForLeasingDeposit = this.createPeriodsWithEndDatesForAllsLDLife(this.leasingDepositToCalculate.getScenario(), this.scenarioTo);
+			this.tm_endDatesForLeasingDeposit = this.createPeriodsWithEndDatesForAllsLDLife(this.leasingDepositToCalculate, this.leasingDepositToCalculate.getScenario(), this.scenarioTo);
 			log.info("this.tm_endDatesForLeasingDeposit => {}", this.tm_endDatesForLeasingDeposit);
 
 			this.startDateWithlastDayOfStartingMonth = this.leasingDepositToCalculate.getStart_date().toLocalDate().withDayOfMonth(1).plusMonths(1).minusDays(1);
@@ -931,7 +931,9 @@ public class EntryCalculator implements Callable<List<Entry>>
 		return LDdurationMonths;
 	}
 
-	private TreeMap<ZonedDateTime, ZonedDateTime> createPeriodsWithEndDatesForAllsLDLife(Scenario Scenario_LOAD, Scenario Scenario_SAVE)
+	//cоздание TreeMap с датами окончания по двум сценариям (сценарий-поулчатель обладает преимуществом)
+	//при этом предполагается, что по сценарию-источнику в будущих периодах значения дат конца не проставлены.
+	public static TreeMap<ZonedDateTime, ZonedDateTime> createPeriodsWithEndDatesForAllsLDLife(LeasingDeposit leasingDepositToCalculate, Scenario Scenario_LOAD, Scenario Scenario_SAVE)
 	{
 		TreeMap<ZonedDateTime, ZonedDateTime> TMEndDate = leasingDepositToCalculate.getEnd_dates().stream()
 				.filter(element -> element.getEndDateID().getScenario().equals(Scenario_LOAD) || element.getEndDateID().getScenario().equals(Scenario_SAVE))

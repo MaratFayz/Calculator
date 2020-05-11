@@ -1,7 +1,7 @@
 package LD.rest;
 
 import LD.model.Counterpartner.Counterpartner;
-import LD.model.Counterpartner.CounterpartnerDTO;
+import LD.model.Counterpartner.CounterpartnerDTO_in;
 import LD.service.CounterpartnerService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -52,9 +52,9 @@ public class CounterpartnerController
 	@PostMapping
 	@ApiOperation(value = "Сохранение нового контрагента", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новый контрагент был сохранен.")
-	public ResponseEntity saveNewCounterpartner(@RequestBody CounterpartnerDTO counterpartnerDTO)
+	public ResponseEntity saveNewCounterpartner(@RequestBody CounterpartnerDTO_in counterpartnerDTOIn)
 	{
-		Counterpartner counterpartner = CounterpartnerDTO.CounterpartnerDTO_to_Counterpartner(counterpartnerDTO);
+		Counterpartner counterpartner = CounterpartnerDTO_in.CounterpartnerDTO_in_to_Counterpartner(counterpartnerDTOIn);
 		Counterpartner newCounterpartner = counterpartnerService.saveNewCounterpartner(counterpartner);
 		return new ResponseEntity(newCounterpartner, HttpStatus.OK);
 	}
@@ -62,11 +62,11 @@ public class CounterpartnerController
 	@PutMapping("{id}")
 	@ApiOperation(value = "Изменение значений контрагента", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Контрагент была изменена.")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody CounterpartnerDTO counterpartnerDTO)
+	public ResponseEntity update(@PathVariable Long id, @RequestBody CounterpartnerDTO_in counterpartnerDTOIn)
 	{
-		log.info("(update): Поступил объект counterpartnerDTO", counterpartnerDTO);
+		log.info("(update): Поступил объект counterpartnerDTOIn", counterpartnerDTOIn);
 
-		Counterpartner counterpartner = CounterpartnerDTO.CounterpartnerDTO_to_Counterpartner(counterpartnerDTO);
+		Counterpartner counterpartner = CounterpartnerDTO_in.CounterpartnerDTO_in_to_Counterpartner(counterpartnerDTOIn);
 		Counterpartner updatedCounterpartner = counterpartnerService.updateCounterpartner(id, counterpartner);
 		return new ResponseEntity(updatedCounterpartner, HttpStatus.OK);
 	}

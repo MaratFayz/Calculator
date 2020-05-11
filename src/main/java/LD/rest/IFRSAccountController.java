@@ -1,7 +1,7 @@
 package LD.rest;
 
 import LD.model.IFRSAccount.IFRSAccount;
-import LD.model.IFRSAccount.IFRSAccountDTO;
+import LD.model.IFRSAccount.IFRSAccountDTO_in;
 import LD.service.IFRSAccountService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -52,9 +52,9 @@ public class IFRSAccountController
 	@PostMapping
 	@ApiOperation(value = "Сохранение нового счёта", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новый счёт был сохранен.")
-	public ResponseEntity saveNewIFRSAccount(@RequestBody IFRSAccountDTO ifrsAccountDTO)
+	public ResponseEntity saveNewIFRSAccount(@RequestBody IFRSAccountDTO_in ifrsAccountDTOIn)
 	{
-		IFRSAccount ifrsAccount = IFRSAccountDTO.IFRSAccountDTO_to_IFRSAccount(ifrsAccountDTO);
+		IFRSAccount ifrsAccount = IFRSAccountDTO_in.IFRSAccountDTO_in_to_IFRSAccount(ifrsAccountDTOIn);
 		IFRSAccount newIFRSAccount = ifrsAccountService.saveNewIFRSAccount(ifrsAccount);
 		return new ResponseEntity(newIFRSAccount, HttpStatus.OK);
 	}
@@ -62,11 +62,11 @@ public class IFRSAccountController
 	@PutMapping("{id}")
 	@ApiOperation(value = "Изменение значений счёта", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Счёт был изменен.")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody IFRSAccountDTO ifrsAccountDTO)
+	public ResponseEntity update(@PathVariable Long id, @RequestBody IFRSAccountDTO_in ifrsAccountDTOIn)
 	{
-		log.info("(update): Поступил объект ifrsAccountDTO", ifrsAccountDTO);
+		log.info("(update): Поступил объект ifrsAccountDTOIn", ifrsAccountDTOIn);
 
-		IFRSAccount ifrsAccount = IFRSAccountDTO.IFRSAccountDTO_to_IFRSAccount(ifrsAccountDTO);
+		IFRSAccount ifrsAccount = IFRSAccountDTO_in.IFRSAccountDTO_in_to_IFRSAccount(ifrsAccountDTOIn);
 		IFRSAccount updatedIFRSAccount = ifrsAccountService.updateIFRSAccount(id, ifrsAccount);
 		return new ResponseEntity(updatedIFRSAccount, HttpStatus.OK);
 	}

@@ -1,14 +1,12 @@
 package LD.rest;
 
-import LD.model.EntryIFRSAcc.EntryIFRSAcc;
-import LD.model.EntryIFRSAcc.EntryIFRSAccDTO;
-import LD.model.EntryIFRSAcc.EntryIFRSAccID;
-import LD.model.EntryIFRSAcc.EntryIFRSAccTransform;
+import LD.model.EntryIFRSAcc.*;
 import LD.service.EntryIFRSAccService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,9 +28,17 @@ public class EntryIFRSAccController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех записей на счетах МСФО", response = ResponseEntity.class)
-	public List<EntryIFRSAcc> getAllEntryIFRSAccs()
+	public List<EntryIFRSAccDTO_out> getAllEntryIFRSAccs()
 	{
 		return entryIFRSAccService.getAllEntriesIFRSAcc();
+	}
+
+	@GetMapping("/forDate")
+	@ApiOperation(value = "Получение всех записей на счетах МСФО на определённую дату по определённому сценарию", response = ResponseEntity.class)
+	public List<EntryIFRSAccDTO_out> getAllEntryIFRSAccs_for2Scenarios(@RequestParam @NonNull Long scenarioFromId,
+																	   @RequestParam @NonNull Long scenarioToId)
+	{
+		return entryIFRSAccService.getAllEntriesIFRSAcc_for2Scenarios(scenarioToId);
 	}
 
 	@GetMapping("{leasingDeposit_id}/{scenario_id}/{period_id}/{CALCULATION_TIME}/{ifrsAcc_id}")
@@ -47,7 +53,7 @@ public class EntryIFRSAccController
 										  @PathVariable String CALCULATION_TIME,
 										  @PathVariable Long ifrsAcc_id)
 	{
-		EntryIFRSAccID id = entryIFRSAccTransform.EntryIFRSAccDTO_to_EntryIFRSAccID(scenario_id, leasingDeposit_id, period_id, CALCULATION_TIME, ifrsAcc_id);
+		EntryIFRSAccID id = entryIFRSAccTransform.getEntryIFRSAccID(scenario_id, leasingDeposit_id, period_id, CALCULATION_TIME, ifrsAcc_id);
 		EntryIFRSAcc entryIFRSAcc = entryIFRSAccService.getEntryIFRSAcc(id);
 		log.info("(getEntryIFRSAcc): entryIFRSAcc was taken: " + entryIFRSAcc);
 		return new ResponseEntity(entryIFRSAcc, HttpStatus.OK);
@@ -56,45 +62,46 @@ public class EntryIFRSAccController
 	@PostMapping
 	@ApiOperation(value = "Сохранение новой записи на счетах МСФО", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новая запись на счетах МСФО была сохранена.")
-	public ResponseEntity saveNewEntryIFRSAcc(@RequestBody EntryIFRSAccDTO entryIFRSAccDTO)
+	public ResponseEntity saveNewEntryIFRSAcc(@RequestBody EntryIFRSAccDTO_in entryIFRSAccDTO_in)
 	{
-		EntryIFRSAcc entryIFRSAcc = entryIFRSAccTransform.EntryIFRSAccDTO_to_EntryIFRSAcc(entryIFRSAccDTO);
+		EntryIFRSAcc entryIFRSAcc = entryIFRSAccTransform.EntryIFRSAccDTO_in_to_EntryIFRSAcc(entryIFRSAccDTO_in);
 		EntryIFRSAcc newEntryIFRSAcc = entryIFRSAccService.saveNewEntryIFRSAcc(entryIFRSAcc);
 		return new ResponseEntity(newEntryIFRSAcc, HttpStatus.OK);
 	}
 
-	@PutMapping("{leasingDeposit_id}/{scenario_id}/{period_id}/{CALCULATION_TIME}/{ifrsAcc_id}")
+	@PutMapping
 	@ApiOperation(value = "Изменение записи на счетах МСФО", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Запись на счетах МСФО была изменена.")
-	public ResponseEntity update(@PathVariable Long leasingDeposit_id,
-								 @PathVariable Long scenario_id,
-								 @PathVariable Long period_id,
-								 @PathVariable String CALCULATION_TIME,
-								 @PathVariable Long ifrsAcc_id,
-								 @RequestBody EntryIFRSAccDTO entryIFRSAccDTO)
+	public ResponseEntity update(@RequestBody EntryIFRSAccDTO_in entryIFRSAccDTO_in)
 	{
-		log.info("(update): Поступил объект entryIFRSAccDTO", entryIFRSAccDTO);
+		log.info("(update): Поступил объект entryIFRSAccDTO_in = {}", entryIFRSAccDTO_in);
 
-		EntryIFRSAcc entryIFRSAcc = entryIFRSAccTransform.EntryIFRSAccDTO_to_EntryIFRSAcc(entryIFRSAccDTO);
+		EntryIFRSAcc entryIFRSAcc = entryIFRSAccTransform.EntryIFRSAccDTO_in_to_EntryIFRSAcc(entryIFRSAccDTO_in);
 
-		EntryIFRSAccID id = entryIFRSAccTransform.EntryIFRSAccDTO_to_EntryIFRSAccID(scenario_id, leasingDeposit_id, period_id, CALCULATION_TIME, ifrsAcc_id);
+		EntryIFRSAccID id = entryIFRSAccTransform.getEntryIFRSAccID(entryIFRSAccDTO_in.getScenario(),
+				entryIFRSAccDTO_in.getLeasingDeposit(),
+				entryIFRSAccDTO_in.getPeriod(),
+				entryIFRSAccDTO_in.getCALCULATION_TIME(),
+				entryIFRSAccDTO_in.getIfrsAccount());
+
 		EntryIFRSAcc updatedEntryIFRSAcc = entryIFRSAccService.updateEntryIFRSAcc(id, entryIFRSAcc);
 		return new ResponseEntity(updatedEntryIFRSAcc, HttpStatus.OK);
 	}
 
-	@DeleteMapping("{leasingDeposit_id}/{scenario_id}/{period_id}/{CALCULATION_TIME}/{ifrsAcc_id}")
+	@DeleteMapping
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Запись на счетах МСФО была успешно удалена"),
 			@ApiResponse(code = 404, message = "Запись на счетах МСФО не была обнаружена")
 	})
-	public ResponseEntity delete(@PathVariable Long leasingDeposit_id,
-								 @PathVariable Long scenario_id,
-								 @PathVariable Long period_id,
-								 @PathVariable String CALCULATION_TIME,
-								 @PathVariable Long ifrsAcc_id)
+	public ResponseEntity delete(@RequestBody EntryIFRSAccDTO_in entryIFRSAccDTO_in)
 	{
-		EntryIFRSAccID id = entryIFRSAccTransform.EntryIFRSAccDTO_to_EntryIFRSAccID(scenario_id, leasingDeposit_id, period_id, CALCULATION_TIME, ifrsAcc_id);
+		EntryIFRSAccID id = entryIFRSAccTransform.getEntryIFRSAccID(entryIFRSAccDTO_in.getScenario(),
+				entryIFRSAccDTO_in.getLeasingDeposit(),
+				entryIFRSAccDTO_in.getPeriod(),
+				entryIFRSAccDTO_in.getCALCULATION_TIME(),
+				entryIFRSAccDTO_in.getIfrsAccount());
+
 		return entryIFRSAccService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
 	}
 }

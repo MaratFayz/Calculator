@@ -1,6 +1,6 @@
 package LD.rest;
 
-import LD.model.Scenario.ScenarioDTO;
+import LD.model.Scenario.ScenarioDTO_in;
 import LD.model.Scenario.Scenario;
 import LD.service.ScenarioService;
 import io.swagger.annotations.Api;
@@ -52,9 +52,9 @@ public class ScenarioController
 	@PostMapping
 	@ApiOperation(value = "Сохранение нового сценария", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новый сценарий был сохранен.")
-	public ResponseEntity saveNewScenario(@RequestBody ScenarioDTO scenarioDTO)
+	public ResponseEntity saveNewScenario(@RequestBody ScenarioDTO_in scenarioDTOIn)
 	{
-		Scenario scenario = ScenarioDTO.ScenarioDTO_to_Scenario(scenarioDTO);
+		Scenario scenario = ScenarioDTO_in.ScenarioDTO_to_Scenario(scenarioDTOIn);
 		Scenario newScenario = scenarioService.saveNewScenario(scenario);
 		return new ResponseEntity(newScenario, HttpStatus.OK);
 	}
@@ -62,11 +62,11 @@ public class ScenarioController
 	@PutMapping("{id}")
 	@ApiOperation(value = "Изменение значений сценария", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Сценарий был изменен.")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody ScenarioDTO scenarioDTO)
+	public ResponseEntity update(@PathVariable Long id, @RequestBody ScenarioDTO_in scenarioDTOIn)
 	{
-		log.info("(update): Поступил объект scenarioDTO", scenarioDTO);
+		log.info("(update): Поступил объект scenarioDTOIn", scenarioDTOIn);
 
-		Scenario scenario = ScenarioDTO.ScenarioDTO_to_Scenario(scenarioDTO);
+		Scenario scenario = ScenarioDTO_in.ScenarioDTO_to_Scenario(scenarioDTOIn);
 		Scenario updatedScenario = scenarioService.updateScenario(id, scenario);
 		return new ResponseEntity(updatedScenario, HttpStatus.OK);
 	}

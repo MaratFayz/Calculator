@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LeasingDepositDTO
+public class LeasingDepositDTO_in
 {
 	private Long company;
 

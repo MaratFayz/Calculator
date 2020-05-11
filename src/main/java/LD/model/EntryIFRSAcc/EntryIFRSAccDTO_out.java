@@ -1,11 +1,15 @@
 package LD.model.EntryIFRSAcc;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
-public class EntryIFRSAccDTO
+@Builder
+@AllArgsConstructor
+public class EntryIFRSAccDTO_out
 {
 	private Long leasingDeposit;
 	private Long scenario;

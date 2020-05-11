@@ -1,7 +1,7 @@
 package LD.rest;
 
 import LD.model.EndDate.EndDate;
-import LD.model.EndDate.EndDateDTO;
+import LD.model.EndDate.EndDateDTO_in;
 import LD.model.EndDate.EndDateID;
 import LD.model.EndDate.EndDateTransform;
 import LD.service.EndDateService;
@@ -35,7 +35,7 @@ public class EndDateController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех конечных дат по лизинговым депозитам")
-	public List<EndDateDTO> getAllEndDates()
+	public List<EndDateDTO_in> getAllEndDates()
 	{
 		return endDateService.getAllEndDates();
 	}
@@ -56,41 +56,42 @@ public class EndDateController
 	@PostMapping
 	@ApiOperation(value = "Сохранение новой конечной даты", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новая конечная дата была сохранена.")
-	public ResponseEntity saveNewEndDates(@RequestBody EndDateDTO endDateDTO)
+	public ResponseEntity saveNewEndDates(@RequestBody EndDateDTO_in endDateDTO_in)
 	{
-		EndDate endDate = endDateTransform.EndDatesDTO_to_EndDates(endDateDTO);
+		EndDate endDate = endDateTransform.EndDatesDTO_to_EndDates(endDateDTO_in);
 		EndDate newEndDate = endDateService.saveEndDate(endDate);
 		return new ResponseEntity(newEndDate, HttpStatus.OK);
 	}
 
-	@PutMapping("{leasingDeposit_id}/{scenario_id}/{period_id}")
+	@PutMapping
 	@ApiOperation(value = "Изменение значений конечной даты", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Конечная дата была изменена.")
-	public ResponseEntity update(@PathVariable Long leasingDeposit_id,
-								 @PathVariable Long scenario_id,
-								 @PathVariable Long period_id,
-								 @RequestBody EndDateDTO endDateDTO)
+	public ResponseEntity update(@RequestBody EndDateDTO_in endDateDTO_in)
 	{
-		log.info("(update): Поступил объект endDateDTO", endDateDTO);
+		log.info("(update): Поступил объект endDateDTO_in = {}", endDateDTO_in);
 
-		EndDate endDate = endDateTransform.EndDatesDTO_to_EndDates(endDateDTO);
+		EndDate endDate = endDateTransform.EndDatesDTO_to_EndDates(endDateDTO_in);
 
-		EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(scenario_id, leasingDeposit_id, period_id);
+		EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
+				endDateDTO_in.getLeasingDeposit(),
+				endDateDTO_in.getPeriod());
+
 		EndDate updatedEndDate = endDateService.update(id, endDate);
 		return new ResponseEntity(updatedEndDate, HttpStatus.OK);
 	}
 
-	@DeleteMapping("{leasingDeposit_id}/{scenario_id}/{period_id}")
+	@DeleteMapping
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Конечная дата была успешно удалена"),
 			@ApiResponse(code = 404, message = "Конечная дата не была обнаружена")
 	})
-	public ResponseEntity delete(@PathVariable Long leasingDeposit_id,
-								 @PathVariable Long scenario_id,
-								 @PathVariable Long period_id)
+	public ResponseEntity delete(@RequestBody EndDateDTO_in endDateDTO_in)
 	{
-		EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(scenario_id, leasingDeposit_id, period_id);
+		EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
+				endDateDTO_in.getLeasingDeposit(),
+				endDateDTO_in.getPeriod());
+
 		return endDateService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
 	}
 }

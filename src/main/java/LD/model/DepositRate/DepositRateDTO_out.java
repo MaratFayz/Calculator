@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DepositRateDTO
+public class DepositRateDTO_out
 {
 	private Long company;
 	private String START_PERIOD;

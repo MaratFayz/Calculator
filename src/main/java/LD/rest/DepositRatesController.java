@@ -1,9 +1,6 @@
 package LD.rest;
 
-import LD.model.DepositRate.DepositRate;
-import LD.model.DepositRate.DepositRateDTO;
-import LD.model.DepositRate.DepositRateID;
-import LD.model.DepositRate.DepositRateTransform;
+import LD.model.DepositRate.*;
 import LD.service.DepositRatesService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -30,7 +27,7 @@ public class DepositRatesController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех ставок депозитов", response = ResponseEntity.class)
-	public List<DepositRateDTO> getAllDepositRates()
+	public List<DepositRateDTO_out> getAllDepositRates()
 	{
 		return depositRatesService.getAllDepositRates();
 	}
@@ -48,7 +45,7 @@ public class DepositRatesController
 										  @PathVariable String startDate,
 										  @PathVariable String endDate)
 	{
-		DepositRateID id = depositRateTransform.DepositRatesDTO_to_DepositRatesID(company_id, currency_id, duration_id, scenario_id, startDate, endDate);
+		DepositRateID id = depositRateTransform.getDepositRatesID(company_id, currency_id, duration_id, scenario_id, startDate, endDate);
 		DepositRate depositRate = depositRatesService.getDepositRate(id);
 		log.info("(getDepositRates): depositRate was taken: " + depositRate);
 		return new ResponseEntity(depositRate, HttpStatus.OK);
@@ -57,47 +54,48 @@ public class DepositRatesController
 	@PostMapping
 	@ApiOperation(value = "Сохранение новой ставки депозита", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новая ставка депозита была сохранена.")
-	public ResponseEntity saveNewDepositRate(@RequestBody DepositRateDTO depositRateDTO)
+	public ResponseEntity saveNewDepositRate(@RequestBody DepositRateDTO_in depositRateDTO_in)
 	{
-		DepositRate depositRate = depositRateTransform.DepositRatesDTO_to_DepositRates(depositRateDTO);
+		DepositRate depositRate = depositRateTransform.DepositRatesDTO_in_to_DepositRates(depositRateDTO_in);
 		DepositRate newDepositRate = depositRatesService.saveNewDepositRates(depositRate);
 		return new ResponseEntity(newDepositRate, HttpStatus.OK);
 	}
 
-	@PutMapping("{company_id}/{currency_id}/{duration_id}/{scenario_id}/{startDate}/{endDate}")
+	@PutMapping
 	@ApiOperation(value = "Изменение ставок депозитов", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Ставка депозита была изменена.")
-	public ResponseEntity update(@PathVariable Long company_id,
-								 @PathVariable Long currency_id,
-								 @PathVariable Long duration_id,
-								 @PathVariable Long scenario_id,
-								 @PathVariable String startDate,
-								 @PathVariable String endDate,
-								 @RequestBody DepositRateDTO depositRateDTO)
+	public ResponseEntity update(@RequestBody DepositRateDTO_in depositRateDTO_in)
 	{
-		log.info("(update): Поступил объект depositRateDTO", depositRateDTO);
+		log.info("(update): Поступил объект depositRateDTO_in = {}", depositRateDTO_in);
 
-		DepositRate depositRate = depositRateTransform.DepositRatesDTO_to_DepositRates(depositRateDTO);
+		DepositRate depositRate = depositRateTransform.DepositRatesDTO_in_to_DepositRates(depositRateDTO_in);
 
-		DepositRateID id = depositRateTransform.DepositRatesDTO_to_DepositRatesID(company_id, currency_id, duration_id, scenario_id, startDate, endDate);
+		DepositRateID id = depositRateTransform.getDepositRatesID(depositRateDTO_in.getCompany(),
+				depositRateDTO_in.getCurrency(),
+				depositRateDTO_in.getDuration(),
+				depositRateDTO_in.getScenario(),
+				depositRateDTO_in.getSTART_PERIOD(),
+				depositRateDTO_in.getEND_PERIOD());
+
 		DepositRate updatedDepositRate = depositRatesService.updateDepositRates(id, depositRate);
 		return new ResponseEntity(updatedDepositRate, HttpStatus.OK);
 	}
 
-	@DeleteMapping("{company_id}/{currency_id}/{duration_id}/{scenario_id}/{startDate}/{endDate}")
+	@DeleteMapping
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Ставка депозита была успешно удалена"),
 			@ApiResponse(code = 404, message = "Ставка депозита не была обнаружена")
 	})
-	public ResponseEntity delete(@PathVariable Long company_id,
-								 @PathVariable Long currency_id,
-								 @PathVariable Long duration_id,
-								 @PathVariable Long scenario_id,
-								 @PathVariable String startDate,
-								 @PathVariable String endDate)
+	public ResponseEntity delete(@RequestBody DepositRateDTO_in depositRateDTO_in)
 	{
-		DepositRateID id = depositRateTransform.DepositRatesDTO_to_DepositRatesID(company_id, currency_id, duration_id, scenario_id, startDate, endDate);
+		DepositRateID id = depositRateTransform.getDepositRatesID(depositRateDTO_in.getCompany(),
+				depositRateDTO_in.getCurrency(),
+				depositRateDTO_in.getDuration(),
+				depositRateDTO_in.getScenario(),
+				depositRateDTO_in.getSTART_PERIOD(),
+				depositRateDTO_in.getEND_PERIOD());
+
 		return depositRatesService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
 	}
 }

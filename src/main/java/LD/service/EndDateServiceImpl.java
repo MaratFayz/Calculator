@@ -1,7 +1,7 @@
 package LD.service;
 
 import LD.model.EndDate.EndDate;
-import LD.model.EndDate.EndDateDTO;
+import LD.model.EndDate.EndDateDTO_in;
 import LD.model.EndDate.EndDateID;
 import LD.model.EndDate.EndDateTransform;
 import LD.repository.EndDatesRepository;
@@ -22,7 +22,7 @@ public class EndDateServiceImpl implements EndDateService
 	EndDateTransform endDateTransform;
 
 	@Override
-	public List<EndDateDTO> getAllEndDates()
+	public List<EndDateDTO_in> getAllEndDates()
 	{
 		return endDatesRepository.findAll()
 				.stream()

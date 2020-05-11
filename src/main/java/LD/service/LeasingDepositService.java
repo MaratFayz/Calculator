@@ -1,13 +1,19 @@
 package LD.service;
 
 import LD.model.LeasingDeposit.LeasingDeposit;
-import LD.model.LeasingDeposit.LeasingDepositDTO;
+import LD.model.LeasingDeposit.LeasingDepositDTO_out;
+import LD.model.LeasingDeposit.LeasingDepositDTO_out_onPeriodFor2Scenarios;
+import lombok.NonNull;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
 public interface LeasingDepositService
 {
-	List<LeasingDepositDTO> getAllLeasingDeposits();
+	List<LeasingDepositDTO_out> getAllLeasingDeposits();
+
+	List<LeasingDepositDTO_out_onPeriodFor2Scenarios> getAllLeasingDepositsOnPeriodFor2Scenarios(Long scenarioFromId,
+																								 Long scenarioToId);
 
 	LeasingDeposit getLeasingDeposit(Long id);
 

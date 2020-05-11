@@ -1,13 +1,12 @@
 package LD.rest;
 
-import LD.model.LeasingDeposit.LeasingDepositDTO;
-import LD.model.LeasingDeposit.LeasingDepositTransform;
-import LD.model.LeasingDeposit.LeasingDeposit;
+import LD.model.LeasingDeposit.*;
 import LD.service.LeasingDepositService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,9 +28,17 @@ public class LeasingDepositController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех лизинговых депозитов", response = ResponseEntity.class)
-	public List<LeasingDepositDTO> getAllLeasingDeposits()
+	public List<LeasingDepositDTO_out> getAllLeasingDeposits()
 	{
 		return leasingDepositService.getAllLeasingDeposits();
+	}
+
+	@GetMapping("/for2Scenarios")
+	@ApiOperation(value = "Получение всех лизинговых депозитов для определённого периода", response = ResponseEntity.class)
+	public List<LeasingDepositDTO_out_onPeriodFor2Scenarios> getAllLeasingDepositsOnPeriodFor2Scenarios(@RequestParam @NonNull Long scenarioFromId,
+																										@RequestParam @NonNull Long scenarioToId)
+	{
+		return leasingDepositService.getAllLeasingDepositsOnPeriodFor2Scenarios(scenarioFromId, scenarioToId);
 	}
 
 	@GetMapping("{id}")
@@ -50,9 +57,9 @@ public class LeasingDepositController
 	@PostMapping
 	@ApiOperation(value = "Сохранение нового лизингового депозита", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новый лизинговый депозит был сохранен.")
-	public ResponseEntity saveNewLeasingDeposit(@RequestBody LeasingDepositDTO leasingDepositDTO)
+	public ResponseEntity saveNewLeasingDeposit(@RequestBody LeasingDepositDTO_in leasingDepositDTO_in)
 	{
-		LeasingDeposit leasingDeposit = leasingDepositTransform.LeasingDepositDTO_to_LeasingDeposit(leasingDepositDTO);
+		LeasingDeposit leasingDeposit = leasingDepositTransform.LeasingDepositDTO_in_to_LeasingDeposit(leasingDepositDTO_in);
 		LeasingDeposit newLeasingDeposit = leasingDepositService.saveNewLeasingDeposit(leasingDeposit);
 		return new ResponseEntity(newLeasingDeposit, HttpStatus.OK);
 	}
@@ -60,11 +67,11 @@ public class LeasingDepositController
 	@PutMapping("{id}")
 	@ApiOperation(value = "Изменение значений лизингового депозита", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Лизинговый депозит был изменен.")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody LeasingDepositDTO leasingDepositDTO)
+	public ResponseEntity update(@PathVariable Long id, @RequestBody LeasingDepositDTO_in leasingDepositDTO_in)
 	{
-		log.info("(update): Поступил объект leasingDepositDTO", leasingDepositDTO);
+		log.info("(update): Поступил объект leasingDepositDTO_in = {}", leasingDepositDTO_in);
 
-		LeasingDeposit leasingDeposit = leasingDepositTransform.LeasingDepositDTO_to_LeasingDeposit(leasingDepositDTO);
+		LeasingDeposit leasingDeposit = leasingDepositTransform.LeasingDepositDTO_in_to_LeasingDeposit(leasingDepositDTO_in);
 		LeasingDeposit updatedLeasingDeposit = leasingDepositService.updateLeasingDeposit(id, leasingDeposit);
 		return new ResponseEntity(updatedLeasingDeposit, HttpStatus.OK);
 	}

@@ -1,7 +1,7 @@
 package LD.rest;
 
 import LD.model.ExchangeRate.ExchangeRate;
-import LD.model.ExchangeRate.ExchangeRateDTO;
+import LD.model.ExchangeRate.ExchangeRateDTO_in;
 import LD.model.ExchangeRate.ExchangeRateID;
 import LD.model.ExchangeRate.ExchangeRateTransform;
 import LD.service.ExchangeRateService;
@@ -30,7 +30,7 @@ public class ExchangeRateController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех курсов валют", response = ResponseEntity.class)
-	public List<ExchangeRateDTO> getAllExchangeRates()
+	public List<ExchangeRateDTO_in> getAllExchangeRates()
 	{
 		return exchangeRateService.getAllExchangeRates();
 	}
@@ -52,36 +52,42 @@ public class ExchangeRateController
 	@PostMapping
 	@ApiOperation(value = "Сохранение нового курса валют", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новый курс валют был сохранен.")
-	public ResponseEntity saveNewExchangeRate(@RequestBody ExchangeRateDTO exchangeRateDTO)
+	public ResponseEntity saveNewExchangeRate(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in)
 	{
-		ExchangeRate exchangeRate = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRate(exchangeRateDTO);
+		ExchangeRate exchangeRate = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRate(exchangeRateDTO_in);
 		ExchangeRate newExchangeRate = exchangeRateService.saveNewExchangeRate(exchangeRate);
 		return new ResponseEntity(newExchangeRate, HttpStatus.OK);
 	}
 
-	@PutMapping("{scenario_id}/{currency_id}/{date}")
+	@PutMapping
 	@ApiOperation(value = "Изменение значений курса валют", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Курс валют был изменен.")
-	public ResponseEntity update(@PathVariable Long scenario_id, @PathVariable Long currency_id, @PathVariable String date, @RequestBody ExchangeRateDTO exchangeRateDTO)
+	public ResponseEntity update(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in)
 	{
-		log.info("(update): Поступил объект exchangeRateDTO", exchangeRateDTO);
+		log.info("(update): Поступил объект exchangeRateDTO_in = {}", exchangeRateDTO_in);
 
-		ExchangeRate exchangeRate = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRate(exchangeRateDTO);
+		ExchangeRate exchangeRate = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRate(exchangeRateDTO_in);
 
-		ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(scenario_id, currency_id, date);
+		ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO_in.getScenario(),
+				exchangeRateDTO_in.getCurrency(),
+				exchangeRateDTO_in.getDate());
+
 		ExchangeRate updatedExchangeRate = exchangeRateService.updateExchangeRate(id, exchangeRate);
 		return new ResponseEntity(updatedExchangeRate, HttpStatus.OK);
 	}
 
-	@DeleteMapping("{scenario_id}/{currency_id}/{date}")
+	@DeleteMapping
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Курс валют был успешно удален"),
 			@ApiResponse(code = 404, message = "Курс валют не был обнаружен")
 	})
-	public ResponseEntity delete(@PathVariable Long scenario_id, @PathVariable Long currency_id, @PathVariable String date)
+	public ResponseEntity delete(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in)
 	{
-		ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(scenario_id, currency_id, date);
+		ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO_in.getScenario(),
+				exchangeRateDTO_in.getCurrency(),
+				exchangeRateDTO_in.getDate());
+
 		return exchangeRateService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
 	}
 

@@ -1,6 +1,5 @@
-package LD.model.PeriodsClosed;
+package LD.model.EndDate;
 
-import LD.model.Enums.STATUS_X;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,11 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PeriodsClosedDTO
+public class EndDateDTO_in
 {
+	private Long leasingDeposit;
 	private Long scenario;
 	private Long period;
-
-	private STATUS_X ISCLOSED;
+	private String End_Date;
 }
-

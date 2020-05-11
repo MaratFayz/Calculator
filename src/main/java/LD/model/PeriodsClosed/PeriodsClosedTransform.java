@@ -13,19 +13,19 @@ public class PeriodsClosedTransform
 	@Autowired
 	ScenarioService scenarioService;
 
-	public PeriodsClosed PeriodsClosedDTO_to_PeriodsClosed(PeriodsClosedDTO periodsClosedDTO)
+	public PeriodsClosed PeriodsClosedDTO_to_PeriodsClosed(PeriodsClosedDTO_in periodsClosedDTO_in)
 	{
-		PeriodsClosedID pcID = PeriodsClosedDTO_to_PeriodsClosedID(periodsClosedDTO.getScenario(), periodsClosedDTO.getPeriod());
+		PeriodsClosedID pcID = PeriodsClosedDTO_to_PeriodsClosedID(periodsClosedDTO_in.getScenario(), periodsClosedDTO_in.getPeriod());
 
 		return PeriodsClosed.builder()
 				.periodsClosedID(pcID)
-				.ISCLOSED(periodsClosedDTO.getISCLOSED())
+				.ISCLOSED(periodsClosedDTO_in.getISCLOSED())
 				.build();
 	}
 
-	public PeriodsClosedDTO PeriodsClosed_to_PeriodsClosedDTO(PeriodsClosed periodsClosed)
+	public PeriodsClosedDTO_in PeriodsClosed_to_PeriodsClosedDTO(PeriodsClosed periodsClosed)
 	{
-		return PeriodsClosedDTO.builder()
+		return PeriodsClosedDTO_in.builder()
 				.period(periodsClosed.getPeriodsClosedID().getPeriod().getId())
 				.scenario(periodsClosed.getPeriodsClosedID().getScenario().getId())
 				.ISCLOSED(periodsClosed.getISCLOSED())

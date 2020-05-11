@@ -27,5 +27,4 @@ public class EntryIFRSAccID implements Serializable
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private IFRSAccount ifrsAccount;
-
 }

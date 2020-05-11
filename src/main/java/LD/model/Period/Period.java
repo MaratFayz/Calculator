@@ -11,7 +11,7 @@ import java.time.ZonedDateTime;
 @Setter
 @ToString
 @NoArgsConstructor()
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class Period
 {

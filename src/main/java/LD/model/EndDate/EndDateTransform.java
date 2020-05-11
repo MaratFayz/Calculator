@@ -19,21 +19,21 @@ public class EndDateTransform
 	@Autowired
 	PeriodService periodService;
 
-	public EndDate EndDatesDTO_to_EndDates(EndDateDTO endDateDTO)
+	public EndDate EndDatesDTO_to_EndDates(EndDateDTO_in endDateDTO_in)
 	{
-		EndDateID edID = EndDatesDTO_to_EndDatesID(endDateDTO.getScenario(),
-				endDateDTO.getLeasingDeposit(),
-				endDateDTO.getPeriod());
+		EndDateID edID = EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
+				endDateDTO_in.getLeasingDeposit(),
+				endDateDTO_in.getPeriod());
 
 		return EndDate.builder()
 				.endDateID(edID)
-				.End_Date(parsingDate(endDateDTO.getEnd_Date()))
+				.End_Date(parsingDate(endDateDTO_in.getEnd_Date()))
 				.build();
 	}
 
-	public EndDateDTO EndDates_to_EndDatesDTO(EndDate endDate)
+	public EndDateDTO_in EndDates_to_EndDatesDTO(EndDate endDate)
 	{
-		return EndDateDTO.builder()
+		return EndDateDTO_in.builder()
 				.End_Date(DateFormat.formatDate(endDate.getEnd_Date()))
 				.leasingDeposit(endDate.getLeasingDeposit().getId())
 				.scenario(endDate.endDateID.getScenario().getId())

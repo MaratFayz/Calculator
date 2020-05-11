@@ -1,7 +1,7 @@
 package LD.rest;
 
 import LD.model.PeriodsClosed.PeriodsClosed;
-import LD.model.PeriodsClosed.PeriodsClosedDTO;
+import LD.model.PeriodsClosed.PeriodsClosedDTO_in;
 import LD.model.PeriodsClosed.PeriodsClosedID;
 import LD.model.PeriodsClosed.PeriodsClosedTransform;
 import LD.service.PeriodsClosedService;
@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 
 @RestController
@@ -31,7 +30,7 @@ public class PeriodsClosedController
 
 	@GetMapping
 	@ApiOperation(value = "Получение всех периодов и их статусов закрытия", response = ResponseEntity.class)
-	public List<PeriodsClosedDTO> getAllPeriodsClosed()
+	public List<PeriodsClosedDTO_in> getAllPeriodsClosed()
 	{
 		return periodsClosedService.getAllPeriodsClosed();
 	}
@@ -67,36 +66,40 @@ public class PeriodsClosedController
 	@PostMapping
 	@ApiOperation(value = "Сохранение периода со статусом закрытия", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Новый период со статусом закрытия был сохранен.")
-	public ResponseEntity saveNewPeriodsClosed(@RequestBody PeriodsClosedDTO periodsClosedDTO)
+	public ResponseEntity saveNewPeriodsClosed(@RequestBody PeriodsClosedDTO_in periodsClosedDTO_in)
 	{
-		PeriodsClosed periodClosed = periodsClosedTransform.PeriodsClosedDTO_to_PeriodsClosed(periodsClosedDTO);
+		PeriodsClosed periodClosed = periodsClosedTransform.PeriodsClosedDTO_to_PeriodsClosed(periodsClosedDTO_in);
 		PeriodsClosed newPeriodsClosed = periodsClosedService.saveNewPeriodsClosed(periodClosed);
 		return new ResponseEntity(newPeriodsClosed, HttpStatus.OK);
 	}
 
-	@PutMapping("{scenario_id}/{period_id}")
+	@PutMapping
 	@ApiOperation(value = "Изменение значений периода со статусом закрытия", response = ResponseEntity.class)
 	@ApiResponse(code = 200, message = "Период со статусом закрытия был изменен.")
-	public ResponseEntity update(@PathVariable Long scenario_id, @PathVariable Long period_id, @RequestBody PeriodsClosedDTO periodsClosedDTO)
+	public ResponseEntity update(@RequestBody PeriodsClosedDTO_in periodsClosedDTO_in)
 	{
-		log.info("(update): Поступил объект periodsClosedDTO", periodsClosedDTO);
+		log.info("(update): Поступил объект periodsClosedDTO_in = {}", periodsClosedDTO_in);
 
-		PeriodsClosed periodClosed = periodsClosedTransform.PeriodsClosedDTO_to_PeriodsClosed(periodsClosedDTO);
+		PeriodsClosed periodClosed = periodsClosedTransform.PeriodsClosedDTO_to_PeriodsClosed(periodsClosedDTO_in);
 
-		PeriodsClosedID id = periodsClosedTransform.PeriodsClosedDTO_to_PeriodsClosedID(scenario_id, period_id);
+		PeriodsClosedID id = periodsClosedTransform.PeriodsClosedDTO_to_PeriodsClosedID(periodsClosedDTO_in.getScenario(),
+				periodsClosedDTO_in.getPeriod());
+
 		PeriodsClosed updatedPeriodsClosed = periodsClosedService.updatePeriodsClosed(id, periodClosed);
 		return new ResponseEntity(updatedPeriodsClosed, HttpStatus.OK);
 	}
 
-	@DeleteMapping("{scenario_id}/{period_id}")
+	@DeleteMapping
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Период со статусом закрытия был успешно удален"),
 			@ApiResponse(code = 404, message = "Период со статусом закрытия не был обнаружен")
 	})
-	public ResponseEntity delete(@PathVariable Long scenario_id, @PathVariable Long period_id)
+	public ResponseEntity delete(@RequestBody PeriodsClosedDTO_in periodsClosedDTO_in)
 	{
-		PeriodsClosedID id = periodsClosedTransform.PeriodsClosedDTO_to_PeriodsClosedID(scenario_id, period_id);
+		PeriodsClosedID id = periodsClosedTransform.PeriodsClosedDTO_to_PeriodsClosedID(periodsClosedDTO_in.getScenario(),
+				periodsClosedDTO_in.getPeriod());
+
 		return periodsClosedService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
 	}
 }

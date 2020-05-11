@@ -1,14 +1,14 @@
 package LD.service;
 
 import LD.model.PeriodsClosed.PeriodsClosed;
-import LD.model.PeriodsClosed.PeriodsClosedDTO;
+import LD.model.PeriodsClosed.PeriodsClosedDTO_in;
 import LD.model.PeriodsClosed.PeriodsClosedID;
 
 import java.util.List;
 
 public interface PeriodsClosedService
 {
-	List<PeriodsClosedDTO> getAllPeriodsClosed();
+	List<PeriodsClosedDTO_in> getAllPeriodsClosed();
 
 	PeriodsClosed getPeriodsClosed(PeriodsClosedID id);
 

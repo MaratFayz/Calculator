@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ExchangeRateDTO
+public class ExchangeRateDTO_in
 {
 	private Long currency;
 	private Long scenario;

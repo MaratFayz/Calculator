@@ -36,6 +36,8 @@ public class DurationServiceImpl implements DurationService
 	@Override
 	public Duration updateDuration(Long id, Duration duration)
 	{
+		duration.setId(id);
+
 		Duration durationToUpdate = getDuration(id);
 
 		BeanUtils.copyProperties(duration, durationToUpdate);

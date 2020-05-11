@@ -36,6 +36,8 @@ public class CompanyServiceImpl implements CompanyService
 	@Override
 	public Company updateCompany(Long id, Company company)
 	{
+		company.setId(id);
+
 		Company companyToUpdate = getCompany(id);
 
 		BeanUtils.copyProperties(company, companyToUpdate);
