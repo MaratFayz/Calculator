@@ -94,9 +94,9 @@ public class testService_Entries_IntergTest
 		InitializeGeneraldata();
 		create_LD_1_NormalTestLD();
 
-		GDK.getDataFromDB(SCENARIO_LOAD, SCENARIO_SAVE);
+		//GDK.getDataFromDB(SCENARIO_LOAD, SCENARIO_SAVE);
 		EntryService entryService = new EntryServiceImpl(ld_entry_repository, depositRatesRepository, entry_ifrs_acc_repository, GDK);
-		entryService.calculateEntries(SCENARIO_LOAD, SCENARIO_SAVE);
+		//entryService.calculateEntries(SCENARIO_LOAD, SCENARIO_SAVE);
 
 		ld_entry_repository.findAll().stream().forEach(System.out::println);
 

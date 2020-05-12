@@ -94,8 +94,8 @@ public class EntryController
 			@ApiResponse(code = 500, message = "Произошла ошибка при расчете")
 	})
 	public ResponseEntity calculateAllEntries(
-			@RequestParam(name = "scenario_from") String scenarioFrom,
-			@RequestParam(name = "scenario_to") String scenarioTo) throws ExecutionException, InterruptedException
+			@RequestParam(name = "scenario_from") Long scenarioFrom,
+			@RequestParam(name = "scenario_to") Long scenarioTo) throws ExecutionException, InterruptedException
 	{
 		try
 		{

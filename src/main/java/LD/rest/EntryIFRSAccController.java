@@ -35,7 +35,7 @@ public class EntryIFRSAccController
 
 	@GetMapping("/forDate")
 	@ApiOperation(value = "Получение всех записей на счетах МСФО на определённую дату по определённому сценарию", response = ResponseEntity.class)
-	public List<EntryIFRSAccDTO_out> getAllEntryIFRSAccs_for2Scenarios(@RequestParam @NonNull Long scenarioFromId,
+	public List<EntryIFRSAccDTO_out_form> getAllEntryIFRSAccs_for2Scenarios(@RequestParam @NonNull Long scenarioFromId,
 																	   @RequestParam @NonNull Long scenarioToId)
 	{
 		return entryIFRSAccService.getAllEntriesIFRSAcc_for2Scenarios(scenarioToId);

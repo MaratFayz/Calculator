@@ -1,5 +1,6 @@
 package LD.model.EntryIFRSAcc;
 
+import LD.config.DateFormat;
 import LD.model.Entry.EntryID;
 import LD.model.Entry.EntryTransform;
 import LD.service.EntryService;
@@ -50,6 +51,18 @@ public class EntryIFRSAccTransform
 				.scenario(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getScenario().getId())
 				.period(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().getId())
 				.CALCULATION_TIME(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getCALCULATION_TIME().toString())
+				.ifrsAccount(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId())
+				.sum(entryIFRSAcc.getSum())
+				.build();
+	}
+
+	public EntryIFRSAccDTO_out_form EntryIFRSAcc_to_EntryIFRSAcc_DTO_out_form(EntryIFRSAcc entryIFRSAcc)
+	{
+		return EntryIFRSAccDTO_out_form.builder()
+				.leasingDeposit(entryIFRSAcc.getEntryIFRSAccID().getEntry().getLeasingDeposit().getId())
+				.scenario(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getScenario().getId())
+				.period(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().getId())
+				.CALCULATION_TIME(DateFormat.formatDate(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getCALCULATION_TIME()))
 				.ifrsAccount(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId())
 				.sum(entryIFRSAcc.getSum())
 				.build();

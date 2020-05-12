@@ -53,20 +53,20 @@ public class GeneralDataKeeper
 	@Autowired
 	private PeriodsClosedRepository periodsClosedRepository;
 
-	public void getDataFromDB(String scenarioFrom, String scenarioTo)
+	public void getDataFromDB(Long scenarioFrom, Long scenarioTo)
 	{
 		getDataFromDB(null, scenarioFrom, scenarioTo);
 	}
 
-	public void getDataFromDB(ZonedDateTime copyDate, String scenarioFrom, String scenarioTo)
+	public void getDataFromDB(ZonedDateTime copyDate, Long scenarioFrom_id, Long scenarioTo_id)
 	{
 		this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo = copyDate;
 
-		this.from = scenarioRepository.findOne(ScenarioForName(scenarioFrom)).orElseThrow();
-		log.info("Результат запроса сценария-источника по значению {} => {}", scenarioFrom, this.from);
+		this.from = scenarioRepository.findById(scenarioFrom_id).orElseThrow();
+		log.info("Результат запроса сценария-источника по значению {} => {}", scenarioFrom_id, this.from);
 
-		this.to = scenarioRepository.findOne(ScenarioForName(scenarioTo)).orElseThrow();
-		log.info("Результат запроса сценария-получателя по значению {} => {}", scenarioTo, this.to);
+		this.to = scenarioRepository.findById(scenarioTo_id).orElseThrow();
+		log.info("Результат запроса сценария-получателя по значению {} => {}", scenarioTo_id, this.to);
 
 		LeasingDeposits = leasingDepositRepository.findAll(specLDsForScenario(this.to));
 		log.info("Результат запроса лизинговых депозитов по сценарию-получателю {} => {}", this.to.getName(), LeasingDeposits);

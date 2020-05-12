@@ -99,7 +99,7 @@ public class testService_Entries
 
 		entryService = new EntryServiceImpl(ld_entry_repository, depositRatesRepository, entry_ifrs_acc_repository, GDK);
 
-		entryService.calculateEntries(SCENARIO_LOAD, SCENARIO_SAVE);
+		//entryService.calculateEntries(SCENARIO_LOAD, SCENARIO_SAVE);
 	}
 
 	@Test

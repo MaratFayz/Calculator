@@ -1,9 +1,6 @@
 package LD.service;
 
-import LD.model.EntryIFRSAcc.EntryIFRSAcc;
-import LD.model.EntryIFRSAcc.EntryIFRSAccDTO_out;
-import LD.model.EntryIFRSAcc.EntryIFRSAccID;
-import LD.model.EntryIFRSAcc.EntryIFRSAccTransform;
+import LD.model.EntryIFRSAcc.*;
 import LD.model.Enums.EntryStatus;
 import LD.model.Period.Period;
 import LD.model.Scenario.Scenario;
@@ -46,7 +43,7 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService
 	}
 
 	@Override
-	public List<EntryIFRSAccDTO_out> getAllEntriesIFRSAcc_for2Scenarios(Long scenarioToId)
+	public List<EntryIFRSAccDTO_out_form> getAllEntriesIFRSAcc_for2Scenarios(Long scenarioToId)
 	{
 		final Scenario scenario_to = scenarioRepository.findById(scenarioToId)
 				.orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioToId + " отсутствует в базе данных"));
@@ -64,7 +61,7 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService
 				.filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().equals(firstOpenPeriodForScenarioTo))
 				.filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getEntryID().getScenario().equals(scenario_to))
 				.filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getStatus().equals(EntryStatus.ACTUAL))
-				.map(entryIFRSAccTransform::EntryIFRSAcc_to_EntryIFRSAcc_DTO_out)
+				.map(entryIFRSAccTransform::EntryIFRSAcc_to_EntryIFRSAcc_DTO_out_form)
 				.collect(Collectors.toList());
 	}
 
