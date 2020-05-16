@@ -1,5 +1,6 @@
 package LD.model.PeriodsClosed;
 
+import LD.config.DateFormat;
 import LD.service.PeriodService;
 import LD.service.ScenarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,7 @@ public class PeriodsClosedTransform
 	@Autowired
 	ScenarioService scenarioService;
 
-	public PeriodsClosed PeriodsClosedDTO_to_PeriodsClosed(PeriodsClosedDTO_in periodsClosedDTO_in)
+	public PeriodsClosed PeriodsClosedDTO_in_to_PeriodsClosed(PeriodsClosedDTO_in periodsClosedDTO_in)
 	{
 		PeriodsClosedID pcID = PeriodsClosedDTO_to_PeriodsClosedID(periodsClosedDTO_in.getScenario(), periodsClosedDTO_in.getPeriod());
 
@@ -23,12 +24,14 @@ public class PeriodsClosedTransform
 				.build();
 	}
 
-	public PeriodsClosedDTO_in PeriodsClosed_to_PeriodsClosedDTO(PeriodsClosed periodsClosed)
+	public PeriodsClosedDTO_out PeriodsClosed_to_PeriodsClosedDTO_out(PeriodsClosed periodsClosed)
 	{
-		return PeriodsClosedDTO_in.builder()
+		return PeriodsClosedDTO_out.builder()
 				.period(periodsClosed.getPeriodsClosedID().getPeriod().getId())
 				.scenario(periodsClosed.getPeriodsClosedID().getScenario().getId())
 				.ISCLOSED(periodsClosed.getISCLOSED())
+				.user(periodsClosed.getUser().getUsername())
+				.lastChange(DateFormat.formatDate(periodsClosed.getLastChange()))
 				.build();
 	}
 

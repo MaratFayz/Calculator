@@ -20,4 +20,6 @@ public class DepositRateDTO_out
 	private Long duration;
 	private Long scenario;
 	private BigDecimal RATE;
+	private String user;
+	private String lastChange;
 }

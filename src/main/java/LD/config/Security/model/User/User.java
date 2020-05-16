@@ -2,6 +2,7 @@ package LD.config.Security.model.User;
 
 import LD.config.Security.model.Role.Role;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -9,13 +10,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "usr")
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User implements UserDetails
 {
 	@Id
@@ -25,19 +28,40 @@ public class User implements UserDetails
 	@Column(nullable = false, unique = true)
 	private String username;
 
+	@Column(nullable = false)
 	private String password;
 
-	@ManyToMany(fetch = FetchType.EAGER)
-	private Set<Role> roles;
-
+	@Column(nullable = false)
 	private boolean isExpired;
+
+	@Column(nullable = false)
 	private boolean isLocked;
+
+	@Column(nullable = false)
 	private boolean isEnabled;
+
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(
+			name = "users_roles",
+			joinColumns = @JoinColumn(
+					name = "user_id", referencedColumnName = "id"),
+			inverseJoinColumns = @JoinColumn(
+					name = "role_id", referencedColumnName = "id"))
+	private Collection<Role> roles;
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities()
 	{
-		return roles;
+		Set<GrantedAuthority> authorities = new HashSet<>();
+		authorities.addAll(roles);
+
+		for (Role role: this.roles)
+		{
+			role.getAuthorities().stream()
+					.forEach(authorities::add);
+		}
+
+		return authorities;
 	}
 
 	@Override

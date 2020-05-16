@@ -16,7 +16,7 @@ public class ExchangeRateTransform
 	@Autowired
 	ScenarioService scenarioService;
 
-	public ExchangeRate ExchangeRateDTO_to_ExchangeRate(ExchangeRateDTO_in exchangeRateDTO_in)
+	public ExchangeRate ExchangeRateDTO_in_to_ExchangeRate(ExchangeRateDTO_in exchangeRateDTO_in)
 	{
 		ExchangeRateID erID = ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO_in.getScenario(),
 																	exchangeRateDTO_in.getCurrency(),
@@ -29,14 +29,16 @@ public class ExchangeRateTransform
 				.build();
 	}
 
-	public ExchangeRateDTO_in ExchangeRate_to_ExchangeRateDTO(ExchangeRate exchangeRate)
+	public ExchangeRateDTO_out ExchangeRate_to_ExchangeRateDTO_out(ExchangeRate exchangeRate)
 	{
-		return ExchangeRateDTO_in.builder()
+		return ExchangeRateDTO_out.builder()
 				.currency(exchangeRate.getExchangeRateID().getCurrency().getId())
 				.scenario(exchangeRate.getExchangeRateID().getScenario().getId())
 				.date(DateFormat.formatDate(exchangeRate.getExchangeRateID().getDate()))
 				.rate_at_date(exchangeRate.getRate_at_date())
 				.average_rate_for_month(exchangeRate.getAverage_rate_for_month())
+				.user(exchangeRate.getUser().getUsername())
+				.lastChange(DateFormat.formatDate(exchangeRate.getLastChange()))
 				.build();
 	}
 

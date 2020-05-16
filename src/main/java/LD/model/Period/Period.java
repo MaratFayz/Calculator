@@ -1,5 +1,6 @@
 package LD.model.Period;
 
+import LD.config.Security.model.User.User;
 import lombok.*;
 
 import javax.persistence.*;
@@ -7,9 +8,7 @@ import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "period")
-@Getter
-@Setter
-@ToString
+@Data
 @NoArgsConstructor()
 @Builder(toBuilder = true)
 @AllArgsConstructor
@@ -22,4 +21,10 @@ public class Period
 
 	@Column(name = "date", nullable = false, unique = true)
 	private ZonedDateTime date;
+
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private User user;
+
+	@Column(name = "DateTime_lastChange", nullable = false)
+	private ZonedDateTime lastChange;
 }

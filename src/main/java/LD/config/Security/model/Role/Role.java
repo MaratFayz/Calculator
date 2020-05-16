@@ -1,33 +1,39 @@
 package LD.config.Security.model.Role;
 
+import LD.config.Security.model.Authority.CustomAuthority;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Entity
-@Table(name = "t_role")
+@Table(name = "roles")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Builder
 public class Role implements GrantedAuthority
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
+	@Column(nullable = false, unique = true)
 	private String name;
 
-	public Role(Long id)
-	{
-		this.id = id;
-	}
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "role_authorities",
+			   joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+			   inverseJoinColumns = @JoinColumn(name = "authority_id", referencedColumnName = "id"))
+	private Set<CustomAuthority> authorities;
 
 	@Override
 	public String getAuthority()
 	{
-		return "ROLE_" + name;
+		return name;
 	}
 }

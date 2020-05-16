@@ -1,12 +1,13 @@
 package LD.service;
 
 import LD.model.Duration.Duration;
+import LD.model.Duration.DurationDTO_out;
 
 import java.util.List;
 
 public interface DurationService
 {
-	List<Duration> getAllDurations();
+	List<DurationDTO_out> getAllDurations();
 
 	Duration getDuration(Long id);
 

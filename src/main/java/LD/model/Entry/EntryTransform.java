@@ -1,8 +1,6 @@
 package LD.model.Entry;
 
 import LD.config.DateFormat;
-import LD.model.Period.Period;
-import LD.service.LeasingDepositService;
 import LD.service.PeriodService;
 import LD.service.ScenarioService;
 import lombok.extern.log4j.Log4j2;
@@ -19,8 +17,6 @@ import static LD.config.DateFormat.parsingDate;
 @Log4j2
 public class EntryTransform
 {
-	@Autowired
-	LeasingDepositService leasingDepositService;
 	@Autowired
 	ScenarioService scenarioService;
 	@Autowired
@@ -97,6 +93,8 @@ public class EntryTransform
 				.leasingDeposit(entry.entryID.getLeasingDeposit_id())
 				.period(entry.entryID.getPeriod().getId())
 				.CALCULATION_TIME(formatDate(entry.entryID.getCALCULATION_TIME()))
+				.user(entry.getUser().getUsername())
+				.lastChange(DateFormat.formatDate(entry.getLastChange()))
 				.end_date_at_this_period(formatDate(entry.getEnd_date_at_this_period()))
 				.status(entry.getStatus())
 				.Status_EntryMadeDuringOrAfterClosedPeriod(entry.getStatus_EntryMadeDuringOrAfterClosedPeriod())
@@ -123,6 +121,8 @@ public class EntryTransform
 				.leasingDeposit(entry.entryID.getLeasingDeposit_id())
 				.period(entry.entryID.getPeriod().getId())
 				.CALCULATION_TIME(formatDate(entry.entryID.getCALCULATION_TIME()))
+				.user(entry.getUser().getUsername())
+				.lastChange(DateFormat.formatDate(entry.getLastChange()))
 				.end_date_at_this_period(formatDate(entry.getEnd_date_at_this_period()))
 				.status(entry.getStatus())
 				.Status_EntryMadeDuringOrAfterClosedPeriod(entry.getStatus_EntryMadeDuringOrAfterClosedPeriod())
@@ -142,6 +142,8 @@ public class EntryTransform
 				.leasingDeposit(entry.entryID.getLeasingDeposit_id())
 				.period(entry.entryID.getPeriod().getId())
 				.CALCULATION_TIME(formatDate(entry.entryID.getCALCULATION_TIME()))
+				.user(entry.getUser().getUsername())
+				.lastChange(DateFormat.formatDate(entry.getLastChange()))
 				.end_date_at_this_period(formatDate(entry.getEnd_date_at_this_period()))
 				.status(entry.getStatus())
 				.Status_EntryMadeDuringOrAfterClosedPeriod(entry.getStatus_EntryMadeDuringOrAfterClosedPeriod())
@@ -175,6 +177,8 @@ public class EntryTransform
 				.leasingDeposit(entry.entryID.getLeasingDeposit_id())
 				.period(entry.entryID.getPeriod().getId())
 				.CALCULATION_TIME(entry.entryID.getCALCULATION_TIME().withZoneSameInstant(ZoneId.of("UTC")).toString())
+				.user(entry.getUser().getUsername())
+				.lastChange(DateFormat.formatDate(entry.getLastChange()))
 				.end_date_at_this_period(formatDate(entry.getEnd_date_at_this_period()))
 				.status(entry.getStatus())
 				.Status_EntryMadeDuringOrAfterClosedPeriod(entry.getStatus_EntryMadeDuringOrAfterClosedPeriod())

@@ -2,13 +2,14 @@ package LD.service;
 
 import LD.model.ExchangeRate.ExchangeRate;
 import LD.model.ExchangeRate.ExchangeRateDTO_in;
+import LD.model.ExchangeRate.ExchangeRateDTO_out;
 import LD.model.ExchangeRate.ExchangeRateID;
 
 import java.util.List;
 
 public interface ExchangeRateService
 {
-	List<ExchangeRateDTO_in> getAllExchangeRates();
+	List<ExchangeRateDTO_out> getAllExchangeRates();
 
 	ExchangeRate getExchangeRate(ExchangeRateID id);
 
@@ -17,4 +18,6 @@ public interface ExchangeRateService
 	ExchangeRate updateExchangeRate(ExchangeRateID id, ExchangeRate period);
 
 	boolean delete(ExchangeRateID id);
+
+	void importExchangeRatesFormCBR();
 }

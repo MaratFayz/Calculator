@@ -28,6 +28,10 @@ public class LeasingDepositDTO_out
 
 	private Long scenario;
 
+	private String user;
+
+	private String lastChange;
+
 	private STATUS_X is_created;
 
 	private STATUS_X is_deleted;

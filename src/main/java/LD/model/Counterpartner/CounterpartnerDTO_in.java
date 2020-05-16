@@ -1,10 +1,14 @@
 package LD.model.Counterpartner;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class CounterpartnerDTO_in
 {
 	private String name;

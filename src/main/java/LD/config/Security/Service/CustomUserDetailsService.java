@@ -16,23 +16,26 @@ import java.util.List;
 
 @Service
 @Log4j2
-public class UserService implements UserDetailsService
+public class CustomUserDetailsService implements UserDetailsService
 {
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
-	PasswordEncoder passwordEncoder;
+	private PasswordEncoder passwordEncoder;
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
 	{
-		log.info("Проверка поиска юзера {} в базе данных", username);
+		log.info("Проверка юзера {} в базе данных", username);
 		User user = userRepository.findByUsername(username);
-		log.info("В базе данных найден юзер {}", username);
 
 		log.info(passwordEncoder.encode("a"));
 
-		if(user == null) new UsernameNotFoundException("User not found");
+		if(user == null)
+		{
+			log.info("В базе данных НЕ найден юзер {}", username);
+			new UsernameNotFoundException("User not found");
+		}
 
 		return user;
 	}
@@ -66,6 +69,7 @@ public class UserService implements UserDetailsService
 		}
 		catch (Exception e)
 		{
+			log.info("Не получилось удалить пользователя: {}", e);
 			return false;
 		}
 

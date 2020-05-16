@@ -1,8 +1,10 @@
 package LD.model.Counterpartner;
 
+import LD.config.Security.model.User.User;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "Counterpartner")
@@ -21,4 +23,10 @@ public class Counterpartner
 
 	@Column(name = "name", nullable = false)
 	private String name;
+
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private User user;
+
+	@Column(name = "DateTime_lastChange", nullable = false)
+	private ZonedDateTime lastChange;
 }

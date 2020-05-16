@@ -51,6 +51,8 @@ public class EntryIFRSAccTransform
 				.scenario(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getScenario().getId())
 				.period(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().getId())
 				.CALCULATION_TIME(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getCALCULATION_TIME().toString())
+				.user(entryIFRSAcc.getUser().getUsername())
+				.lastChange(DateFormat.formatDate(entryIFRSAcc.getLastChange()))
 				.ifrsAccount(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId())
 				.sum(entryIFRSAcc.getSum())
 				.build();
@@ -59,11 +61,16 @@ public class EntryIFRSAccTransform
 	public EntryIFRSAccDTO_out_form EntryIFRSAcc_to_EntryIFRSAcc_DTO_out_form(EntryIFRSAcc entryIFRSAcc)
 	{
 		return EntryIFRSAccDTO_out_form.builder()
-				.leasingDeposit(entryIFRSAcc.getEntryIFRSAccID().getEntry().getLeasingDeposit().getId())
-				.scenario(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getScenario().getId())
-				.period(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().getId())
-				.CALCULATION_TIME(DateFormat.formatDate(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getCALCULATION_TIME()))
-				.ifrsAccount(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId())
+				.scenario(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getScenario().getName())
+				.period(DateFormat.formatDate(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().getDate()))
+				.account_code(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getAccount_code())
+				.account_name(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getAccount_name())
+				.flow_code(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getFlow_code())
+				.flow_name(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getFlow_name())
+				.ct(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getCt())
+				.dr(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getDr())
+				.pa(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getPa())
+				.sh(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getSh())
 				.sum(entryIFRSAcc.getSum())
 				.build();
 	}

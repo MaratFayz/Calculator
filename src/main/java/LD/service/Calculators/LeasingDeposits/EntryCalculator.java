@@ -236,6 +236,7 @@ public class EntryCalculator implements Callable<List<Entry>>
 					t.setStatus_EntryMadeDuringOrAfterClosedPeriod(EntryPeriodCreation.AFTER_CLOSING_PERIOD);
 				else t.setStatus_EntryMadeDuringOrAfterClosedPeriod(EntryPeriodCreation.CURRENT_PERIOD);
 
+				t.setUser(this.GeneralDataKeeper.getUser());
 				t.setLeasingDeposit(this.leasingDepositToCalculate);
 				t.setEntryID(entryID);
 				t.setEnd_date_at_this_period(this.tm_endDatesForLeasingDeposit.floorEntry(finalClosingdate).getValue());

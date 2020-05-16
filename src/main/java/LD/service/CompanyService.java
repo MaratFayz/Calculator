@@ -1,12 +1,13 @@
 package LD.service;
 
 import LD.model.Company.Company;
+import LD.model.Company.CompanyDTO_out;
 
 import java.util.List;
 
 public interface CompanyService
 {
-	List<Company> getAllCompanies();
+	List<CompanyDTO_out> getAllCompanies();
 
 	Company getCompany(Long id);
 

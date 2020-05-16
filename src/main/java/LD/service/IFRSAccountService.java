@@ -1,12 +1,13 @@
 package LD.service;
 
 import LD.model.IFRSAccount.IFRSAccount;
+import LD.model.IFRSAccount.IFRSAccountDTO_out;
 
 import java.util.List;
 
 public interface IFRSAccountService
 {
-	List<IFRSAccount> getAllIFRSAccounts();
+	List<IFRSAccountDTO_out> getAllIFRSAccounts();
 
 	IFRSAccount getIFRSAccount(Long id);
 

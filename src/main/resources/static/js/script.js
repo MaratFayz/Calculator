@@ -24,8 +24,8 @@ var GD_spravochniki = [{"id" : "/currencies", "name" : "Валюты"},
                        {"id" : "/depositRates", "name" : "Ставки депозитов"},
                        {"id" : "/durations", "name" : "Длительности депозитов"},
                        {"id" : "/endDates", "name" : "Даты завершения депозитов"},
-                       {"id" : "/entries", "name" : "Проводки"},
-                       {"id" : urlWithEntryIFRSAcc, "name" : "Проводки на счетах МСФО"},
+                       //{"id" : "/entries", "name" : "Проводки"},
+                       //{"id" : urlWithEntryIFRSAcc, "name" : "Проводки на счетах МСФО"},
                        {"id" : "/exchangeRates", "name" : "Курсы валют"},
                        {"id" : "/ifrsAccounts", "name" : "Счета МСФО"},
                        {"id" : urlWithLeasingDeposits, "name" : "Лизинговые депозиты"},
@@ -335,7 +335,7 @@ Vue.component('DataTableForDataRight', {
                                                    'v-on:refreshDataToView="refreshDataRight($event)" />' +
                     '</div>' +
                     '<div>' +
-                        '<button v-if="showingKeys.length > 0" @click=showAddForm(urlToDetermineName)> Добавить значение </button>' +
+                        '<button v-if="showingData.length > 0" @click=showAddForm(urlToDetermineName)> Добавить значение </button>' +
                     '</div>' +
                     '<div>' +
                         '<DataTable :showButtonsForEditAndDelete="`true`"' +
@@ -453,8 +453,15 @@ Vue.component("tab-generaldata", {
                           console.log(data);
                           this.showingData = data;
                           console.log(this.showingData);
-                          this.showingKeys = Object.keys(this.showingData[0]);
-                          console.log(this.showingKeys);
+                          if (this.showingData.length > 0)
+                          {
+                              this.showingKeys = Object.keys(this.showingData[0]);
+                              console.log(this.showingKeys);
+                          }
+                          else
+                          {
+                              this.showingKeys = [];
+                          }
                     });
                }
 }});

@@ -1,18 +1,19 @@
 package LD.model.EntryIFRSAcc;
 
-import LD.model.Entry.Entry;
-import LD.model.IFRSAccount.IFRSAccount;
-import lombok.*;
+import LD.config.Security.model.User.User;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "EntryIFRSAcc")
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 @Builder
 @AllArgsConstructor
 public class EntryIFRSAcc
@@ -22,4 +23,10 @@ public class EntryIFRSAcc
 
 	@Column(columnDefinition = "DECIMAL(30,10)")
 	private BigDecimal sum;
+
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private User user;
+
+	@Column(name = "DateTime_lastChange", nullable = false)
+	private ZonedDateTime lastChange;
 }

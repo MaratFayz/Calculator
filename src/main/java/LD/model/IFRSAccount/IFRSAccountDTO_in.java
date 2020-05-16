@@ -1,8 +1,14 @@
 package LD.model.IFRSAccount;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class IFRSAccountDTO_in
 {
 	private String account_code;

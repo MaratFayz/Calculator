@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutionException;
 @Service
 public interface EntryService
 {
-	public void calculateEntries(Long SCENARIO_LOAD, Long SCENARIO_SAVE) throws ExecutionException, InterruptedException;
+	void calculateEntries(Long SCENARIO_LOAD, Long SCENARIO_SAVE) throws ExecutionException, InterruptedException;
 
 	List<EntryDTO_out> getAllLDEntries();
 

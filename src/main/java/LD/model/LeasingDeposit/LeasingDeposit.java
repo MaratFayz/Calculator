@@ -1,5 +1,6 @@
 package LD.model.LeasingDeposit;
 
+import LD.config.Security.model.User.User;
 import LD.model.Company.Company;
 import LD.model.Counterpartner.Counterpartner;
 import LD.model.Currency.Currency;
@@ -59,6 +60,12 @@ public class LeasingDeposit
 	@Enumerated(value = EnumType.STRING)
 	@Column(columnDefinition = "enum('X')")
 	private STATUS_X is_deleted;
+
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private User user;
+
+	@Column(name = "DateTime_lastChange", nullable = false)
+	private ZonedDateTime lastChange;
 
 	@OneToMany(mappedBy = "leasingDeposit", fetch = FetchType.EAGER)
 	@JsonIgnore

@@ -37,5 +37,4 @@ public class EntryID implements Serializable
 
 	private ZonedDateTime CALCULATION_TIME;
 
-
 }

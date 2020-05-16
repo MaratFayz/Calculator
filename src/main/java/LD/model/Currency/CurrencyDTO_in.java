@@ -2,9 +2,9 @@ package LD.model.Currency;
 
 import lombok.*;
 
+@Data
 @Builder
 @AllArgsConstructor
-@Data
 @NoArgsConstructor
 public class CurrencyDTO_in
 {

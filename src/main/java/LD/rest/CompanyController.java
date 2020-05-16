@@ -1,7 +1,8 @@
 package LD.rest;
 
-import LD.model.Company.CompanyDTO_in;
 import LD.model.Company.Company;
+import LD.model.Company.CompanyDTO_in;
+import LD.model.Company.CompanyDTO_out;
 import LD.service.CompanyService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -11,6 +12,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,15 +29,16 @@ public class CompanyController
 	@Autowired
 	CompanyService companyService;
 
-	public CompanyController(CompanyService companyService)
-	{
-		this.companyService = companyService;
-	}
-
 	@GetMapping
 	@ApiOperation(value = "Получение всех компаний", response = ResponseEntity.class)
-	public List<Company> getAllCompanies()
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COMPANY_READER)")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Все компании возвращаются в ответе."),
+			@ApiResponse(code = 404, message = "Доступ запрещён")
+	})
+	public List<CompanyDTO_out> getAllCompanies()
 	{
+		log.info("Выдаются все компании.");
 		return companyService.getAllCompanies();
 	}
 
@@ -43,43 +46,61 @@ public class CompanyController
 	@ApiOperation(value = "Получение компании с определённым id", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Компания существует, возвращается в ответе."),
+			@ApiResponse(code = 404, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Такая компания отсутствует")
 	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COMPANY_READER)")
 	public ResponseEntity getCompany(@PathVariable Long id)
 	{
 		Company company = companyService.getCompany(id);
 		log.info("(getCompany): company was taken: " + company);
-		return new ResponseEntity(company, HttpStatus.OK);
+		return new ResponseEntity(CompanyDTO_out.Company_to_CompanyDTO_out(company), HttpStatus.OK);
 	}
 
 	@PostMapping
 	@ApiOperation(value = "Сохранение новой компании", response = ResponseEntity.class)
-	@ApiResponse(code = 200, message = "Новая компания была сохранена.")
-	public ResponseEntity saveNewCompany(@RequestBody CompanyDTO_in companyDTOOut)
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Новая компания была сохранена."),
+			@ApiResponse(code = 404, message = "Доступ запрещён")
+	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COMPANY_ADDER)")
+	public ResponseEntity saveNewCompany(@RequestBody CompanyDTO_in companyDTO_in)
 	{
-		Company company = CompanyDTO_in.CompanyDTO_in_to_Company(companyDTOOut);
+		Company company = CompanyDTO_in.CompanyDTO_in_to_Company(companyDTO_in);
+
+		log.info("Получена компания на вход: {}", company);
+
 		Company newCompany = companyService.saveNewCompany(company);
-		return new ResponseEntity(newCompany, HttpStatus.OK);
+
+		log.info("Новая компания на вход: {}", newCompany);
+
+		return new ResponseEntity(CompanyDTO_out.Company_to_CompanyDTO_out(newCompany), HttpStatus.OK);
 	}
 
 	@PutMapping("{id}")
 	@ApiOperation(value = "Изменение значений компании", response = ResponseEntity.class)
-	@ApiResponse(code = 200, message = "Компания была изменена.")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody CompanyDTO_in companyDTOOut)
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Компания была изменена."),
+			@ApiResponse(code = 404, message = "Доступ запрещён")
+	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COMPANY_EDITOR)")
+	public ResponseEntity update(@PathVariable Long id, @RequestBody CompanyDTO_in companyDTO_in)
 	{
-		log.info("(update): Поступил объект companyDTOOut", companyDTOOut);
+		log.info("(update): Поступил объект companyDTO_in", companyDTO_in);
 
-		Company company = CompanyDTO_in.CompanyDTO_in_to_Company(companyDTOOut);
+		Company company = CompanyDTO_in.CompanyDTO_in_to_Company(companyDTO_in);
 		Company updatedCompany = companyService.updateCompany(id, company);
-		return new ResponseEntity(updatedCompany, HttpStatus.OK);
+		return new ResponseEntity(CompanyDTO_out.Company_to_CompanyDTO_out(updatedCompany), HttpStatus.OK);
 	}
 
 	@DeleteMapping("{id}")
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Компания была успешно удалена"),
+			@ApiResponse(code = 404, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Компания не была обнаружена")
 	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COMPANY_DELETER)")
 	public ResponseEntity delete(@PathVariable Long id)
 	{
 		return companyService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();

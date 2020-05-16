@@ -1,8 +1,11 @@
 package LD.model.Company;
 
+import LD.config.Security.model.User.User;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "Company")
@@ -24,4 +27,10 @@ public class Company
 
 	@Column(name = "name", nullable = false)
 	private String name;
+
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private User user;
+
+	@Column(name = "DateTime_lastChange", nullable = false)
+	private ZonedDateTime lastChange;
 }

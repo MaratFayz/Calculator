@@ -1,5 +1,6 @@
 package LD.model.Entry;
 
+import LD.config.Security.model.User.User;
 import LD.model.Enums.EntryPeriodCreation;
 import LD.model.Enums.EntryStatus;
 import LD.model.Enums.LeasingDepositDuration;
@@ -15,9 +16,7 @@ import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "entries")
-@Getter
-@Setter
-@ToString
+@Data
 @NoArgsConstructor()
 @Builder(toBuilder = true)
 @AllArgsConstructor
@@ -32,6 +31,12 @@ public class Entry
 	@Column(name = "transaction_status", columnDefinition = "enum('ACTUAL', 'STORNO', 'DELETED')")
 	@Enumerated(value = EnumType.STRING)
 	private EntryStatus status;
+
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private User user;
+
+	@Column(name = "DateTime_lastChange", nullable = false)
+	private ZonedDateTime lastChange;
 
 	@Column(name = "Status_EntryMadeDuringOrAfterClosedPeriod", columnDefinition = "enum('CURRENT_PERIOD', 'AFTER_CLOSING_PERIOD')", nullable = false)
 	@Enumerated(value = EnumType.STRING)

@@ -121,6 +121,7 @@ public class EntryIFRSAccCalculator extends RecursiveTask<List<EntryIFRSAcc>>
 		EntryIFRSAcc ldEntryIFRSAcc = new EntryIFRSAcc();
 		ldEntryIFRSAcc.setEntryIFRSAccID(entryIFRSID);
 		ldEntryIFRSAcc.setSum(sum);
+		ldEntryIFRSAcc.setUser(entry.getUser());
 		if(isInverse) ldEntryIFRSAcc.setSum(ldEntryIFRSAcc.getSum().negate());
 
 		this.mappedResult.add(ldEntryIFRSAcc);

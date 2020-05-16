@@ -1,6 +1,7 @@
 package LD.service;
 
 import LD.model.Counterpartner.Counterpartner;
+import LD.model.Counterpartner.Counterpartner_out;
 
 import java.util.List;
 
@@ -14,5 +15,5 @@ public interface CounterpartnerService
 
 	boolean delete(Long id);
 
-	List<Counterpartner> getAllCounterpartners();
+	List<Counterpartner_out> getAllCounterpartners();
 }

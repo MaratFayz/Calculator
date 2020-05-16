@@ -1,23 +1,22 @@
 package LD.service;
 
 import LD.config.DateFormat;
+import LD.config.Security.Repository.UserRepository;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out_onPeriodFor2Scenarios;
 import LD.model.LeasingDeposit.LeasingDepositTransform;
-import LD.model.PeriodsClosed.PeriodsClosed;
 import LD.model.Scenario.Scenario;
 import LD.repository.LeasingDepositRepository;
 import LD.repository.PeriodsClosedRepository;
 import LD.repository.ScenarioRepository;
 import LD.rest.exceptions.NotFoundException;
 import LD.service.Calculators.LeasingDeposits.EntryCalculator;
-import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -40,13 +39,27 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService
 	ScenarioRepository scenarioRepository;
 	@Autowired
 	PeriodsClosedRepository periodsClosedRepository;
+	@Autowired
+	UserRepository userRepository;
 
 	@Override
 	public List<LeasingDepositDTO_out> getAllLeasingDeposits()
 	{
-		return leasingDepositRepository.findAll().stream()
-				.map(ld -> leasingDepositTransform.LeasingDeposit_to_LeasingDepositDTO_out(ld))
-				.collect(Collectors.toList());
+		List<LeasingDeposit> resultFormDB = leasingDepositRepository.findAll();
+		List<LeasingDepositDTO_out> resultFormDB_out = new ArrayList<>();
+
+		if(resultFormDB.size() == 0)
+		{
+			resultFormDB_out.add(new LeasingDepositDTO_out());
+		}
+		else
+		{
+			resultFormDB_out = resultFormDB.stream()
+					.map(ld -> leasingDepositTransform.LeasingDeposit_to_LeasingDepositDTO_out(ld))
+					.collect(Collectors.toList());
+		}
+
+		return resultFormDB_out;
 	}
 
 	@Override
@@ -118,6 +131,13 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService
 	@Override
 	public LeasingDeposit saveNewLeasingDeposit(LeasingDeposit leasingDeposit)
 	{
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		leasingDeposit.setUser(userRepository.findByUsername(username));
+
+		leasingDeposit.setLastChange(ZonedDateTime.now());
+
+		log.info("Лизинговый депозит для сохранения = {}", leasingDeposit);
+
 		return leasingDepositRepository.save(leasingDeposit);
 	}
 
@@ -125,6 +145,11 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService
 	public LeasingDeposit updateLeasingDeposit(Long id, LeasingDeposit leasingDeposit)
 	{
 		leasingDeposit.setId(id);
+
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		leasingDeposit.setUser(userRepository.findByUsername(username));
+
+		leasingDeposit.setLastChange(ZonedDateTime.now());
 
 		LeasingDeposit leasingDepositToUpdate = getLeasingDeposit(id);
 

@@ -19,6 +19,8 @@ public class EntryDTO_out_RegLD3
 	private Long leasingDeposit;
 	private Long scenario;
 	private Long period;
+	private String user;
+	private String lastChange;
 	private String CALCULATION_TIME;
 	private String end_date_at_this_period;
 	private EntryStatus status;

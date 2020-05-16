@@ -1,12 +1,13 @@
 package LD.service;
 
 import LD.model.Currency.Currency;
+import LD.model.Currency.Currency_out;
 
 import java.util.List;
 
 public interface CurrencyService
 {
-	List<Currency> getAllCurrencies();
+	List<Currency_out> getAllCurrencies();
 
 	Currency getCurrency(Long id);
 

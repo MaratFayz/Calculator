@@ -13,11 +13,14 @@ import java.math.BigDecimal;
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class EntryDTO_out
 {
 	private Long leasingDeposit;
 	private Long scenario;
 	private Long period;
+	private String user;
+	private String lastChange;
 	private String CALCULATION_TIME;
 	private String end_date_at_this_period;
 	private EntryStatus status;

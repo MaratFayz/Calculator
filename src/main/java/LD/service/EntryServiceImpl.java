@@ -1,5 +1,8 @@
 package LD.service;
 
+import LD.config.Security.Repository.UserRepository;
+import LD.model.Company.Company;
+import LD.model.Company.CompanyDTO_out;
 import LD.model.Entry.*;
 import LD.model.EntryIFRSAcc.EntryIFRSAcc;
 import LD.model.Enums.EntryStatus;
@@ -14,9 +17,9 @@ import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +52,13 @@ public class EntryServiceImpl implements EntryService
 	ScenarioRepository scenarioRepository;
 	@Autowired
 	PeriodsClosedRepository periodsClosedRepository;
+	@Autowired
+	UserRepository userRepository;
 
-	public EntryServiceImpl(EntryRepository entryRepository, DepositRatesRepository depositRatesRepository, EntryIFRSAccRepository entry_ifrs_acc_repository, GeneralDataKeeper GDK)
+	public EntryServiceImpl(EntryRepository entryRepository,
+							DepositRatesRepository depositRatesRepository,
+							EntryIFRSAccRepository entry_ifrs_acc_repository,
+							GeneralDataKeeper GDK)
 	{
 		this.entryRepository = entryRepository;
 		this.depositRatesRepository = depositRatesRepository;
@@ -109,10 +117,21 @@ public class EntryServiceImpl implements EntryService
 	@Override
 	public List<EntryDTO_out> getAllLDEntries()
 	{
-		return entryRepository.findAll()
-				.stream()
-				.map(entry -> entryTransform.Entry_to_EntryDTO_out(entry))
-				.collect(Collectors.toList());
+		List<Entry> resultFormDB = entryRepository.findAll();
+		List<EntryDTO_out> resultFormDB_out = new ArrayList<>();
+
+		if(resultFormDB.size() == 0)
+		{
+			resultFormDB_out.add(new EntryDTO_out());
+		}
+		else
+		{
+			resultFormDB_out = resultFormDB.stream()
+					.map(entry -> entryTransform.Entry_to_EntryDTO_out(entry))
+					.collect(Collectors.toList());
+		}
+
+		return resultFormDB_out;
 	}
 
 	public <R> List<R> getAllLDEntries_RegLDX(Long scenarioToId, Function<Entry, R> transformer_To_DTO_RegLD)
@@ -176,6 +195,11 @@ public class EntryServiceImpl implements EntryService
 	@Override
 	public Entry update(EntryID id, Entry entry)
 	{
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		entry.setUser(userRepository.findByUsername(username));
+
+		entry.setLastChange(ZonedDateTime.now());
+
 		Entry updatingEntry = getEntry(id);
 
 		BeanUtils.copyProperties(entry, updatingEntry);
@@ -188,6 +212,13 @@ public class EntryServiceImpl implements EntryService
 	@Override
 	public Entry saveEntry(Entry entry)
 	{
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		entry.setUser(userRepository.findByUsername(username));
+
+		entry.setLastChange(ZonedDateTime.now());
+
+		log.info("Проводка для сохранения = {}", entry);
+
 		return entryRepository.saveAndFlush(entry);
 	}
 

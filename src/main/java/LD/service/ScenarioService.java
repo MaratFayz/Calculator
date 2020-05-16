@@ -1,12 +1,13 @@
 package LD.service;
 
 import LD.model.Scenario.Scenario;
+import LD.model.Scenario.ScenarioDTO_out;
 
 import java.util.List;
 
 public interface ScenarioService
 {
-	List<Scenario> getAllScenarios();
+	List<ScenarioDTO_out> getAllScenarios();
 
 	Scenario getScenario(Long id);
 

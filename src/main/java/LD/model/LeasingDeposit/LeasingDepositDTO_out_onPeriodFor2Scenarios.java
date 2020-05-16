@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class LeasingDepositDTO_out_onPeriodFor2Scenarios
 {
 	private Long id;
@@ -26,6 +27,10 @@ public class LeasingDepositDTO_out_onPeriodFor2Scenarios
 	private BigDecimal deposit_sum_not_disc;
 
 	private Long scenario;
+
+	private String user;
+
+	private String lastChange;
 
 	private STATUS_X is_created;
 

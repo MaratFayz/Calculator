@@ -45,6 +45,8 @@ public class DepositRateTransform
 				.START_PERIOD(DateFormat.formatDate(depositRate.depositRateID.getSTART_PERIOD()))
 				.END_PERIOD(DateFormat.formatDate(depositRate.depositRateID.getEND_PERIOD()))
 				.scenario(depositRate.depositRateID.getScenario().getId())
+				.user(depositRate.getUser().getUsername())
+				.lastChange(DateFormat.formatDate(depositRate.getLastChange()))
 				.RATE(depositRate.getRATE())
 				.build();
 	}

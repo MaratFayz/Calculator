@@ -1,5 +1,7 @@
 package LD.service.Calculators.LeasingDeposits;
 
+import LD.config.Security.Repository.UserRepository;
+import LD.config.Security.model.User.User;
 import LD.model.Enums.STATUS_X;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.ExchangeRate.ExchangeRate;
@@ -13,6 +15,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import LD.repository.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.criteria.*;
@@ -39,6 +42,7 @@ public class GeneralDataKeeper
 	private Scenario from;
 	private Scenario to;
 	private ZonedDateTime period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo;
+	private User user;
 
 	@Autowired
 	private LeasingDepositRepository leasingDepositRepository;
@@ -52,6 +56,8 @@ public class GeneralDataKeeper
 	private PeriodRepository periodRepository;
 	@Autowired
 	private PeriodsClosedRepository periodsClosedRepository;
+	@Autowired
+	private UserRepository userRepository;
 
 	public void getDataFromDB(Long scenarioFrom, Long scenarioTo)
 	{
@@ -60,6 +66,9 @@ public class GeneralDataKeeper
 
 	public void getDataFromDB(ZonedDateTime copyDate, Long scenarioFrom_id, Long scenarioTo_id)
 	{
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		this.user = userRepository.findByUsername(username);
+
 		this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo = copyDate;
 
 		this.from = scenarioRepository.findById(scenarioFrom_id).orElseThrow();

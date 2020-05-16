@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>ADMIN: IFRS Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+</head>
+<body>
+<div>
+    <form action="/logout" method="post">
+        <input type="submit" value="Sign Out">
+    </form>
+</div>
+
+<h1> Панель администратора </h1>
+
+<div id="admin" class="adminApp">
+    <div>
+        <button
+                v-for="tab in tabs"
+                v-bind:value="tab.id"
+                v-bind:class="['tab-button', { active: currentTab === tab.id }]"
+                v-on:click="currentTab = tab.id"
+        >
+            {{ tab.name }}
+        </button>
+    </div>
+    <br>
+
+    <div> <component v-bind:is="currentTabComponent" class="tab"></component> </div>
+</div>
+
+<script src="js/admin_scripts.js"></script>
+</body>
+</html>
