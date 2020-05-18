@@ -119,4 +119,20 @@ public class PeriodsClosedController
 
 		return periodsClosedService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
 	}
+
+	@PutMapping("/autoClosingPeriods")
+	@ApiOperation(value = "Автоматическое массовое изменение значений периода со статусом закрытия", response = ResponseEntity.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Периоды со статусом закрытия былы изменены."),
+			@ApiResponse(code = 404, message = "Доступ запрещён")
+	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).AUTO_CLOSING_PERIODS)")
+	public ResponseEntity autoClosingPeriods(@RequestParam String dateBeforeToClose, @RequestParam long scenario_id)
+	{
+		log.info("Для автоматического закрытия поступила следующая дата = {} по сценарию = {}", dateBeforeToClose, scenario_id);
+
+		periodsClosedService.autoClosePeriods(dateBeforeToClose, scenario_id);
+
+		return ResponseEntity.ok().build();
+	}
 }

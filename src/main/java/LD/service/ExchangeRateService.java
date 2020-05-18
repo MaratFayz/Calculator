@@ -19,5 +19,5 @@ public interface ExchangeRateService
 
 	boolean delete(ExchangeRateID id);
 
-	void importExchangeRatesFormCBR();
+	void importExchangeRatesFormCBR(long scenario_id, boolean isAddOnlyNewestRates);
 }

@@ -22,8 +22,11 @@ public class Currency
 	@Column(name = "id", nullable = false, unique = true)
 	private Long id;
 
-	@Column(name = "short_name", nullable = false)
+	@Column(name = "short_name", nullable = false, length = 3)
 	private String short_name;
+
+	@Column(name = "name", nullable = false)
+	private String name;
 
 	@Column(name = "CBRCurrencyCode")
 	private String CBRCurrencyCode;

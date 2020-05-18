@@ -17,4 +17,6 @@ public interface PeriodService
 	Period updatePeriod(Long id, Period period);
 
 	boolean delete(Long id);
+
+	void autoCreatePeriods(String dateFrom, String dateTo);
 }

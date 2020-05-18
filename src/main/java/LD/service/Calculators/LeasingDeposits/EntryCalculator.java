@@ -46,6 +46,7 @@ public class EntryCalculator implements Callable<List<Entry>>
 	private LeasingDeposit leasingDepositToCalculate;
 	final int numberDaysInYear = 365;
 	DepositRatesRepository depositRatesRepository;
+	BigDecimal LDYearPercent;
 
 	public EntryCalculator(LeasingDeposit leasingDepositToCalculate, GeneralDataKeeper GeneralDataKeeper, DepositRatesRepository depositRatesRepository)
 	{
@@ -82,7 +83,7 @@ public class EntryCalculator implements Callable<List<Entry>>
 			log.info("this.getLDdurationMonths() => {}", this.getLDdurationMonths());
 
 			log.info("Начало расчета ставки депозита");
-			BigDecimal LDYearPercent = getLDRate();
+			this.LDYearPercent = getLDRate();
 			log.info("Конец расчета ставки депозита. Ставка равна = {}", LDYearPercent);
 
 			this.min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Day = this.countActualClosingDateForTheFirstOpenPeriod(firstOpenPeriod);
@@ -241,6 +242,7 @@ public class EntryCalculator implements Callable<List<Entry>>
 				t.setEntryID(entryID);
 				t.setEnd_date_at_this_period(this.tm_endDatesForLeasingDeposit.floorEntry(finalClosingdate).getValue());
 				t.setStatus(EntryStatus.ACTUAL);
+				t.setPercentRateForPeriodForLD(this.LDYearPercent);
 				t.setDISCONT_AT_START_DATE_cur_REG_LD_1_K(this.deposit_sum_discounted_on_firstEndDate.subtract(this.leasingDepositToCalculate.getDeposit_sum_not_disc()));
 				t.setDISCONT_AT_START_DATE_RUB_REG_LD_1_L(t.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().multiply(exRateAtStartDate));
 

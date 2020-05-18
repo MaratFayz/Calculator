@@ -23,6 +23,7 @@ public class EntryDTO_out_RegLD3
 	private String lastChange;
 	private String CALCULATION_TIME;
 	private String end_date_at_this_period;
+	private BigDecimal percentRateForPeriodForLD;
 	private EntryStatus status;
 	private EntryPeriodCreation Status_EntryMadeDuringOrAfterClosedPeriod;
 	private BigDecimal discountedSum_at_current_end_date_cur_REG_LD_3_G;

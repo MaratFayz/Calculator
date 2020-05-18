@@ -1,10 +1,7 @@
 package LD.config.Security;
 
-import LD.config.Security.Service.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,12 +20,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
 		http
 				.csrf().disable()
 				.authorizeRequests()
-					.antMatchers("/admin").hasRole("ADMIN")
+					.antMatchers("/login").not().authenticated()
+					.antMatchers("/admin").hasAnyAuthority(
+							"USER_ADDER", "USER_EDITOR", "USER_DELETER", "USER_READER",
+						               "ROLE_ADDER", "ROLE_EDITOR", "ROLE_DELETER", "ROLE_READER",
+									   "LOAD_EXCHANGE_RATE_FROM_CBR", "AUTO_ADDING_PERIODS", "AUTO_CLOSING_PERIODS")
 					.antMatchers("/").authenticated()
 					.anyRequest().authenticated()
 				.and()
 					.formLogin()
-					//.loginPage("/login")
+					.loginPage("/login")
 					.permitAll()
 				.and()
 					.logout()

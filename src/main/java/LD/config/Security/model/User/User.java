@@ -1,6 +1,7 @@
 package LD.config.Security.model.User;
 
 import LD.config.Security.model.Role.Role;
+import LD.model.Enums.STATUS_X;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,14 +33,13 @@ public class User implements UserDetails
 	@Column(nullable = false)
 	private String password;
 
-	@Column(nullable = false)
-	private boolean isExpired;
+	private STATUS_X isAccountExpired;
 
-	@Column(nullable = false)
-	private boolean isLocked;
+	private STATUS_X isCredentialsExpired;
 
-	@Column(nullable = false)
-	private boolean isEnabled;
+	private STATUS_X isLocked;
+
+	private STATUS_X isEnabled;
 
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
@@ -48,6 +49,12 @@ public class User implements UserDetails
 			inverseJoinColumns = @JoinColumn(
 					name = "role_id", referencedColumnName = "id"))
 	private Collection<Role> roles;
+
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private User user_changed;
+
+	@Column(name = "DateTime_lastChange", nullable = false)
+	private ZonedDateTime lastChange;
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities()
@@ -79,24 +86,24 @@ public class User implements UserDetails
 	@Override
 	public boolean isAccountNonExpired()
 	{
-		return !isExpired;
+		return !isAccountExpired.equals(STATUS_X.X);
 	}
 
 	@Override
 	public boolean isAccountNonLocked()
 	{
-		return !isLocked;
+		return !isLocked.equals(STATUS_X.X);
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired()
 	{
-		return !isExpired;
+		return !isCredentialsExpired.equals(STATUS_X.X);
 	}
 
 	@Override
 	public boolean isEnabled()
 	{
-		return isEnabled;
+		return isEnabled.equals(STATUS_X.X);
 	}
 }

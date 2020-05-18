@@ -38,6 +38,9 @@ public class Entry
 	@Column(name = "DateTime_lastChange", nullable = false)
 	private ZonedDateTime lastChange;
 
+	@Column(name = "percentRateForPeriodForLD", nullable = false)
+	private BigDecimal percentRateForPeriodForLD;
+
 	@Column(name = "Status_EntryMadeDuringOrAfterClosedPeriod", columnDefinition = "enum('CURRENT_PERIOD', 'AFTER_CLOSING_PERIOD')", nullable = false)
 	@Enumerated(value = EnumType.STRING)
 	private EntryPeriodCreation Status_EntryMadeDuringOrAfterClosedPeriod;

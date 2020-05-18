@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -49,7 +50,7 @@ public class addAuthoritiesAndRoles_Admin implements ApplicationListener<Context
 
 		Set<CustomAuthority> superAdminCustomAuthorities = Set.copyOf(customAuthorityRepository.findAll());
 
-		Role adminRole = createRoleIfNotFound("ROLE_ADMIN", superAdminCustomAuthorities);
+		Role adminRole = createRoleIfNotFound("ROLE_SUPERADMIN", superAdminCustomAuthorities);
 
 		User adminUser = User.builder()
 			.isEnabled(true)
@@ -58,6 +59,7 @@ public class addAuthoritiesAndRoles_Admin implements ApplicationListener<Context
 			.username("a")
 			.password(passwordEncoder.encode("a"))
 			.roles(Set.of(adminRole))
+			.lastChange(ZonedDateTime.now())
 			.build();
 
 		userRepository.save(adminUser);
@@ -96,6 +98,7 @@ public class addAuthoritiesAndRoles_Admin implements ApplicationListener<Context
 			role = Role.builder()
 					.name(name)
 					.authorities(CustomAuthorities)
+					.lastChange(ZonedDateTime.now())
 					.build();
 
 			roleRepository.save(role);

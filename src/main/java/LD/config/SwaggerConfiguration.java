@@ -25,8 +25,8 @@ public class SwaggerConfiguration
 	}
 
 	private ApiInfo apiEndPointsInfo() {
-		return new ApiInfoBuilder().title("Spring Boot REST API")
-				.description("Employee Management REST API")
+		return new ApiInfoBuilder().title("IFRS Calculator REST API")
+				.description("IFRS Calculator for leasing deposits REST API")
 				.contact(new Contact("Fayzelgayanov Marat", "", "f4815162342@gmail.com"))
 				.license("Apache 2.0")
 				.licenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html")

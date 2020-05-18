@@ -20,4 +20,6 @@ public interface PeriodsClosedService
 	PeriodsClosed updatePeriodsClosed(PeriodsClosedID id, PeriodsClosed periodClosed);
 
 	boolean delete(PeriodsClosedID id);
+
+	void autoClosePeriods(String dateBeforeToClose, long scenario_id);
 }

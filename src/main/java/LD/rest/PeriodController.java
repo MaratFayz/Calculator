@@ -100,4 +100,17 @@ public class PeriodController
 	{
 		return periodService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
 	}
+
+	@PostMapping("/autoCreatePeriods")
+	@ApiOperation(value = "Автоматическое добавление значений периодов в базу данных")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Периоды были успешно добавлены"),
+			@ApiResponse(code = 404, message = "Доступ запрещён")
+	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).AUTO_ADDING_PERIODS)")
+	public ResponseEntity autoCreatePeriods(@RequestParam String dateFrom, @RequestParam String dateTo)
+	{
+		periodService.autoCreatePeriods(dateFrom, dateTo);
+		return ResponseEntity.ok().build();
+	}
 }

@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,6 +55,7 @@ public class EntryServiceImpl implements EntryService
 	PeriodsClosedRepository periodsClosedRepository;
 	@Autowired
 	UserRepository userRepository;
+	ReentrantLock reentrantLock;
 
 	public EntryServiceImpl(EntryRepository entryRepository,
 							DepositRatesRepository depositRatesRepository,
@@ -64,11 +66,14 @@ public class EntryServiceImpl implements EntryService
 		this.depositRatesRepository = depositRatesRepository;
 		this.entry_ifrs_acc_repository = entry_ifrs_acc_repository;
 		this.GDK = GDK;
+		this.reentrantLock = new ReentrantLock();
 	}
 
 	@Override
 	public void calculateEntries(Long SCENARIO_LOAD, Long SCENARIO_SAVE) throws ExecutionException, InterruptedException
 	{
+		this.reentrantLock.lock();
+
 		ExecutorService threadExecutor = Executors.newFixedThreadPool(10);
 
 		List<Future<List<Entry>>> allEntriesInAllLD = new ArrayList<>();
@@ -112,6 +117,8 @@ public class EntryServiceImpl implements EntryService
 		entry_ifrs_acc_repository.saveAll(resultEntryInIFRS);
 
 		threadExecutor.shutdown();
+
+		this.reentrantLock.unlock();
 	}
 
 	@Override

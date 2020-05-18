@@ -16,6 +16,8 @@ public class Currency_out
 
 	private String short_name;
 
+	private String name;
+
 	private String CBR_currency_code;
 
 	private String user;
@@ -27,6 +29,7 @@ public class Currency_out
 		return Currency_out.builder()
 				.id(currency.getId())
 				.short_name(currency.getShort_name())
+				.name(currency.getName())
 				.CBR_currency_code(currency.getCBRCurrencyCode())
 				.user(currency.getUser().getUsername())
 				.lastChange(DateFormat.formatDate(currency.getLastChange()))

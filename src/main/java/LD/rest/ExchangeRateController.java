@@ -76,9 +76,10 @@ public class ExchangeRateController
 			@ApiResponse(code = 404, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LOAD_EXCHANGE_RATE_FROM_CBR)")
-	public ResponseEntity importExchangeRatesFormCBR()
+	public ResponseEntity importExchangeRatesFormCBR(@RequestParam long scenario_id,
+													 @RequestParam boolean isAddOnlyNewestRates)
 	{
-		exchangeRateService.importExchangeRatesFormCBR();
+		exchangeRateService.importExchangeRatesFormCBR(scenario_id, isAddOnlyNewestRates);
 		return new ResponseEntity(HttpStatus.OK);
 	}
 
