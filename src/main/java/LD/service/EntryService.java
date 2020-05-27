@@ -3,13 +3,14 @@ package LD.service;
 import LD.model.Entry.*;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Service
 public interface EntryService
 {
-	void calculateEntries(Long SCENARIO_LOAD, Long SCENARIO_SAVE) throws ExecutionException, InterruptedException;
+	void calculateEntries(ZonedDateTime copyDate, Long SCENARIO_LOAD, Long SCENARIO_SAVE) throws ExecutionException, InterruptedException;
 
 	List<EntryDTO_out> getAllLDEntries();
 

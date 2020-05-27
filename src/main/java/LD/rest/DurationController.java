@@ -42,7 +42,7 @@ public class DurationController
 	@ApiOperation(value = "Получение длительности с определённым id", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Длительность существует, возвращается в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Такая длительность отсутствует")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).DURATION_READER)")
@@ -87,7 +87,7 @@ public class DurationController
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Длительность была успешно удалена"),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Длительность не была обнаружена")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).DURATION_DELETER)")

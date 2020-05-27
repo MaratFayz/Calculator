@@ -1,6 +1,5 @@
 package LD.config.Security.model.User;
 
-import LD.config.DateFormat;
 import LD.model.Enums.STATUS_X;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

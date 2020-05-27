@@ -52,7 +52,7 @@ public class EntryIFRSAccController
 	@ApiOperation(value = "Получение записи на счетах МСФО с определённым id", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Запись на счетах МСФО существует, возвращается в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Такая запись на счетах МСФО отсутствует")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_IFRS_READER)")
@@ -109,7 +109,7 @@ public class EntryIFRSAccController
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Запись на счетах МСФО была успешно удалена"),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Запись на счетах МСФО не была обнаружена")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_IFRS_DELETER)")

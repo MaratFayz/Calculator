@@ -55,7 +55,6 @@ public class UserServiceImpl implements UserService
 	public User saveNewUser(User user)
 	{
 		User userFromDB = userRepository.findByUsername(user.getUsername());
-
 		if(userFromDB != null) return null;
 
 		user.setPassword(passwordEncoder.encode(user.getPassword()));

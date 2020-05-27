@@ -107,18 +107,40 @@ public class PeriodServiceImpl implements PeriodService
 	@Override
 	public void autoCreatePeriods(String dateFrom, String dateTo)
 	{
-		LocalDate LDdateFrom = DateFormat.parsingDate(dateFrom).toLocalDate().plusMonths(1).withDayOfMonth(1).minusDays(1);
-		LocalDate LDdateTo = DateFormat.parsingDate(dateTo).toLocalDate().plusMonths(1).withDayOfMonth(1);
-
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		User userCreated = userRepository.findByUsername(username);
 
+		ArrayList<Period> generatedPeriods = generatePeriods(dateFrom, dateTo, userCreated, periodRepository);
+
+		periodRepository.saveAll(generatedPeriods);
+	}
+
+	public static ArrayList<Period> generatePeriods(String dateFrom, String dateTo, User userCreated, PeriodRepository periodRepository)
+	{
+		ArrayList<Period> periods = new ArrayList<>();
+
+		LocalDate LDdateFrom = DateFormat.parsingDate(dateFrom).toLocalDate();
+		LocalDate LDdateTo = DateFormat.parsingDate(dateTo).toLocalDate();
+
+		if(LDdateFrom.isAfter(LDdateTo))
+		{
+			LocalDate now = LocalDate.now();
+			now = LDdateFrom;
+			LDdateFrom = LDdateTo;
+			LDdateTo = now;
+		}
+
+		LDdateFrom = LDdateFrom.plusMonths(1).withDayOfMonth(1).minusDays(1);
+		LDdateTo = LDdateTo.plusMonths(1).withDayOfMonth(1);
+
 		LDdateFrom.datesUntil(LDdateTo, java.time.Period.ofMonths(1)).forEach(date ->
 		{
+			//доводим до последнего дня месяца
+			date = date.withDayOfMonth(date.lengthOfMonth());
+
 			ZonedDateTime zonedDateTime = ZonedDateTime.of(date, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
 
-			Period foundPeriod = periodRepository
-					.findByDate(zonedDateTime);
+			Period foundPeriod = periodRepository.findByDate(zonedDateTime);
 
 			log.info("Для даты {} был обнаружен период {}", zonedDateTime, foundPeriod);
 
@@ -134,8 +156,10 @@ public class PeriodServiceImpl implements PeriodService
 
 				log.info("Для даты {} был создан период {}", zonedDateTime, newPeriod);
 
-				periodRepository.save(newPeriod);
+				periods.add(newPeriod);
 			}
 		});
+
+		return periods;
 	}
 }

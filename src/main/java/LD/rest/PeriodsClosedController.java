@@ -42,7 +42,7 @@ public class PeriodsClosedController
 	@ApiOperation(value = "Получение периода и статуса закрытия с определённым id", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Период и статус закрытия существует, возвращается в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Такой период и статус закрытия отсутствует")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).PERIODS_CLOSED_READER)")
@@ -58,7 +58,7 @@ public class PeriodsClosedController
 	@ApiOperation(value = "Получение по сценарию периода закрытия", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Период закрытия в сценарии существует, возвращается в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 500, message = "Нет последнего закрытого периода в сценарии")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).PERIODS_CLOSED_READER)")
@@ -108,7 +108,7 @@ public class PeriodsClosedController
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Период со статусом закрытия был успешно удален"),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Период со статусом закрытия не был обнаружен")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).PERIODS_CLOSED_DELETER)")

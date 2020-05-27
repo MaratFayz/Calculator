@@ -101,7 +101,7 @@ public class LeasingDepositController
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Лизинговый депозит был успешно удален"),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Лизинговый депозит не был обнаружен")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LEASING_DEPOSIT_DELETER)")

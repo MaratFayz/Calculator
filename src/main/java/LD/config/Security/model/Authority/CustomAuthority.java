@@ -37,6 +37,11 @@ public class CustomAuthority implements GrantedAuthority
 		CustomAuthority.builder().name(ALL_AUTHORITIES.USER_DELETER.name()).build(),
 		CustomAuthority.builder().name(ALL_AUTHORITIES.USER_READER.name()).build(),
 
+		CustomAuthority.builder().name(ALL_AUTHORITIES.ROLE_ADDER.name()).build(),
+		CustomAuthority.builder().name(ALL_AUTHORITIES.ROLE_EDITOR.name()).build(),
+		CustomAuthority.builder().name(ALL_AUTHORITIES.ROLE_DELETER.name()).build(),
+		CustomAuthority.builder().name(ALL_AUTHORITIES.ROLE_READER.name()).build(),
+
 		CustomAuthority.builder().name(ALL_AUTHORITIES.COMPANY_ADDER.name()).build(),
 		CustomAuthority.builder().name(ALL_AUTHORITIES.COMPANY_EDITOR.name()).build(),
 		CustomAuthority.builder().name(ALL_AUTHORITIES.COMPANY_DELETER.name()).build(),

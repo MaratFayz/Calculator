@@ -1,5 +1,6 @@
 package LD.rest;
 
+import LD.config.DateFormat;
 import LD.model.Entry.*;
 import LD.service.EntryService;
 import io.swagger.annotations.Api;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -83,7 +85,7 @@ public class EntryController
 	@ApiOperation("Получение транзакции с определённым id")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Транзакция существует, возвращается в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Такая транзакция отсутствует")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_READER)")
@@ -119,12 +121,15 @@ public class EntryController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CALCULATE)")
 	public ResponseEntity calculateAllEntries(
 			@RequestParam(name = "scenario_from") Long scenarioFrom,
-			@RequestParam(name = "scenario_to") Long scenarioTo) throws ExecutionException, InterruptedException
+			@RequestParam(name = "scenario_to") Long scenarioTo,
+			@RequestParam(name = "dateCopyStart", required = false) String dateCopyStart) throws ExecutionException, InterruptedException
 	{
+		ZonedDateTime parsedCopyDate = DateFormat.parsingDate(dateCopyStart).plusMonths(1).withDayOfMonth(1).minusDays(1);
+		log.info("Дата начала копирования была запарсена в {}", parsedCopyDate);
 		try
 		{
 			log.info("Расчет транзакций начался. Значения параметров: From = {}, To = {}", scenarioFrom, scenarioTo);
-			entryService.calculateEntries(scenarioFrom, scenarioTo);
+			entryService.calculateEntries(parsedCopyDate, scenarioFrom, scenarioTo);
 			log.info("Расчет транзакций окончен. Значения параметров: From = {}, To = {}", scenarioFrom, scenarioTo);
 		}
 		catch (Exception any)
@@ -162,7 +167,7 @@ public class EntryController
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Транзакция была успешно удалена"),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Транзакция не была обнаружена")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_DELETER)")

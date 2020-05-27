@@ -162,14 +162,10 @@ public class GeneralDataKeeper
 
 	public static Specification<LeasingDeposit> specLDsForScenario(Scenario scenarioWhereFindLDs)
 	{
-		return new Specification<LeasingDeposit>()
-		{
-			@Override
-			public Predicate toPredicate(Root<LeasingDeposit> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder)
-			{
-				return criteriaBuilder.and(criteriaBuilder.equal(root.get("is_created"), STATUS_X.X), criteriaBuilder.equal(root.get("scenario"), scenarioWhereFindLDs));
-			}
-		};
+		Specification<LeasingDeposit> spLD = (rootLD, qLD, cbLD) ->
+				cbLD.and(cbLD.equal(rootLD.get("is_created"), STATUS_X.X), cbLD.equal(rootLD.get("scenario"), scenarioWhereFindLDs));
+
+		return spLD;
 	}
 
 	private List<Period> countAllPeriods()

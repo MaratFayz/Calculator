@@ -42,7 +42,7 @@ public class EndDateController
 	@ApiOperation("Получение конечных дат с определённым id")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Конечная дата существует, возвращается в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Такая конечная дата отсутствует")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_READER)")
@@ -93,7 +93,7 @@ public class EndDateController
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Конечная дата была успешно удалена"),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Конечная дата не была обнаружена")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_DELETER)")

@@ -6,6 +6,12 @@ import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.Authority.CustomAuthority;
 import LD.config.Security.model.Role.Role;
 import LD.config.Security.model.User.User;
+import LD.model.Currency.Currency;
+import LD.model.Enums.STATUS_X;
+import LD.model.Enums.ScenarioStornoStatus;
+import LD.model.Scenario.Scenario;
+import LD.repository.CurrencyRepository;
+import LD.repository.ScenarioRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -36,6 +42,11 @@ public class addAuthoritiesAndRoles_Admin implements ApplicationListener<Context
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	@Autowired
+	private CurrencyRepository currencyRepository;
+	@Autowired
+	private ScenarioRepository scenarioRepository;
+
 	@Override
 	@Transactional
 	public void onApplicationEvent(ContextRefreshedEvent event)
@@ -53,16 +64,44 @@ public class addAuthoritiesAndRoles_Admin implements ApplicationListener<Context
 		Role adminRole = createRoleIfNotFound("ROLE_SUPERADMIN", superAdminCustomAuthorities);
 
 		User adminUser = User.builder()
-			.isEnabled(true)
-			.isExpired(false)
-			.isLocked(false)
+			.isEnabled(STATUS_X.X)
+			.isAccountExpired(null)
+			.isCredentialsExpired(null)
+			.isLocked(null)
 			.username("a")
 			.password(passwordEncoder.encode("a"))
 			.roles(Set.of(adminRole))
 			.lastChange(ZonedDateTime.now())
 			.build();
 
-		userRepository.save(adminUser);
+		adminUser = userRepository.save(adminUser);
+
+		Currency RUB = Currency.builder()
+				.name("Russian Ruble")
+				.CBRCurrencyCode(null)
+				.short_name("RUB")
+				.lastChange(ZonedDateTime.now())
+				.user(adminUser)
+				.build();
+
+		Currency USD = Currency.builder()
+				.name("USA Dollar")
+				.CBRCurrencyCode("R01235")
+				.short_name("USD")
+				.lastChange(ZonedDateTime.now())
+				.user(adminUser)
+				.build();
+
+		currencyRepository.save(RUB);
+		currencyRepository.save(USD);
+
+		Scenario fact = Scenario.builder()
+				.status(ScenarioStornoStatus.ADDITION).name("FACT")
+				.lastChange(ZonedDateTime.now())
+				.user(adminUser)
+				.build();
+
+		scenarioRepository.save(fact);
 
 		alreadySetup = true;
 	}

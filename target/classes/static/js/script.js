@@ -586,6 +586,11 @@ Vue.component("tab-entriesifrs", {
 });
 
 Vue.component("tab-calculate", {
+    data: function() {
+        return {
+            dateCopyStart: {}
+        }
+    },
     computed: {
         selectedScenario_from_: function() {
             return selectedScenario_from;
@@ -596,6 +601,10 @@ Vue.component("tab-calculate", {
     },
     template: '<div>' +
                     '<template v-if="selectedScenario_from_ != `` && selectedScenario_to_ != `` "> ' +
+                        '<div>' +
+                            '<label> Дата начала копирования со сценария-источника: </label>' +
+                            '<input type="text" :name="key" v-model="dateCopyStart.date">' +
+                        '</div>' +
                         '<button ' +
                               'v-bind:value="`calculate`" ' +
                               'class="spravochnikButton" ' +
@@ -629,12 +638,14 @@ Vue.component("tab-calculate", {
             console.log("calculate => selectedScenario_to = ", selectedScenario_to);
             var selectedScenario_to_id = determineIdSprav(selectedScenario_to, allScenarios);
             console.log("calculate => selectedScenario_to_id = ", selectedScenario_to_id);
+            console.log("calculate => dateCopyStart = ", this.dateCopyStart);
 
             if(selectedScenario_from_id != undefined && selectedScenario_to_id != undefined)
             {
-                let finalurl = urlWithEntryCalculator + "?scenario_from=" +
-                               selectedScenario_from_id + "&scenario_to=" +
-                               selectedScenario_to_id;
+                let finalurl = urlWithEntryCalculator +
+                               "?scenario_from=" + selectedScenario_from_id +
+                               "&scenario_to=" + selectedScenario_to_id +
+                               "&dateCopyStart=" + this.dateCopyStart;
 
                 let response = await fetch(finalurl, {
                     method: "POST",

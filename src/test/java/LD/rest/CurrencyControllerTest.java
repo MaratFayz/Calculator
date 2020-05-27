@@ -86,6 +86,6 @@ public class CurrencyControllerTest
 	{
 		mvc.perform(MockMvcRequestBuilders.delete("/currencies/1")
 				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().is(404));
+				.andExpect(status().is(403));
 	}
 }

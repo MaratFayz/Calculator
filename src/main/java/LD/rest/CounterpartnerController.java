@@ -32,7 +32,7 @@ public class CounterpartnerController
 			@ApiResponse(code = 200, message = "Все контрагенты возвращаются в ответе."),
 			@ApiResponse(code = 404, message = "Доступ запрещён")
 	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COUNTERPARTNER_ADDER)")
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COUNTERPARTNER_READER)")
 	public List<Counterpartner_out> getAllCounterpartners()
 	{
 		return counterpartnerService.getAllCounterpartners();
@@ -42,10 +42,10 @@ public class CounterpartnerController
 	@ApiOperation(value = "Получение контрагента с определённым id", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Контрагент существует, возвращается в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Такой контрагент отсутствует")
 	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COUNTERPARTNER_ADDER)")
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COUNTERPARTNER_READER)")
 	public ResponseEntity getCounterpartner(@PathVariable Long id)
 	{
 		Counterpartner counterpartner = counterpartnerService.getCounterpartner(id);
@@ -73,6 +73,7 @@ public class CounterpartnerController
 			@ApiResponse(code = 200, message = "Контрагент был изменен."),
 			@ApiResponse(code = 404, message = "Доступ запрещён")
 	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COUNTERPARTNER_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody CounterpartnerDTO_in counterpartnerDTOIn)
 	{
 		log.info("(update): Поступил объект counterpartnerDTOIn", counterpartnerDTOIn);
@@ -86,9 +87,10 @@ public class CounterpartnerController
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Контрагент был успешно удален"),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Контрагент не был обнаружен")
 	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COUNTERPARTNER_DELETER)")
 	public ResponseEntity delete(@PathVariable Long id)
 	{
 		return counterpartnerService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();

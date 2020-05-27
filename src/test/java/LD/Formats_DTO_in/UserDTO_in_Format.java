@@ -7,6 +7,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Arrays;
+
 public class UserDTO_in_Format
 {
 	@Autowired
@@ -25,6 +27,9 @@ public class UserDTO_in_Format
 				.roles(null)
 				.username(null)
 				.build();
+
+		Class<?> uD = UserDTO_in.class;
+		Arrays.stream(uD.getDeclaredFields()).forEach(System.out::println);
 
 		try
 		{

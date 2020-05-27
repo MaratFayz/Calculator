@@ -48,11 +48,13 @@ public class RoleTransform
 				(result, authority) -> result.append(", ").append(authority.getAuthority()),
 				(res1, res2) -> res1.append(", ").append(res2));
 
+		RoleAuthorities = RoleAuthorities.delete(0, 2);
+
 		return RoleDTO_out.builder()
 				.id(role.getId())
 				.name(role.getName())
 				.authorities(RoleAuthorities)
-				.user_changed(role.getUser_changed().getUsername())
+				.user_changed(role.getUser_changed() == null ? null : role.getUser_changed().getUsername())
 				.lastChange(DateFormat.formatDate(role.getLastChange()))
 				.build();
 	}

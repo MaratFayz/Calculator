@@ -5,6 +5,7 @@ import LD.model.Currency.Currency;
 import LD.model.Currency.Currency_out;
 import LD.repository.CurrencyRepository;
 import LD.rest.exceptions.NotFoundException;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Log4j2
 public class CurrencyServiceImpl implements CurrencyService
 {
 	@Autowired
@@ -88,6 +90,7 @@ public class CurrencyServiceImpl implements CurrencyService
 		}
 		catch (Exception e)
 		{
+			log.info("При удалении валюты произошла ошибка. Возврат значения false");
 			return false;
 		}
 

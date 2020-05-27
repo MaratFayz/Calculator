@@ -70,7 +70,7 @@ public class EntryServiceImpl implements EntryService
 	}
 
 	@Override
-	public void calculateEntries(Long SCENARIO_LOAD, Long SCENARIO_SAVE) throws ExecutionException, InterruptedException
+	public void calculateEntries(ZonedDateTime copyDate, Long SCENARIO_LOAD, Long SCENARIO_SAVE) throws ExecutionException, InterruptedException
 	{
 		this.reentrantLock.lock();
 
@@ -81,7 +81,7 @@ public class EntryServiceImpl implements EntryService
 
 		log.info("Начат расчет GDK");
 
-		GDK.getDataFromDB(SCENARIO_LOAD, SCENARIO_SAVE);
+		GDK.getDataFromDB(copyDate, SCENARIO_LOAD, SCENARIO_SAVE);
 
 		log.info("Значения в this.GDK = {}", this.GDK);
 

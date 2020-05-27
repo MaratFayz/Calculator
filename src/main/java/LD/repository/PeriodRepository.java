@@ -13,4 +13,5 @@ public interface PeriodRepository extends JpaRepository<Period, Long>, JpaSpecif
 {
 	Period findByDate(ZonedDateTime dateTime);
 	List<Period> findByDateLessThanEqual(ZonedDateTime dateTime);
+	List<Period> findByDateGreaterThan(ZonedDateTime dateTime);
 }

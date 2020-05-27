@@ -131,9 +131,10 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		User userChanging = userRepository.findByUsername(username);
 
-		ZonedDateTime endDateToClose = DateFormat.parsingDate(dateBeforeToClose);
+		ZonedDateTime endDateToClose = DateFormat.parsingDate(dateBeforeToClose).withDayOfMonth(1).plusMonths(1).minusDays(1);
 		Scenario scenarioWhereClose = scenarioRepository.findById(scenario_id).get();
 
+		//периоды до даты включительно будем закрывать
 		TreeSet<Period> periods = new TreeSet(Comparator.comparing(Period::getDate));
 		periods.addAll(periodRepository.findByDateLessThanEqual(endDateToClose));
 
@@ -171,6 +172,28 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService
 				periodsClosedRepository.saveAndFlush(pcToUpdate);
 			}
 
+		});
+
+		//периоды после даты будем открывать
+		periods = new TreeSet(Comparator.comparing(Period::getDate));
+		periods.addAll(periodRepository.findByDateGreaterThan(endDateToClose));
+
+		periods.stream().forEach(p -> {
+			List<PeriodsClosed> periodsClosedForPeriod = periodsClosedRepository.findAll().stream()
+					.filter(pc -> pc.getPeriodsClosedID().getPeriod().equals(p))
+					.filter(pc -> pc.getPeriodsClosedID().getScenario().equals(scenarioWhereClose))
+					.collect(Collectors.toList());
+
+			if(periodsClosedForPeriod.size() > 0)
+			{
+				//уже существуют периоды -> надо их открыть
+				PeriodsClosed pcToUpdate = periodsClosedForPeriod.get(0);
+				pcToUpdate.setISCLOSED(null);
+				pcToUpdate.setLastChange(ZonedDateTime.now());
+				pcToUpdate.setUser(userChanging);
+
+				periodsClosedRepository.saveAndFlush(pcToUpdate);
+			}
 		});
 	}
 }

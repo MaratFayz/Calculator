@@ -3,6 +3,7 @@ package LD.service;
 import LD.model.Period.Period;
 import LD.model.Period.PeriodDTO_in;
 import LD.model.Period.PeriodDTO_out;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 

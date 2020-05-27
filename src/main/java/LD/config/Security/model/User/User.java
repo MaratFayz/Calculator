@@ -86,24 +86,24 @@ public class User implements UserDetails
 	@Override
 	public boolean isAccountNonExpired()
 	{
-		return !isAccountExpired.equals(STATUS_X.X);
+		return isAccountExpired == null;
 	}
 
 	@Override
 	public boolean isAccountNonLocked()
 	{
-		return !isLocked.equals(STATUS_X.X);
+		return isLocked == null;
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired()
 	{
-		return !isCredentialsExpired.equals(STATUS_X.X);
+		return isCredentialsExpired == null;
 	}
 
 	@Override
 	public boolean isEnabled()
 	{
-		return isEnabled.equals(STATUS_X.X);
+		return isEnabled != null;
 	}
 }

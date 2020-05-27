@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
     <Appenders>
-        <Console name="STDOUT">
-            <Layout type="PatternLayout" pattern="%m %n" />
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%style{%date{DEFAULT}}{yellow}
+                %highlight{%-5level}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green}
+                %message %n"/>
         </Console>
         <RollingFile name="rollingFile"
-                     fileName="logs/Calculator.log"
-                     filePattern="logs/Calculator-$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
+                     fileName="target/Calculator.log"
+                     filePattern="target/Calculator-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout>
                 <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
             </PatternLayout>
@@ -20,8 +22,9 @@
 
     <Loggers>
         <Root level="ALL">
-            <AppenderRef ref="STDOUT" />
             <AppenderRef ref="rollingFile" />
+            <AppenderRef ref="STDOUT" />
+
         </Root>
     </Loggers>
 

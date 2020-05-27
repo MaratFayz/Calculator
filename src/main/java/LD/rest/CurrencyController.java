@@ -47,7 +47,7 @@ public class CurrencyController
 	@ApiOperation(value = "Получение валюты с определённым id", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Валюта существует, возвращается в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Такая валюта отсутствует")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CURRENCY_READER)")
@@ -64,6 +64,7 @@ public class CurrencyController
 			@ApiResponse(code = 200, message = "Новая валюта была сохранена."),
 			@ApiResponse(code = 404, message = "Доступ запрещён")
 	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CURRENCY_ADDER)")
 	public ResponseEntity saveNewCurrency(@RequestBody CurrencyDTO_in currencyDTOIn)
 	{
 		Currency currency = CurrencyDTO_in.CurrencyDTO_in_to_Currency(currencyDTOIn);
@@ -77,6 +78,7 @@ public class CurrencyController
 			@ApiResponse(code = 200, message = "Валюта была изменена."),
 			@ApiResponse(code = 404, message = "Доступ запрещён")
 	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CURRENCY_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody CurrencyDTO_in currencyDTOIn)
 	{
 		log.info("(update): Поступил объект currencyDTOIn", currencyDTOIn);
@@ -90,11 +92,13 @@ public class CurrencyController
 	@ApiOperation(value = "Удаление значения")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Валюта была успешно удалена"),
-			@ApiResponse(code = 404, message = "Доступ запрещён"),
+			@ApiResponse(code = 403, message = "Доступ запрещён"),
 			@ApiResponse(code = 404, message = "Валюта не была обнаружена")
 	})
+	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CURRENCY_DELETER)")
 	public ResponseEntity delete(@PathVariable Long id)
 	{
+		log.info("вызывается метод удаления валюты с id = {}", id);
 		return currencyService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
 	}
 

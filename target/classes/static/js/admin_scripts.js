@@ -1,4 +1,5 @@
 var tabs = [{"id" : "users", "name" : "Управление пользователями"},
+            {"id" : "roles", "name" : "Управление ролями"},
             {"id" : "exImport", "name" : "Импорт курсов валют"},
             {"id" : "autoCreatePeriods", "name" : "Автоматическое создание периодов"},
             {"id" : "autoClosingPeriods", "name" : "Автоматическое закрытие периодов"}]
@@ -6,11 +7,34 @@ var tabs = [{"id" : "users", "name" : "Управление пользовате
 var selectedScenario_from = "";
 var selectedScenario_to = "";
 var allScenarios = [];
+var allCurrencies = [];
 
 var urlWithScenarios = "/scenarios";
+var urlWithCurrencies = "/currencies";
 var urlWithUsers = "/users";
-var urlWithAutoCreatePeriods = "/autoCreatePeriods";
-var urlWithAutoClosingPeriods = "/autoClosingPeriods";
+var urlWithRoles = "/roles";
+var urlWithAutoCreatePeriods = "/periods/autoCreatePeriods";
+var urlWithAutoClosingPeriods = "/periodsClosed/autoClosingPeriods";
+var urlWithImportExchangeCurrencies = "/exchangeRates/importERFromCBR";
+
+var GD_spravochniki = [{"id" : "/user", "name" : "Пользователи"},
+                       {"id" : "/roles", "name" : "Роли"}]
+
+function determineIdSprav(value, allValueForSprav)
+{
+    var value_id;
+    var index;
+    for (index = 0; index < allValueForSprav.length; ++index)
+    {
+       console.log("value.id = " + allValueForSprav[index].id);
+       console.log("value.name = " + allValueForSprav[index].name);
+
+        if(value == allValueForSprav[index].name)
+            value_id = allValueForSprav[index].id;
+    }
+
+    return value_id;
+}
 
 function determineNameSprav(urlToDetermineName) {
     var index;
@@ -357,14 +381,180 @@ Vue.component('tab-users',
     }
 });
 
-Vue.component('tab-eximport',
-);
+Vue.component('tab-roles',
+{
+    data: function() {
+        return {
+            URLIK : {},
+            showingData : [],
+            showingKeys : []
+        }
+    },
+    template:
+               '<table align="left" valign="top">' +
+                    '<caption> <h1> Роли пользователей </h1> </caption>' +
+                    '<tr align="left" valign="top">' +
+                          '<td>' +
+                            '<DataTableForDataRight :showingData = "showingData" ' +
+                                ':showingKeys = "showingKeys" ' +
+                                ':urlToDetermineName = "URLIK" ' +
+                                'v-on:refreshDataToView=remakeDataToView($event) />' +
+                          '</td>' +
+                    '</tr>' +
+              '</table>',
+    methods: {
+               remakeDataToView: function(url)
+               {
+                    this.URLIK.url = url;
+                    console.log(this.URLIK.url);
+                    var promise = getValuesFromServer(url, null);
+                    promise.then(data => {
+                          console.log(data);
+                          this.showingData = data;
+                          console.log(this.showingData);
+                          if (this.showingData.length > 0)
+                          {
+                              this.showingKeys = Object.keys(this.showingData[0]);
+                              console.log(this.showingKeys);
+                          }
+                          else
+                          {
+                              this.showingKeys = [];
+                          }
+                    });
+               }
+             },
+    created: function()
+    {
+        this.remakeDataToView(urlWithRoles);
+    }
+});
 
-Vue.component('tab-autocreateperiods',
-);
+Vue.component('tab-autocreateperiods', {
+    data: function() {
+        return {
+            dateFrom: {},
+            dateTo: {},
+            urlWithAutoCreatePeriods: urlWithAutoCreatePeriods
+        }
+    },
+    template: '<div>' +
+                    '<label> Дата периода начала генерации </label>' +
+                    '<input type="text" v-model="dateFrom.date">' +
 
-Vue.component('tab-autoclosingperiods',
-);
+                    '<label> Дата периода конца генерации </label>' +
+                    '<input type="text" v-model="dateTo.date">' +
+
+                    '<button @click="sendDataToDB(this.urlWithAutoCreatePeriods, dateFrom, dateTo, `POST`)">' +
+                        'Сгенерировать периоды </button>' +
+              '</div>',
+    methods: {
+        sendDataToDB: async function(url, dateFrom, dateTo, method)
+        {
+            let finalurl = url;
+            finalurl = finalurl + "?dateFrom=" + dateFrom.date + "&dateTo=" + dateTo.date;
+
+          let response = await fetch(finalurl, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json;charset=utf-8'
+            }
+          });
+
+          let result = await response.json();
+          console.log(finalurl);
+          console.log(result);
+        },
+    }
+});
+
+Vue.component('tab-eximport', {
+    data: function() {
+        return {
+            urlWithImportExchangeCurrencies: urlWithImportExchangeCurrencies,
+            selectedScenario: {},
+            allScenarios: allScenarios,
+            isAddOnlyNewestRates: {}
+        }
+    },
+    template: '<div>' +
+                    '<label> Импорт курсов только: </label>' +
+                    '<input type="radio" id="X" value="1" v-model="isAddOnlyNewestRates.value">' +
+                    '<label for="X">Новых курсов</label>' +
+                    '<input type="radio" id="Y" value="0" v-model="isAddOnlyNewestRates.value">' +
+                    '<label for="Y">Всех курсов с затиранием имеющихся</label>' +
+
+                    '<p>Сценарий, в который будут сохранены курсы:</p>' +
+                    '<select v-model="selectedScenario">' +
+                        '<option v-for="scenario in this.allScenarios"> {{ scenario.name }} </option>' +
+                    '</select>' +
+
+                    '<button @click="sendDataToDB(this.urlWithImportExchangeCurrencies, ' +
+                                    'selectedScenario, isAddOnlyNewestRates, `POST`)">' +
+                        'Импорт курсов валют </button>' +
+              '</div>',
+    methods: {
+        sendDataToDB: async function(url, scenario, isAddOnlyNewestRates, method)
+        {
+            let finalurl = url;
+            var scenario_id = determineIdSprav(scenario, allScenarios);
+            finalurl = finalurl + "?scenario_id=" + scenario_id + "&isAddOnlyNewestRates=" + isAddOnlyNewestRates.value;
+
+          let response = await fetch(finalurl, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json;charset=utf-8'
+            }
+          });
+
+          let result = await response.json();
+          console.log(finalurl);
+          console.log(result);
+        },
+    }
+});
+
+Vue.component('tab-autoclosingperiods', {
+    data: function() {
+        return {
+            dateBeforeToClose: {},
+            urlWithAutoClosingPeriods: urlWithAutoClosingPeriods,
+            selectedScenario: {},
+            allScenarios: allScenarios
+        }
+    },
+    template: '<div>' +
+                    '<label> Дата периода до которого необходимо закрыть периоды </label>' +
+                    '<input type="text" v-model="dateBeforeToClose.date">' +
+
+                    '<p>Сценарий, в котором произойдет закрытие периодов:</p>' +
+                    '<select v-model="selectedScenario">' +
+                        '<option v-for="scenario in this.allScenarios"> {{ scenario.name }} </option>' +
+                    '</select>' +
+
+                    '<button @click="sendDataToDB(this.urlWithAutoClosingPeriods, dateBeforeToClose, selectedScenario, `PUT`)">' +
+                        'Закрыть периоды </button>' +
+              '</div>',
+    methods: {
+        sendDataToDB: async function(url, dateBeforeToClose, scenario, method)
+        {
+            let finalurl = url;
+            var scenario_id = determineIdSprav(scenario, allScenarios);
+            finalurl = finalurl + "?dateBeforeToClose=" + dateBeforeToClose.date + "&scenario_id=" + scenario_id;
+
+          let response = await fetch(finalurl, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json;charset=utf-8'
+            }
+          });
+
+          let result = await response.json();
+          console.log(finalurl);
+          console.log(result);
+        },
+    }
+});
 
 var app = new Vue({
   el: '#admin',
@@ -389,6 +579,14 @@ var app = new Vue({
             allScenarios = scenario;
 
              console.log("В методе created: => после присвоения значения allScenarios = ", allScenarios);
+        });
+
+     var promise = getValuesFromServer(urlWithCurrencies, null);
+     promise.then(currencies => {
+            console.log("В методе created: => currencies после запроса = ", currencies);
+            allCurrencies = currencies;
+
+            console.log("В методе created: => после присвоения значения allCurrencies = ", allCurrencies);
         });
   }
 
