@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class EndDateDTO_in
 {
-	private Long leasingDeposit;
+	private Long leasingDeposit_id;
 	private Long scenario;
 	private Long period;
 	private String End_Date;

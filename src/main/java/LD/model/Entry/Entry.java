@@ -7,6 +7,7 @@ import LD.model.Enums.LeasingDepositDuration;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Period.Period;
 import LD.model.Scenario.Scenario;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -33,6 +34,7 @@ public class Entry
 	private EntryStatus status;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JoinColumn(nullable = false)
 	private User user;
 
 	@Column(name = "DateTime_lastChange", nullable = false)
@@ -165,5 +167,6 @@ public class Entry
 
 	@MapsId(value = "leasingDeposit_id")
 	@ManyToOne(cascade = CascadeType.ALL)
+	@JsonIgnore
 	private LeasingDeposit leasingDeposit;
 }

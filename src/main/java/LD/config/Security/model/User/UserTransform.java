@@ -14,62 +14,65 @@ import java.util.Collection;
 
 @Component
 @Log4j2
-public class UserTransform
-{
-	@Autowired
-	RoleRepository roleRepository;
+public class UserTransform {
 
-	public User UserDTO_in_to_User(UserDTO_in userDTO_in)
-	{
-		Collection<Role> rolesInUserDTO = new ArrayList<>();
-		log.info("DTO in: {}", userDTO_in);
+    @Autowired
+    RoleRepository roleRepository;
 
-		if(userDTO_in.getRoles() != null)
-		{
-			String[] userRoles = userDTO_in.getRoles().split(",\\s*");
+    public User UserDTO_in_to_User(UserDTO_in userDTO_in) {
+        Collection<Role> rolesInUserDTO = new ArrayList<>();
+        log.info("DTO in: {}", userDTO_in);
 
-			log.info("Из DTO in {} получены роли: {}", userDTO_in, userRoles);
+        if (userDTO_in.getRoles() != null) {
+            String[] userRoles = userDTO_in.getRoles()
+                    .split(",\\s*");
 
-			Arrays.stream(userRoles).forEach(r ->
-			{
-				Role role = roleRepository.findByName(r);
+            log.info("Из DTO in {} получены роли: {}", userDTO_in, userRoles);
 
-				if (role != null) rolesInUserDTO.add(role);
-			});
-		}
+            Arrays.stream(userRoles)
+                    .forEach(r ->
+                    {
+                        Role role = roleRepository.findByName(r);
 
-		log.info("Итого из базы данных получены роли: {}", rolesInUserDTO);
+                        if (role != null) rolesInUserDTO.add(role);
+                    });
+        }
 
-		return User.builder()
-				.username(userDTO_in.getUsername())
-				.password(userDTO_in.getPassword())
-				.isAccountExpired(userDTO_in.getIsAccountExpired())
-				.isCredentialsExpired(userDTO_in.getIsCredentialsExpired())
-				.isLocked(userDTO_in.getIsLocked())
-				.isEnabled(userDTO_in.getIsEnabled())
-				.roles(rolesInUserDTO)
-				.build();
-	}
+        log.info("Итого из базы данных получены роли: {}", rolesInUserDTO);
 
-	public UserDTO_out User_to_UserDTO_out(User user)
-	{
-		StringBuilder userRoles = user.getAuthorities().stream().reduce(new StringBuilder(),
-				(result, authority) -> result.append(", ").append(authority.getAuthority()),
-				(res1, res2) -> res1.append(", ").append(res2));
+        return User.builder()
+                .username(userDTO_in.getUsername())
+                .password(userDTO_in.getPassword())
+                .isAccountExpired(userDTO_in.getIsAccountExpired())
+                .isCredentialsExpired(userDTO_in.getIsCredentialsExpired())
+                .isLocked(userDTO_in.getIsLocked())
+                .isEnabled(userDTO_in.getIsEnabled())
+                .roles(rolesInUserDTO)
+                .build();
+    }
 
-		userRoles = userRoles.delete(0, 2);
+    public UserDTO_out User_to_UserDTO_out(User user) {
+        StringBuilder userRoles = user.getAuthorities()
+                .stream()
+                .reduce(new StringBuilder(),
+                        (result, authority) -> result.append(", ")
+                                .append(authority.getAuthority()),
+                        (res1, res2) -> res1.append(", ")
+                                .append(res2));
 
-		return UserDTO_out.builder()
-				.id(user.getId())
-				.username(user.getUsername())
-				.password(user.getPassword())
-				.isAccountExpired(user.getIsAccountExpired())
-				.isCredentialsExpired(user.getIsCredentialsExpired())
-				.isLocked(user.getIsLocked())
-				.isEnabled(user.getIsEnabled())
-				.roles(userRoles)
-				.user_changed(user.getUsername())
-				.lastChange(DateFormat.formatDate(user.getLastChange()))
-				.build();
-	}
+        userRoles = userRoles.delete(0, 2);
+
+        return UserDTO_out.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .isAccountExpired(user.getIsAccountExpired())
+                .isCredentialsExpired(user.getIsCredentialsExpired())
+                .isLocked(user.getIsLocked())
+                .isEnabled(user.getIsEnabled())
+                .roles(userRoles)
+                .user_changed(user.getUsername())
+                .lastChange(DateFormat.formatDate(user.getLastChange()))
+                .build();
+    }
 }

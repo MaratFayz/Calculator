@@ -58,6 +58,8 @@ public class EndDateServiceImpl implements EndDateService
 	@Override
 	public EndDate saveEndDate(EndDate endDate)
 	{
+		log.info("Конечная дата для сохранения = {}", endDate);
+
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		endDate.setUser(userRepository.findByUsername(username));
 

@@ -63,7 +63,10 @@ public class EndDateController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_ADDER)")
 	public ResponseEntity saveNewEndDates(@RequestBody EndDateDTO_in endDateDTO_in)
 	{
+		log.info("endDateDTO_in = {}", endDateDTO_in);
 		EndDate endDate = endDateTransform.EndDatesDTO_in_to_EndDates(endDateDTO_in);
+
+		log.info("endDate = {}", endDate);
 		EndDate newEndDate = endDateService.saveEndDate(endDate);
 		return new ResponseEntity(endDateTransform.EndDates_to_EndDatesDTO_out(newEndDate), HttpStatus.OK);
 	}
@@ -82,7 +85,7 @@ public class EndDateController
 		EndDate endDate = endDateTransform.EndDatesDTO_in_to_EndDates(endDateDTO_in);
 
 		EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
-				endDateDTO_in.getLeasingDeposit(),
+				endDateDTO_in.getLeasingDeposit_id(),
 				endDateDTO_in.getPeriod());
 
 		EndDate updatedEndDate = endDateService.update(id, endDate);
@@ -100,7 +103,7 @@ public class EndDateController
 	public ResponseEntity delete(@RequestBody EndDateDTO_in endDateDTO_in)
 	{
 		EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
-				endDateDTO_in.getLeasingDeposit(),
+				endDateDTO_in.getLeasingDeposit_id(),
 				endDateDTO_in.getPeriod());
 
 		return endDateService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();

@@ -187,187 +187,187 @@ public class testService_Entries
 		ifrsAcc.add(new IFRSAccount(0L,
 				"A0203010100",
 				"Долгосрочные депозиты по аренде ВС - основная сумма",
-				"F2000", "Поступление", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=N5"));
+				"F2000", "Поступление", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=N5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(1L,
 				"A0208010000",
 				"Долгосрочные авансы выданные",
-				"F2000", "Поступление", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.1=N5"));
+				"F2000", "Поступление", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.1=N5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(2L,
 				"A0208010000",
 				"Долгосрочные авансы выданные",
-				"F2000", "Поступление", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.1=M5"));
+				"F2000", "Поступление", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.1=M5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(3L,
 				"A0203010100",
 				"Долгосрочные депозиты по аренде ВС - основная сумма",
-				"F2000", "Поступление", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=M5"));
+				"F2000", "Поступление", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=M5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(4L,
 				"P0302990000",
 				"Прочие финансовые расходы",
-				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.1=U5 + Reg.LeasingDeposit.model.LeasingDeposit.1=V5"));
+				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.1=U5 + Reg.LeasingDeposit.model.LeasingDeposit.1=V5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(5L,
 				"A0203010100",
 				"Долгосрочные депозиты по аренде ВС - основная сумма",
-				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=U5"));
+				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=U5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(6L,
 				"A0203010200",
 				"Долгосрочные депозиты по аренде ВС - проценты",
-				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=V5"));
+				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=V5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(7L,
 				"P0301990000",
 				"Прочие финансовые доходы",
-				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.1=W5 + Reg.LeasingDeposit.model.LeasingDeposit.1=X5"));
+				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.1=W5 + Reg.LeasingDeposit.model.LeasingDeposit.1=X5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(8L,
 				"A0203010100",
 				"Долгосрочные депозиты по аренде ВС - основная сумма",
-				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=W5"));
+				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=W5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(9L,
 				"A0203010200",
 				"Долгосрочные депозиты по аренде ВС - проценты",
-				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=X5"));
+				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.1=X5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(10L,
 				"A0203010200",
 				"Долгосрочные депозиты по аренде ВС - проценты",
-				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.2=M5"));
+				"F2700", "Начисление процентных доходов/расходов/дисконта", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.2=M5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(11L,
 				"P0301020000",
 				"Процентные доходы по страховым депозитам",
-				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.2=M5"));
+				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.2=M5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(12L,
 				"A0203010100",
 				"Долгосрочные депозиты по аренде ВС - основная сумма",
-				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=N5"));
+				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=N5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(13L,
 				"A0203010100",
 				"Долгосрочные депозиты по аренде ВС - основная сумма",
-				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=O5"));
+				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=O5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(14L,
 				"A0203010200",
 				"Долгосрочные депозиты по аренде ВС - проценты",
-				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=T5"));
+				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=T5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(15L,
 				"A0203010200",
 				"Долгосрочные депозиты по аренде ВС - проценты",
-				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=U5"));
+				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=U5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(16L,
 				"P0301310000",
 				"Положительные курсовые разницы",
-				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=V5"));
+				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=V5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(17L,
 				"P0302310000",
 				"Отрицательные курсовые разницы",
-				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=W5"));
+				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=W5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(18L,
 				"A0107010000",
 				"Краткосрочные авансы выданные",
-				"F3000", "Выбытие", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=X5 + Reg.LeasingDeposit.model.LeasingDeposit.3=Y5"));
+				"F3000", "Выбытие", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=X5 + Reg.LeasingDeposit.model.LeasingDeposit.3=Y5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(19L,
 				"A0203010100",
 				"Долгосрочные депозиты по аренде ВС - основная сумма",
-				"F3000", "Выбытие", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=X5"));
+				"F3000", "Выбытие", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=X5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(20L,
 				"A0203010200",
 				"Долгосрочные депозиты по аренде ВС - проценты",
-				"F3000", "Выбытие", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=Y5"));
+				"F3000", "Выбытие", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=Y5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(21L,
 				"P0301310000",
 				"Положительные курсовые разницы",
-				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.4_MA_AFL=B1"));
+				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.4_MA_AFL=B1", null, null));
 
 		ifrsAcc.add(new IFRSAccount(22L,
 				"P0302310000",
 				"Отрицательные курсовые разницы",
-				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.4_MA_AFL=C1"));
+				"Y9900", "Накопительно с начала года", "-", "THP99", "-", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.4_MA_AFL=C1", null, null));
 
 		ifrsAcc.add(new IFRSAccount(23L,
 				"A0107010000",
 				"Краткосрочные авансы выданные",
-				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.4_MA_AFL=A1"));
+				"F1600", "Курсовая разница", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.4_MA_AFL=A1", null, null));
 
 		ifrsAcc.add(new IFRSAccount(24L,
 				"A0215010100",
 				"АПП воздушные суда и авиационные двигатели - ПСт",
-				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-1"));
+				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-1", null, null));
 
 		ifrsAcc.add(new IFRSAccount(25L,
 				"A0215020100",
 				"АПП земля - ПСт",
-				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-2"));
+				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-2", null, null));
 
 		ifrsAcc.add(new IFRSAccount(26L,
 				"A0215030100",
 				"АПП здания - ПСт",
-				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-3"));
+				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-3", null, null));
 
 		ifrsAcc.add(new IFRSAccount(27L,
 				"A0215040100",
 				"АПП машины и оборудование - ПСт",
-				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-4"));
+				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-4", null, null));
 
 		ifrsAcc.add(new IFRSAccount(28L,
 				"A0215050100",
 				"АПП прочие ОС - ПСт",
-				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-5"));
+				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(29L,
 				"A0215060100",
 				"АПП незавершенное строительство - первоначальная стоимость",
-				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-6"));
+				"F2006", "Ввод в эксплуатацию", "-", "THP99", "-", "-", false, "APP-6", null, null));
 
 		ifrsAcc.add(new IFRSAccount(30L,
 				"A0208010000",
 				"Долгосрочные авансы выданные",
-				"F3000", "Выбытие", "-", "THP99", "RUB", "-", true, "APP-7"));
+				"F3000", "Выбытие", "-", "THP99", "RUB", "-", true, "APP-7", null, null));
 
 		ifrsAcc.add(new IFRSAccount(31L,
 				"A0208010000",
 				"Долгосрочные авансы выданные",
-				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=AE5-Reg.LeasingDeposit.model.LeasingDeposit.3=AF5"));
+				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=AE5-Reg.LeasingDeposit.model.LeasingDeposit.3=AF5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(32L,
 				"A0107010000",
 				"Краткосрочные авансы выданные",
-				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=AE5-Reg.LeasingDeposit.model.LeasingDeposit.3=AF5"));
+				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=AE5-Reg.LeasingDeposit.model.LeasingDeposit.3=AF5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(33L,
 				"A0203010100",
 				"Долгосрочные депозиты по аренде ВС - основная сумма",
-				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=AA5-Reg.LeasingDeposit.model.LeasingDeposit.3=AC5"));
+				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=AA5-Reg.LeasingDeposit.model.LeasingDeposit.3=AC5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(34L,
 				"A0102010100",
 				"Краткосрочные депозиты по аренде ВС - основная сумма",
-				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=AA5-Reg.LeasingDeposit.model.LeasingDeposit.3=AC5"));
+				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=AA5-Reg.LeasingDeposit.model.LeasingDeposit.3=AC5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(35L,
 				"A0203010200",
 				"Долгосрочные депозиты по аренде ВС - проценты",
-				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=AB5-Reg.LeasingDeposit.model.LeasingDeposit.3=AD5"));
+				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", true, "Reg.LeasingDeposit.model.LeasingDeposit.3=AB5-Reg.LeasingDeposit.model.LeasingDeposit.3=AD5", null, null));
 
 		ifrsAcc.add(new IFRSAccount(36L,
 				"A0102010200",
 				"Краткосрочные депозиты по аренде ВС - проценты",
-				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=AB5-Reg.LeasingDeposit.model.LeasingDeposit.3=AD5"));
+				"F5000", "Реклассификация между группами актива/обязательства", "-", "THP99", "RUB", "-", false, "Reg.LeasingDeposit.model.LeasingDeposit.3=AB5-Reg.LeasingDeposit.model.LeasingDeposit.3=AD5", null, null));
 	}
 
 	public static void create_LD_1_NormalTestLD()

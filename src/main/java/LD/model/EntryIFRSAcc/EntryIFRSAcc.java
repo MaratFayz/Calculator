@@ -21,10 +21,11 @@ public class EntryIFRSAcc
 	@EmbeddedId
 	private EntryIFRSAccID entryIFRSAccID;
 
-	@Column(columnDefinition = "DECIMAL(30,10)")
+	@Column(columnDefinition = "DECIMAL(30,10)", nullable = false)
 	private BigDecimal sum;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JoinColumn(nullable = false)
 	private User user;
 
 	@Column(name = "DateTime_lastChange", nullable = false)

@@ -1,6 +1,5 @@
 package LD.model.EndDate;
 
-import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Period.Period;
 import LD.model.Scenario.Scenario;
 import lombok.AllArgsConstructor;

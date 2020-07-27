@@ -17,27 +17,28 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor()
 @Builder
 @AllArgsConstructor
-public class Scenario
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, unique = true)
-	private Long id;
+public class Scenario {
 
-	@Column(name = "name", nullable = false)
-	private String name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true)
+    private Long id;
 
-	@Column(name = "storno_status", nullable = false, columnDefinition = "enum('FULL','ADDITION')")
-	@Enumerated(value = EnumType.STRING)
-	private ScenarioStornoStatus status;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-	@Column(name = "isBlocked", columnDefinition = "enum('X')")
-	@Enumerated(value = EnumType.STRING)
-	private STATUS_X isBlocked;
+    @Column(name = "storno_status", nullable = false, columnDefinition = "enum('FULL','ADDITION')")
+    @Enumerated(value = EnumType.STRING)
+    private ScenarioStornoStatus status;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private User user;
+    @Column(name = "isBlocked", columnDefinition = "enum('X')")
+    @Enumerated(value = EnumType.STRING)
+    private STATUS_X isBlocked;
 
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false)
+    private User user;
+
+    @Column(name = "DateTime_lastChange", nullable = false)
+    private ZonedDateTime lastChange;
 }

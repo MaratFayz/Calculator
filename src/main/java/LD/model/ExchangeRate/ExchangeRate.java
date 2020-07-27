@@ -21,13 +21,14 @@ public class ExchangeRate
 	@EmbeddedId
 	private ExchangeRateID exchangeRateID;
 
-	@Column(columnDefinition = "DECIMAL(31,12)")
+	@Column(columnDefinition = "DECIMAL(31,12)", nullable = false)
 	private BigDecimal rate_at_date;
 
 	@Column(columnDefinition = "DECIMAL(31,12)")
 	private BigDecimal average_rate_for_month;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JoinColumn(nullable = false)
 	private User user;
 
 	@Column(name = "DateTime_lastChange", nullable = false)

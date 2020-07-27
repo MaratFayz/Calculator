@@ -22,13 +22,14 @@ public class Company
 	@Column(name = "id", nullable = false, unique = true)
 	private Long id;
 
-	@Column(name = "code", nullable = false)
+	@Column(length = 10, name = "code", nullable = false)
 	private String code;
 
 	@Column(name = "name", nullable = false)
 	private String name;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JoinColumn(nullable = false)
 	private User user;
 
 	@Column(name = "DateTime_lastChange", nullable = false)

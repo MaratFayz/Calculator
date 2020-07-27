@@ -1,30 +1,40 @@
 package LD.model.EndDate;
 
 import LD.config.DateFormat;
+import LD.service.LeasingDepositService;
 import LD.service.PeriodService;
 import LD.service.ScenarioService;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import static LD.config.DateFormat.parsingDate;
 
 @Component
+@Log4j2
 public class EndDateTransform
 {
 	@Autowired
 	ScenarioService scenarioService;
 	@Autowired
 	PeriodService periodService;
+	@Autowired
+	LeasingDepositService leasingDepositService;
 
 	public EndDate EndDatesDTO_in_to_EndDates(EndDateDTO_in endDateDTO_in)
 	{
+		log.info("endDateDTO_in = {}", endDateDTO_in);
+
 		EndDateID edID = EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
-				endDateDTO_in.getLeasingDeposit(),
+				endDateDTO_in.getLeasingDeposit_id(),
 				endDateDTO_in.getPeriod());
+
+		log.info("edID = {}", edID);
 
 		return EndDate.builder()
 				.endDateID(edID)
 				.End_Date(parsingDate(endDateDTO_in.getEnd_Date()))
+				.leasingDeposit(leasingDepositService.getLeasingDeposit(endDateDTO_in.getLeasingDeposit_id()))
 				.build();
 	}
 

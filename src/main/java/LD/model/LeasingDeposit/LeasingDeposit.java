@@ -62,6 +62,7 @@ public class LeasingDeposit
 	private STATUS_X is_deleted;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JoinColumn(nullable = false)
 	private User user;
 
 	@Column(name = "DateTime_lastChange", nullable = false)

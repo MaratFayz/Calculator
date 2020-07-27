@@ -24,8 +24,8 @@ var GD_spravochniki = [{"id" : "/currencies", "name" : "Валюты"},
                        {"id" : "/depositRates", "name" : "Ставки депозитов"},
                        {"id" : "/durations", "name" : "Длительности депозитов"},
                        {"id" : "/endDates", "name" : "Даты завершения депозитов"},
-                       //{"id" : "/entries", "name" : "Проводки"},
-                       //{"id" : urlWithEntryIFRSAcc, "name" : "Проводки на счетах МСФО"},
+                       {"id" : "/entries", "name" : "Проводки"},
+                       {"id" : urlWithEntryIFRSAcc, "name" : "Проводки на счетах МСФО"},
                        {"id" : "/exchangeRates", "name" : "Курсы валют"},
                        {"id" : "/ifrsAccounts", "name" : "Счета МСФО"},
                        {"id" : urlWithLeasingDeposits, "name" : "Лизинговые депозиты"},
@@ -638,14 +638,14 @@ Vue.component("tab-calculate", {
             console.log("calculate => selectedScenario_to = ", selectedScenario_to);
             var selectedScenario_to_id = determineIdSprav(selectedScenario_to, allScenarios);
             console.log("calculate => selectedScenario_to_id = ", selectedScenario_to_id);
-            console.log("calculate => dateCopyStart = ", this.dateCopyStart);
+            console.log("calculate => dateCopyStart.date = ", this.dateCopyStart.date);
 
             if(selectedScenario_from_id != undefined && selectedScenario_to_id != undefined)
             {
                 let finalurl = urlWithEntryCalculator +
                                "?scenario_from=" + selectedScenario_from_id +
                                "&scenario_to=" + selectedScenario_to_id +
-                               "&dateCopyStart=" + this.dateCopyStart;
+                               "&dateCopyStart=" + this.dateCopyStart.date;
 
                 let response = await fetch(finalurl, {
                     method: "POST",

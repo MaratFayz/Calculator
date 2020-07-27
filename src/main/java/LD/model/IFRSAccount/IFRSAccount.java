@@ -10,7 +10,7 @@ import java.time.ZonedDateTime;
 @Table(name = "ifrs_account")
 @NoArgsConstructor
 @Data
-@AllArgsConstructor()
+@AllArgsConstructor
 @Builder
 public class IFRSAccount
 {
@@ -18,21 +18,7 @@ public class IFRSAccount
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	public IFRSAccount(Long id, String account_code, String account_name, String flow_code, String flow_name, String sh, String pa, String ct, String dr, boolean isInverseSum, String mappingFormAndColumn)
-	{
-		this.id = id;
-		this.account_code = account_code;
-		this.account_name = account_name;
-		this.flow_code = flow_code;
-		this.flow_name = flow_name;
-		this.sh = sh;
-		this.pa = pa;
-		this.ct = ct;
-		this.dr = dr;
-		this.isInverseSum = isInverseSum;
-		this.mappingFormAndColumn = mappingFormAndColumn;
-	}
-
+	@Column(length = 40)
 	private String account_code;
 	private String account_name;
 	private String flow_code;
@@ -48,6 +34,7 @@ public class IFRSAccount
 	private String mappingFormAndColumn;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JoinColumn(nullable = false)
 	private User user;
 
 	@Column(name = "DateTime_lastChange", nullable = false)

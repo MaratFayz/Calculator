@@ -31,208 +31,248 @@ import java.util.*;
 @Log4j2
 @Component
 @ToString
-public class GeneralDataKeeper
-{
-	private ZonedDateTime firstOpenPeriod_ScenarioTo;
-	private ZonedDateTime firstOpenPeriod_ScenarioFrom;
-	private List<Period> AllPeriods;
-	private List<ExchangeRate> AllExRates;
-	private List<IFRSAccount> AllIFRSAccounts;
-	private List<LeasingDeposit> LeasingDeposits;
-	private Scenario from;
-	private Scenario to;
-	private ZonedDateTime period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo;
-	private User user;
+public class GeneralDataKeeper {
 
-	@Autowired
-	private LeasingDepositRepository leasingDepositRepository;
-	@Autowired
-	private ScenarioRepository scenarioRepository;
-	@Autowired
-	private IFRSAccountRepository ifrsAccountRepository;
-	@Autowired
-	private ExchangeRateRepository exchangeRateRepository;
-	@Autowired
-	private PeriodRepository periodRepository;
-	@Autowired
-	private PeriodsClosedRepository periodsClosedRepository;
-	@Autowired
-	private UserRepository userRepository;
+    private ZonedDateTime firstOpenPeriod_ScenarioTo;
+    private ZonedDateTime firstOpenPeriod_ScenarioFrom;
+    private List<Period> AllPeriods;
+    private List<ExchangeRate> AllExRates;
+    private List<IFRSAccount> AllIFRSAccounts;
+    private List<LeasingDeposit> LeasingDeposits;
+    private Scenario from;
+    private Scenario to;
+    private ZonedDateTime period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo;
+    private User user;
 
-	public void getDataFromDB(Long scenarioFrom, Long scenarioTo)
-	{
-		getDataFromDB(null, scenarioFrom, scenarioTo);
-	}
+    @Autowired
+    private LeasingDepositRepository leasingDepositRepository;
+    @Autowired
+    private ScenarioRepository scenarioRepository;
+    @Autowired
+    private IFRSAccountRepository ifrsAccountRepository;
+    @Autowired
+    private ExchangeRateRepository exchangeRateRepository;
+    @Autowired
+    private PeriodRepository periodRepository;
+    @Autowired
+    private PeriodsClosedRepository periodsClosedRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-	public void getDataFromDB(ZonedDateTime copyDate, Long scenarioFrom_id, Long scenarioTo_id)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		this.user = userRepository.findByUsername(username);
+    public void getDataFromDB(Long scenarioFrom, Long scenarioTo) {
+        getDataFromDB(null, scenarioFrom, scenarioTo);
+    }
 
-		this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo = copyDate;
+    public void getDataFromDB(ZonedDateTime copyDate, Long scenarioFrom_id, Long scenarioTo_id) {
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        this.user = userRepository.findByUsername(username);
 
-		this.from = scenarioRepository.findById(scenarioFrom_id).orElseThrow();
-		log.info("Результат запроса сценария-источника по значению {} => {}", scenarioFrom_id, this.from);
+        this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo = copyDate;
 
-		this.to = scenarioRepository.findById(scenarioTo_id).orElseThrow();
-		log.info("Результат запроса сценария-получателя по значению {} => {}", scenarioTo_id, this.to);
+        this.from = scenarioRepository.findById(scenarioFrom_id)
+                .orElseThrow();
+        log.info("Результат запроса сценария-источника по значению {} => {}", scenarioFrom_id,
+                this.from);
 
-		LeasingDeposits = leasingDepositRepository.findAll(specLDsForScenario(this.to));
-		log.info("Результат запроса лизинговых депозитов по сценарию-получателю {} => {}", this.to.getName(), LeasingDeposits);
+        this.to = scenarioRepository.findById(scenarioTo_id)
+                .orElseThrow();
+        log.info("Результат запроса сценария-получателя по значению {} => {}", scenarioTo_id,
+                this.to);
 
-		this.firstOpenPeriod_ScenarioTo = periodsClosedRepository.findAll(specFirstClosedPeriod(this.to)).get(0).getPeriodsClosedID().getPeriod().getDate();
-		log.info("Результат запроса первого открытого периода для сценария {} => {}", this.to.getName(), this.firstOpenPeriod_ScenarioTo);
+        LeasingDeposits = leasingDepositRepository.findAll(specLDsForScenario(this.to));
+        log.info("Результат запроса лизинговых депозитов по сценарию-получателю {} => {}",
+                this.to.getName(), LeasingDeposits);
 
-		if(!(this.from.equals(this.to) && this.from.getStatus().equals(ScenarioStornoStatus.ADDITION)))
-		{
-			log.info("Сценарий-источник {} не равен сценарию-получателю {}", this.to.getName(), this.from.getName());
+        this.firstOpenPeriod_ScenarioTo =
+                periodsClosedRepository.findAll(specFirstClosedPeriod(this.to))
+                        .get(0)
+                        .getPeriodsClosedID()
+                        .getPeriod()
+                        .getDate();
+        log.info("Результат запроса первого открытого периода для сценария {} => {}",
+                this.to.getName(), this.firstOpenPeriod_ScenarioTo);
 
-			if(this.from.getStatus().equals(ScenarioStornoStatus.ADDITION) && (this.to.getStatus().equals(ScenarioStornoStatus.ADDITION)))
-			{
-				log.info("Запрещённая операция переноса ADDITION -> ADDITION");
+        if (!(this.from.equals(this.to) && this.from.getStatus()
+                .equals(ScenarioStornoStatus.ADDITION))) {
+            log.info("Сценарий-источник {} не равен сценарию-получателю {}", this.to.getName(),
+                    this.from.getName());
 
-				throw new IllegalArgumentException("Запрещённая операция переноса ADDITION -> ADDITION");
-			}
+            if (this.from.getStatus()
+                    .equals(ScenarioStornoStatus.ADDITION) && (this.to.getStatus()
+                    .equals(ScenarioStornoStatus.ADDITION))) {
+                log.info("Запрещённая операция переноса ADDITION -> ADDITION");
 
-			if(this.from.getStatus().equals(ScenarioStornoStatus.FULL) && (this.to.getStatus().equals(ScenarioStornoStatus.ADDITION)))
-			{
-				log.info("Запрещённая операция переноса FULL -> ADDITION");
+                throw new IllegalArgumentException(
+                        "Запрещённая операция переноса ADDITION -> ADDITION");
+            }
 
-				throw new IllegalArgumentException("Запрещённая операция переноса FULL -> ADDITION");
-			}
+            if (this.from.getStatus()
+                    .equals(ScenarioStornoStatus.FULL) && (this.to.getStatus()
+                    .equals(ScenarioStornoStatus.ADDITION))) {
+                log.info("Запрещённая операция переноса FULL -> ADDITION");
 
-			if(this.from.getStatus().equals(ScenarioStornoStatus.FULL) && this.to.getStatus().equals(ScenarioStornoStatus.FULL) &&
-					!this.from.equals(this.to))
-			{
-				log.info("Запрещённая операция переноса FULL -> FULL");
+                throw new IllegalArgumentException(
+                        "Запрещённая операция переноса FULL -> ADDITION");
+            }
 
-				throw new IllegalArgumentException("Запрещённая операция переноса FULL -> FULL");
-			}
+            if (this.from.getStatus()
+                    .equals(ScenarioStornoStatus.FULL) && this.to.getStatus()
+                    .equals(ScenarioStornoStatus.FULL) &&
+                    !this.from.equals(this.to)) {
+                log.info("Запрещённая операция переноса FULL -> FULL");
 
-			this.firstOpenPeriod_ScenarioFrom = periodsClosedRepository.findAll(specFirstClosedPeriod(this.from)).get(0).getPeriodsClosedID().getPeriod().getDate();
-			log.info("Результат запроса первого открытого периода для сценария-источника {} => {}", this.from.getName(), this.firstOpenPeriod_ScenarioFrom);
+                throw new IllegalArgumentException("Запрещённая операция переноса FULL -> FULL");
+            }
 
-			if (!(this.firstOpenPeriod_ScenarioFrom.isBefore(this.firstOpenPeriod_ScenarioTo) || this.firstOpenPeriod_ScenarioFrom.isEqual(this.firstOpenPeriod_ScenarioTo)))
-			{
-				throw new IllegalArgumentException("Дата первого открытого периода сценария-источника всегда должна быть меньше ИЛИ равно первому открытому периоду сценария-получателя");
-			}
+            this.firstOpenPeriod_ScenarioFrom =
+                    periodsClosedRepository.findAll(specFirstClosedPeriod(this.from))
+                            .get(0)
+                            .getPeriodsClosedID()
+                            .getPeriod()
+                            .getDate();
+            log.info("Результат запроса первого открытого периода для сценария-источника {} => {}",
+                    this.from.getName(), this.firstOpenPeriod_ScenarioFrom);
 
-			if(this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo != null)
-			{
-				if(!this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo.isBefore(this.firstOpenPeriod_ScenarioFrom))
-				{
-					log.info("Дата начала копирования со сценария-источника всегда должна быть меньше любого первого открытого периода каждого из двух сценариев, либо равна null");
+            if (!(this.firstOpenPeriod_ScenarioFrom.isBefore(this.firstOpenPeriod_ScenarioTo) ||
+                    this.firstOpenPeriod_ScenarioFrom.isEqual(this.firstOpenPeriod_ScenarioTo))) {
+                throw new IllegalArgumentException(
+                        "Дата первого открытого периода сценария-источника всегда должна быть меньше ИЛИ равно первому открытому периоду сценария-получателя");
+            }
 
-					throw new IllegalArgumentException("Дата начала копирования со сценария-источника всегда должна быть меньше любого первого открытого периода каждого из двух сценариев, либо равна null");
-				}
-			}
+            if (this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo != null) {
+                if (!this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo.isBefore(
+                        this.firstOpenPeriod_ScenarioFrom)) {
+                    log.info(
+                            "Дата начала копирования со сценария-источника всегда должна быть меньше любого первого открытого периода каждого из двух сценариев, либо равна null");
 
-			LeasingDeposits.addAll(leasingDepositRepository.findAll(specLDsForScenario(this.from)));
-			log.info("Результат запроса ВСЕХ лизинговых депозитов: {}", LeasingDeposits);
+                    throw new IllegalArgumentException(
+                            "Дата начала копирования со сценария-источника всегда должна быть меньше любого первого открытого периода каждого из двух сценариев, либо равна null");
+                }
+            }
 
+            LeasingDeposits.addAll(leasingDepositRepository.findAll(specLDsForScenario(this.from)));
+            log.info("Результат запроса ВСЕХ лизинговых депозитов: {}", LeasingDeposits);
+
+        }
+
+		if (this.LeasingDeposits.size() == 0) {
+			throw new IllegalStateException("Отсутствуют депозиты для расчета");
 		}
 
-		if(this.LeasingDeposits.size() == 0)
-			throw new IllegalStateException("Отсутствуют депозиты для расчета");
+        this.AllPeriods = Collections.unmodifiableList(countAllPeriods());
+        log.info("Результат запроса всех периодов => {}", this.AllPeriods);
 
-		this.AllPeriods = Collections.unmodifiableList(countAllPeriods());
-		log.info("Результат запроса всех периодов => {}", this.AllPeriods);
+        this.AllExRates = Collections.unmodifiableList(
+                exchangeRateRepository.findAll(specAllExRatesForScenario(this.to, this.from)));
+        log.info("Результат запроса всех курсов по сценариям {} и {} => {}", this.from, this.to,
+                this.AllExRates);
 
-		this.AllExRates = Collections.unmodifiableList(exchangeRateRepository.findAll(specAllExRatesForScenario(this.to, this.from)));
-		log.info("Результат запроса всех курсов по сценариям {} и {} => {}", this.from, this.to, this.AllExRates);
+        this.AllIFRSAccounts = Collections.unmodifiableList(ifrsAccountRepository.findAll());
+        log.info("Результат запроса всех счетов МСФО => {}", this.AllIFRSAccounts);
+    }
 
-		this.AllIFRSAccounts = Collections.unmodifiableList(ifrsAccountRepository.findAll());
-		log.info("Результат запроса всех счетов МСФО => {}", this.AllIFRSAccounts);
-	}
+    public static Specification<PeriodsClosed> specFirstClosedPeriod(
+            Scenario scenarioWhereFindFirstOpenPeriod) {
+        Specification<PeriodsClosed> spPerCl = (rootPC, qPC, cbPC) -> {
 
-	public static Specification<PeriodsClosed> specFirstClosedPeriod(Scenario scenarioWhereFindFirstOpenPeriod)
-	{
-		Specification<PeriodsClosed> spPerCl = (rootPC, qPC, cbPC) -> {
+            qPC.orderBy(cbPC.asc(rootPC.get("periodsClosedID")
+                    .get("period")
+                    .get("date")));
 
-			qPC.orderBy(cbPC.asc(rootPC.get("periodsClosedID").get("period").get("date")));
+            return cbPC.and(
+                    cbPC.equal(rootPC.get("periodsClosedID")
+                            .get("scenario"), scenarioWhereFindFirstOpenPeriod),
+                    cbPC.isNull(rootPC.get("ISCLOSED"))
+            );
+        };
 
-			return  cbPC.and(
-					cbPC.equal(rootPC.get("periodsClosedID").get("scenario"), scenarioWhereFindFirstOpenPeriod),
-					cbPC.isNull(rootPC.get("ISCLOSED"))
-			);
-		};
+        return spPerCl;
+    }
 
-		return spPerCl;
-	}
+    public static Specification<LeasingDeposit> specLDsForScenario(Scenario scenarioWhereFindLDs) {
+        Specification<LeasingDeposit> spLD = (rootLD, qLD, cbLD) ->
+                cbLD.and(cbLD.equal(rootLD.get("is_created"), STATUS_X.X),
+                        cbLD.equal(rootLD.get("scenario"), scenarioWhereFindLDs));
 
-	public static Specification<LeasingDeposit> specLDsForScenario(Scenario scenarioWhereFindLDs)
-	{
-		Specification<LeasingDeposit> spLD = (rootLD, qLD, cbLD) ->
-				cbLD.and(cbLD.equal(rootLD.get("is_created"), STATUS_X.X), cbLD.equal(rootLD.get("scenario"), scenarioWhereFindLDs));
+        return spLD;
+    }
 
-		return spLD;
-	}
+    private List<Period> countAllPeriods() {
+        List<Period> allPeriods = new ArrayList<>();
+        allPeriods = periodRepository.findAll();
 
-	private List<Period> countAllPeriods()
-	{
-		List<Period> allPeriods = new ArrayList<>();
-		allPeriods = periodRepository.findAll();
+        //check periods
+        TreeSet<ZonedDateTime> datesInPeriods = allPeriods.stream()
+                .map(period -> period.getDate())
+                .collect(TreeSet::new,
+                        (ts, date) -> ts.add(date), (ts1, ts2) -> ts1.addAll(ts2));
 
-		//check periods
-		TreeSet<ZonedDateTime> datesInPeriods = allPeriods.stream().map(period -> period.getDate()).collect(TreeSet::new,
-				(ts, date) -> ts.add(date), (ts1, ts2) -> ts1.addAll(ts2));
+        TreeSet<ZonedDateTime> reqPeriods = allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod();
 
-		TreeSet<ZonedDateTime> reqPeriods = allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod();
+        reqPeriods.add(this.firstOpenPeriod_ScenarioTo);
 
-		reqPeriods.add(this.firstOpenPeriod_ScenarioTo);
+        reqPeriods.removeAll(datesInPeriods);
 
-		reqPeriods.removeAll(datesInPeriods);
-
-		if(reqPeriods.size() > 0)
+		if (reqPeriods.size() > 0) {
 			new IllegalArgumentException("There is no ALL dates in Periods");
+		}
 
-		return allPeriods;
-	}
+        return allPeriods;
+    }
 
-	private TreeSet<ZonedDateTime> allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod()
-	{
-		Optional<ZonedDateTime> TheEarliestDateInLDs = this.LeasingDeposits.stream().map(ld -> ld.getStart_date()).min(ChronoZonedDateTime::compareTo);
-		TreeSet<ZonedDateTime> allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod = new TreeSet<>();
+    private TreeSet<ZonedDateTime> allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod() {
+        Optional<ZonedDateTime> TheEarliestDateInLDs = this.LeasingDeposits.stream()
+                .map(ld -> ld.getStart_date())
+                .min(ChronoZonedDateTime::compareTo);
+        TreeSet<ZonedDateTime> allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod =
+                new TreeSet<>();
 
-		if(!TheEarliestDateInLDs.isPresent())
+		if (!TheEarliestDateInLDs.isPresent()) {
 			new IllegalArgumentException("There is no ONE date for leasing_deposits");
+		}
 
-		ZonedDateTime theMinDateInLDs_withlastDayOfMonth = TheEarliestDateInLDs.get().withDayOfMonth(TheEarliestDateInLDs.get().toLocalDate().lengthOfMonth());
+        ZonedDateTime theMinDateInLDs_withlastDayOfMonth = TheEarliestDateInLDs.get()
+                .withDayOfMonth(TheEarliestDateInLDs.get()
+                        .toLocalDate()
+                        .lengthOfMonth());
 
-		theMinDateInLDs_withlastDayOfMonth.toLocalDate().datesUntil(this.firstOpenPeriod_ScenarioTo.toLocalDate(), java.time.Period.ofMonths(1))
-				.map(localDate -> ZonedDateTime.of(localDate, LocalTime.MIN, ZoneId.of("UTC")))
-				.forEach(date -> allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod.add(date));
+        theMinDateInLDs_withlastDayOfMonth.toLocalDate()
+                .datesUntil(this.firstOpenPeriod_ScenarioTo.toLocalDate(),
+                        java.time.Period.ofMonths(1))
+                .map(localDate -> ZonedDateTime.of(localDate, LocalTime.MIN, ZoneId.of("UTC")))
+                .forEach(date -> allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod.add(date));
 
-		return allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod;
-	}
+        return allEndDatesFromEarliestLDStartDateTillFirstOpenPeriod;
+    }
 
-	public static Specification<ExchangeRate> specAllExRatesForScenario(Scenario from, Scenario to)
-	{
-		return new Specification<ExchangeRate>()
-		{
-			@Override
-			public Predicate toPredicate(Root<ExchangeRate> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder)
-			{
-				return criteriaBuilder.and(
-						criteriaBuilder.or(
-								criteriaBuilder.equal(root.get("exchangeRateID").get("scenario"), from),
-								criteriaBuilder.equal(root.get("exchangeRateID").get("scenario"), to)
-										));
-			}
-		};
-	}
+    public static Specification<ExchangeRate> specAllExRatesForScenario(Scenario from,
+                                                                        Scenario to) {
+        return new Specification<ExchangeRate>() {
+            @Override
+            public Predicate toPredicate(Root<ExchangeRate> root, CriteriaQuery<?> query,
+                                         CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.and(
+                        criteriaBuilder.or(
+                                criteriaBuilder.equal(root.get("exchangeRateID")
+                                        .get("scenario"), from),
+                                criteriaBuilder.equal(root.get("exchangeRateID")
+                                        .get("scenario"), to)
+                        ));
+            }
+        };
+    }
 
-	public static Specification<Scenario> ScenarioForName(String neededScenario)
-	{
-		return new Specification<Scenario>()
-		{
-			@Override
-			public Predicate toPredicate(Root<Scenario> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder)
-			{
-				return criteriaBuilder.equal(root.get("name"), neededScenario);
-			}
-		};
-	}
+    public static Specification<Scenario> ScenarioForName(String neededScenario) {
+        return new Specification<Scenario>() {
+            @Override
+            public Predicate toPredicate(Root<Scenario> root, CriteriaQuery<?> query,
+                                         CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.equal(root.get("name"), neededScenario);
+            }
+        };
+    }
 
 
 }

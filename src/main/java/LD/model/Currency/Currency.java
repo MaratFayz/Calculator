@@ -28,10 +28,11 @@ public class Currency
 	@Column(name = "name", nullable = false)
 	private String name;
 
-	@Column(name = "CBRCurrencyCode")
+	@Column(name = "CBRCurrencyCode", length = 6)
 	private String CBRCurrencyCode;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JoinColumn(nullable = false)
 	private User user;
 
 	@Column(name = "DateTime_lastChange", nullable = false)

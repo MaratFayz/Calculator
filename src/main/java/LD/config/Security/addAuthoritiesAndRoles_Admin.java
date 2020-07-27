@@ -1,3 +1,4 @@
+/*
 package LD.config.Security;
 
 import LD.config.Security.Repository.CustomAuthorityRepository;
@@ -147,3 +148,4 @@ public class addAuthoritiesAndRoles_Admin implements ApplicationListener<Context
 	}
 
 }
+*/
