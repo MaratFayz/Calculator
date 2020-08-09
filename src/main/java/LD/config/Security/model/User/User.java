@@ -1,11 +1,14 @@
 package LD.config.Security.model.User;
 
+import LD.config.PostgreSQLEnumType;
 import LD.config.Security.model.Role.Role;
 import LD.model.Enums.STATUS_X;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -21,97 +24,90 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User implements UserDetails
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long id;
+@TypeDef(name = "pgsql_enum", typeClass = PostgreSQLEnumType.class)
+public class User implements UserDetails {
 
-	@Column(nullable = false, unique = true)
-	private String username;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
-	@Column(nullable = false)
-	private String password;
+    @Column(nullable = false, unique = true)
+    private String username;
 
+    @Column(nullable = false)
+    private String password;
 
-	@Enumerated(value = EnumType.STRING)
-	private STATUS_X isAccountExpired;
+    @Enumerated(value = EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    private STATUS_X isAccountExpired;
 
+    @Enumerated(value = EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    private STATUS_X isCredentialsExpired;
 
-	@Enumerated(value = EnumType.STRING)
-	private STATUS_X isCredentialsExpired;
+    @Enumerated(value = EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    private STATUS_X isLocked;
 
+    @Enumerated(value = EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    private STATUS_X isEnabled;
 
-	@Enumerated(value = EnumType.STRING)
-	private STATUS_X isLocked;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "users_roles",
+            joinColumns = @JoinColumn(
+                    name = "user_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(
+                    name = "role_id", referencedColumnName = "id"))
+    private Collection<Role> roles;
 
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private User user_changed;
 
-	@Enumerated(value = EnumType.STRING)
-	private STATUS_X isEnabled;
+    @Column(name = "DateTime_lastChange", nullable = false)
+    private ZonedDateTime lastChange;
 
-	@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(
-			name = "users_roles",
-			joinColumns = @JoinColumn(
-					name = "user_id", referencedColumnName = "id"),
-			inverseJoinColumns = @JoinColumn(
-					name = "role_id", referencedColumnName = "id"))
-	private Collection<Role> roles;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        authorities.addAll(roles);
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private User user_changed;
+        for (Role role : this.roles) {
+            role.getAuthorities().stream()
+                    .forEach(authorities::add);
+        }
 
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+        return authorities;
+    }
 
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities()
-	{
-		Set<GrantedAuthority> authorities = new HashSet<>();
-		authorities.addAll(roles);
+    @Override
+    public String getPassword() {
+        return password;
+    }
 
-		for (Role role: this.roles)
-		{
-			role.getAuthorities().stream()
-					.forEach(authorities::add);
-		}
+    @Override
+    public String getUsername() {
+        return username;
+    }
 
-		return authorities;
-	}
+    @Override
+    public boolean isAccountNonExpired() {
+        return isAccountExpired == null;
+    }
 
-	@Override
-	public String getPassword()
-	{
-		return password;
-	}
+    @Override
+    public boolean isAccountNonLocked() {
+        return isLocked == null;
+    }
 
-	@Override
-	public String getUsername()
-	{
-		return username;
-	}
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return isCredentialsExpired == null;
+    }
 
-	@Override
-	public boolean isAccountNonExpired()
-	{
-		return isAccountExpired == null;
-	}
-
-	@Override
-	public boolean isAccountNonLocked()
-	{
-		return isLocked == null;
-	}
-
-	@Override
-	public boolean isCredentialsNonExpired()
-	{
-		return isCredentialsExpired == null;
-	}
-
-	@Override
-	public boolean isEnabled()
-	{
-		return isEnabled != null;
-	}
+    @Override
+    public boolean isEnabled() {
+        return isEnabled != null;
+    }
 }

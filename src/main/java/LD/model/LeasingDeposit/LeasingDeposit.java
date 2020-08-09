@@ -10,6 +10,7 @@ import LD.model.Enums.STATUS_X;
 import LD.model.Scenario.Scenario;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -20,7 +21,7 @@ import java.util.*;
 @Setter
 @Entity
 @Table(name = "leasingDeposits")
-@ToString(exclude = {"statuses", "transactions", "end_dates"})
+@ToString(exclude = {"entries", "end_dates"})
 @NoArgsConstructor()
 @Builder
 @AllArgsConstructor
@@ -54,11 +55,11 @@ public class LeasingDeposit
 	private Scenario scenario;
 
 	@Enumerated(value = EnumType.STRING)
-
+	@Type(type = "pgsql_enum")
 	private STATUS_X is_created;
 
 	@Enumerated(value = EnumType.STRING)
-
+	@Type(type = "pgsql_enum")
 	private STATUS_X is_deleted;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

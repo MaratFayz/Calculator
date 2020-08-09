@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.time.ZonedDateTime;
@@ -29,10 +30,12 @@ public class Scenario {
 
     @Column(name = "storno_status", nullable = false)
     @Enumerated(value = EnumType.STRING)
+    @Type(type = "pgsql_enum")
     private ScenarioStornoStatus status;
 
     @Column(name = "isBlocked")
     @Enumerated(value = EnumType.STRING)
+    @Type(type = "pgsql_enum")
     private STATUS_X isBlocked;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

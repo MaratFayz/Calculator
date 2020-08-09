@@ -3,6 +3,7 @@ package LD.model.PeriodsClosed;
 import LD.config.Security.model.User.User;
 import LD.model.Enums.STATUS_X;
 import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.time.ZonedDateTime;
@@ -19,6 +20,7 @@ public class PeriodsClosed
 	private PeriodsClosedID periodsClosedID;
 
 	@Enumerated(value = EnumType.STRING)
+	@Type(type = "pgsql_enum")
 	private STATUS_X ISCLOSED;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
