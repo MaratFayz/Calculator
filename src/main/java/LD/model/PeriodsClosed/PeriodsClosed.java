@@ -19,7 +19,6 @@ public class PeriodsClosed
 	private PeriodsClosedID periodsClosedID;
 
 	@Enumerated(value = EnumType.STRING)
-	@Column(columnDefinition = "enum('X')")
 	private STATUS_X ISCLOSED;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

@@ -27,11 +27,11 @@ public class Scenario {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "storno_status", nullable = false, columnDefinition = "enum('FULL','ADDITION')")
+    @Column(name = "storno_status", nullable = false)
     @Enumerated(value = EnumType.STRING)
     private ScenarioStornoStatus status;
 
-    @Column(name = "isBlocked", columnDefinition = "enum('X')")
+    @Column(name = "isBlocked")
     @Enumerated(value = EnumType.STRING)
     private STATUS_X isBlocked;
 

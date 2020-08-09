@@ -29,7 +29,7 @@ public class Entry
 	@Column(name = "end_date_at_this_period", nullable = false, columnDefinition = "DATE")
 	private ZonedDateTime end_date_at_this_period;
 
-	@Column(name = "transaction_status", columnDefinition = "enum('ACTUAL', 'STORNO', 'DELETED')")
+	@Column(name = "transaction_status")
 	@Enumerated(value = EnumType.STRING)
 	private EntryStatus status;
 
@@ -43,7 +43,7 @@ public class Entry
 	@Column(name = "percentRateForPeriodForLD", nullable = false)
 	private BigDecimal percentRateForPeriodForLD;
 
-	@Column(name = "Status_EntryMadeDuringOrAfterClosedPeriod", columnDefinition = "enum('CURRENT_PERIOD', 'AFTER_CLOSING_PERIOD')", nullable = false)
+	@Column(name = "Status_EntryMadeDuringOrAfterClosedPeriod", nullable = false)
 	@Enumerated(value = EnumType.STRING)
 	private EntryPeriodCreation Status_EntryMadeDuringOrAfterClosedPeriod;
 
@@ -143,7 +143,7 @@ public class Entry
 	@Column(name = "DISPOSAL_DISCONT_RUB_REG_LD_3_Y", nullable = false, columnDefinition = "DECIMAL(30,10)")
 	private BigDecimal DISPOSAL_DISCONT_RUB_REG_LD_3_Y;
 
-	@Column(name = "LDTERM_REG_LD_3_Z", nullable = false, columnDefinition = "enum('ST','LT')")
+	@Column(name = "LDTERM_REG_LD_3_Z", nullable = false)
 	@Enumerated(value = EnumType.STRING)
 	private LeasingDepositDuration LDTERM_REG_LD_3_Z;
 

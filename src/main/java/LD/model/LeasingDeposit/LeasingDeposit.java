@@ -54,11 +54,11 @@ public class LeasingDeposit
 	private Scenario scenario;
 
 	@Enumerated(value = EnumType.STRING)
-	@Column(columnDefinition = "enum('X')")
+
 	private STATUS_X is_created;
 
 	@Enumerated(value = EnumType.STRING)
-	@Column(columnDefinition = "enum('X')")
+
 	private STATUS_X is_deleted;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

@@ -33,19 +33,19 @@ public class User implements UserDetails
 	@Column(nullable = false)
 	private String password;
 
-	@Column(columnDefinition = "enum('X')")
+
 	@Enumerated(value = EnumType.STRING)
 	private STATUS_X isAccountExpired;
 
-	@Column(columnDefinition = "enum('X')")
+
 	@Enumerated(value = EnumType.STRING)
 	private STATUS_X isCredentialsExpired;
 
-	@Column(columnDefinition = "enum('X')")
+
 	@Enumerated(value = EnumType.STRING)
 	private STATUS_X isLocked;
 
-	@Column(columnDefinition = "enum('X')")
+
 	@Enumerated(value = EnumType.STRING)
 	private STATUS_X isEnabled;
 
