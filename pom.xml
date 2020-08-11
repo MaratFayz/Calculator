@@ -13,9 +13,6 @@
         <java.version>14</java.version>
         <downloadSources>true</downloadSources>
         <downloadJavadocs>true</downloadJavadocs>
-        <maven.compiler.target>1.14</maven.compiler.target>
-        <maven.compiler.source>1.14</maven.compiler.source>
-
     </properties>
 
     <parent>
@@ -111,6 +108,7 @@
     <dependency>
         <groupId>org.flywaydb</groupId>
         <artifactId>flyway-core</artifactId>
+        <version>6.5.3</version>
     </dependency>
 
 </dependencies>
