@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -137,7 +138,7 @@ public class Exceptions
 
 		Mockito.when(periodsClosedRepository.findAll(Mockito.any(Specification.class))).thenReturn(List.of(pcDA), List.of(pcSA));
 
-		Throwable thrown = Assert.assertThrows(IllegalArgumentException.class, () -> {
+		Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			GDK.getDataFromDB(scenarioSource, scenarioDestination);
 		});
 
@@ -277,7 +278,7 @@ public class Exceptions
 
 		Mockito.when(periodsClosedRepository.findAll(Mockito.any(Specification.class))).thenReturn(List.of(pcDA), List.of(pcSA));
 
-		Throwable thrown = Assert.assertThrows(IllegalArgumentException.class, () -> {
+		Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			GDK.getDataFromDB(scenarioSource, scenarioDestination);
 		});
 
@@ -319,7 +320,7 @@ public class Exceptions
 
 		Mockito.when(periodsClosedRepository.findAll(Mockito.any(Specification.class))).thenReturn(List.of(pcDA), List.of(pcSA));
 
-		Throwable thrown = Assert.assertThrows(IllegalArgumentException.class, () -> {
+		Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			GDK.getDataFromDB(scenarioSource, scenarioDestination);
 		});
 
@@ -412,7 +413,7 @@ public class Exceptions
 
 		Mockito.when(periodsClosedRepository.findAll(Mockito.any(Specification.class))).thenReturn(List.of(pcDA), List.of(pcSA));
 
-		Throwable thrown = Assert.assertThrows(IllegalArgumentException.class, () -> {
+		Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			GDK.getDataFromDB(copyDate, scenarioSource, scenarioDestination);
 		});
 
@@ -455,7 +456,7 @@ public class Exceptions
 
 		Mockito.when(periodsClosedRepository.findAll(Mockito.any(Specification.class))).thenReturn(List.of(pcDA), List.of(pcSA));
 
-		Throwable thrown = Assert.assertThrows(IllegalArgumentException.class, () -> {
+		Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			GDK.getDataFromDB(copyDate, scenarioSource, scenarioDestination);
 		});
 
@@ -653,7 +654,7 @@ public class Exceptions
 
 		Mockito.when(leasingDepositRepository.findAll(Mockito.any(Specification.class))).thenReturn(new ArrayList(), cv);
 
-		Throwable thrown = Assert.assertThrows(IllegalArgumentException.class, () -> {
+		Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			GDK.getDataFromDB(scenarioSource, scenarioDestination);
 		});
 

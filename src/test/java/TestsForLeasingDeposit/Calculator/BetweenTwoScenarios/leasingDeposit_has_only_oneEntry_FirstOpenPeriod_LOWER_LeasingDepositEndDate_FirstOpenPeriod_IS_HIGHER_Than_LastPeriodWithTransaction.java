@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -109,7 +110,7 @@ public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepos
 		Mockito.when(GDK.getFirstOpenPeriod_ScenarioFrom()).thenReturn(getDate(31, 3, 2020));
 		Mockito.when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(31, 3, 2020));
 
-		Throwable e = Assert.assertThrows(ExecutionException.class, () -> {
+		Throwable e = Assertions.assertThrows(ExecutionException.class, () -> {
 			LeasingDeposits = GDK.getLeasingDeposits();
 
 			Future<List<Entry>> entries = threadExecutor.submit(lec);
