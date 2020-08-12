@@ -1,0 +1,27 @@
+version: '3'
+services:
+  calculator:
+    image:
+      maratfayzelgayanov/ld_calculator:1.0
+    ports:
+      - "8080:8080"
+    links:
+      - database
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: ldCluster
+        awslogs-region: eu-north-1
+        awslogs-stream-prefix: calculator
+  database:
+    image:
+      postgres:12
+    environment:
+      POSTGRES_PASSWORD: 'ZZZXXX5!#~a'
+      POSTGRES_DB: 'leasingdepositsdb'
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: ldCluster
+        awslogs-region: eu-north-1
+        awslogs-stream-prefix: database
