@@ -776,11 +776,14 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                             this.startDateWithlastDayOfStartingMonth,
                                             GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom(),
                                             allExRates, GeneralDataKeeper.getFrom(), t);
-                                    accumulatedDiscountRUB = accumulatedDiscountRUB.add(
-                                            calculateAccumDiscountRUB_RegLD2(
-                                                    GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom()
-                                                            .toLocalDate(), finalClosingdate,
-                                                    allExRates, scSAVE, t));
+
+                                    if (!GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom().isEqual(finalClosingdate)) {
+                                        accumulatedDiscountRUB = accumulatedDiscountRUB.add(
+                                                calculateAccumDiscountRUB_RegLD2(
+                                                        GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom()
+                                                                .toLocalDate(), finalClosingdate,
+                                                        allExRates, scSAVE, t));
+                                    }
                                 } else {
                                     accumulatedDiscountRUB = calculateAccumDiscountRUB_RegLD2(
                                             this.startDateWithlastDayOfStartingMonth,
@@ -1392,23 +1395,25 @@ public class EntryCalculator implements Callable<List<Entry>> {
         return result;
     }
 
-    private BigDecimal calculateAccumDiscountRUB_RegLD2(LocalDate startCalculatingInclusive,
+    BigDecimal calculateAccumDiscountRUB_RegLD2(LocalDate startCalculatingInclusive,
                                                         ZonedDateTime dateUntilCountExclusive,
                                                         List<ExchangeRate> allExRates,
                                                         Scenario whereCalculate,
                                                         Entry calculatingEntry) {
+        if(startCalculatingInclusive.isEqual(dateUntilCountExclusive.toLocalDate())) {
+            throw new IllegalArgumentException("Wrong argument values: startCalculatingInclusive equals dateUntilCountExclusive");
+        }
+
         BigDecimal accumulatedDiscountRUB = BigDecimal.ZERO;
 
         for (LocalDate date : startCalculatingInclusive.datesUntil(
                 dateUntilCountExclusive.withDayOfMonth(1)
                         .toLocalDate(), java.time.Period.ofMonths(1))
                 .collect(Collectors.toList())) {
-            LocalDate lastPeriod = date.withDayOfMonth(1)
-                    .minusDays(1);
-            if (lastPeriod.isBefore(this.leasingDepositToCalculate.getStart_date()
-                    .toLocalDate())) {
-                lastPeriod = this.leasingDepositToCalculate.getStart_date()
-                        .toLocalDate();
+            LocalDate lastPeriod = date.withDayOfMonth(1).minusDays(1);
+
+            if (lastPeriod.isBefore(this.leasingDepositToCalculate.getStart_date().toLocalDate())) {
+                lastPeriod = this.leasingDepositToCalculate.getStart_date().toLocalDate();
             }
 
             LocalDate dateLastDayOfMonth = date.withDayOfMonth(date.lengthOfMonth());
