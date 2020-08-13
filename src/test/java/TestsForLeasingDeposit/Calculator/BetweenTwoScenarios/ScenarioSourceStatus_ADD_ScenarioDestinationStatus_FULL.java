@@ -132,7 +132,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
     @Test
     public void test2_NumberOfStornoTransactions() {
-        assertEquals(18, calculatorTestForScenarioSourceDestination.getCalculatedStornoDeletedEntries().stream()
+        assertEquals(33, calculatorTestForScenarioSourceDestination.getCalculatedStornoDeletedEntries().stream()
                 .filter(entry -> entry.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(entry -> entry.getStatus() == EntryStatus.STORNO)
                 .count());
@@ -140,7 +140,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
     @Test
     public void test3_NumberOfAllTransactionsStornoAndCalculated() {
-        assertEquals(34, calculatorTestForScenarioSourceDestination.getCalculatedStornoDeletedEntries().size());
+        assertEquals(49, calculatorTestForScenarioSourceDestination.getCalculatedStornoDeletedEntries().size());
     }
 
     @Test
@@ -155,9 +155,9 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
     public void test5_ActualEntryBasedOnLeasingDeposit() {
         //31.08.2018
         var LD1_31082018 = leasingDeposit1.getEntries().stream()
+                .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 8, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
-                .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
 
         assertEquals(BigDecimal.valueOf(-11973), LD1_31082018.getDISCONT_AT_START_DATE_cur_REG_LD_1_K().setScale(0, RoundingMode.HALF_UP));
@@ -1108,7 +1108,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
         leasingDeposit1.setEnd_dates(Set.of(ed_ld1_31032017_20102019, ed_ld1_31082017_20122019, ed_ld1_31102017_20112019, ed_ld1_30112019_03112019));
         leasingDeposit1.setEntries(new HashSet<>());
 
-        LocalDate.of(2017, 3, 31).datesUntil(LocalDate.of(2018, 9, 1), java.time.Period.ofMonths(1)).forEach(date ->
+        LocalDate.of(2017, 3, 31).datesUntil(LocalDate.of(2019, 12, 1), java.time.Period.ofMonths(1)).forEach(date ->
         {
             EntryID entryID_destinationSource = EntryID.builder()
                     .leasingDeposit_id(leasingDeposit1.getId())
