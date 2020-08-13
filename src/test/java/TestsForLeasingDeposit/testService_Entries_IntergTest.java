@@ -1,5 +1,6 @@
 package TestsForLeasingDeposit;
 
+import LD.config.Security.model.User.User;
 import LD.model.Company.Company;
 import LD.model.Counterpartner.Counterpartner;
 import LD.model.Currency.Currency;
@@ -23,7 +24,8 @@ import LD.service.EntryServiceImpl;
 import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
 import TestsForLeasingDeposit.Calculator.Builders;
 import junit.framework.TestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -33,8 +35,11 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-//@RunWith(SpringRunner.class)
+import static TestsForLeasingDeposit.Calculator.Builders.getAnyUser;
+
+//@ExtendWith(SpringExtension.class)
 @SpringBootTest
+@Disabled("Correct realisation of integration test needed")
 public class testService_Entries_IntergTest
 {
 	@Autowired
@@ -105,7 +110,8 @@ public class testService_Entries_IntergTest
 
 	public void InitializeGeneraldata()
 	{
-		fact = Builders.getSC("FACT", ScenarioStornoStatus.ADDITION);
+		User user = getAnyUser();
+		fact = Builders.getSC("FACT", ScenarioStornoStatus.ADDITION, user);
 		fact = scenarioRepository.saveAndFlush(fact);
 
 		usd = Builders.getCUR("USD");
