@@ -87,11 +87,11 @@ public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepos
         InitializeGeneraldata();
         create_LD_1_NormalTestLD();
 
-        Mockito.when(GDK.getLeasingDeposits()).thenReturn(List.of(leasingDeposit1));
-        Mockito.when(GDK.getTo()).thenReturn(plan2020);
-        Mockito.when(GDK.getFrom()).thenReturn(fact);
-//        Mockito.when(GDK.getAllExRates()).thenReturn(ExR);
-//        Mockito.when(GDK.getAllPeriods()).thenReturn(List.copyOf(periods.values()));
+        Mockito.lenient().when(GDK.getLeasingDeposits()).thenReturn(List.of(leasingDeposit1));
+        Mockito.lenient().when(GDK.getTo()).thenReturn(plan2020);
+        Mockito.lenient().when(GDK.getFrom()).thenReturn(fact);
+        Mockito.lenient().when(GDK.getAllExRates()).thenReturn(ExR);
+        Mockito.lenient().when(GDK.getAllPeriods()).thenReturn(List.copyOf(periods.values()));
 
         threadExecutor = Executors.newFixedThreadPool(10);
 
@@ -106,8 +106,6 @@ public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepos
         Mockito.when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(31, 3, 2020));
 
         Throwable e = Assertions.assertThrows(ExecutionException.class, () -> {
-            LeasingDeposits = GDK.getLeasingDeposits();
-
             Future<List<Entry>> entries = threadExecutor.submit(lec);
             calculatedEntries.addAll(entries.get());
 
@@ -125,8 +123,6 @@ public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepos
         Mockito.when(GDK.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(null);
 
         Assertions.assertDoesNotThrow(() -> {
-            LeasingDeposits = GDK.getLeasingDeposits();
-
             Future<List<Entry>> entries = threadExecutor.submit(lec);
             calculatedEntries.addAll(entries.get());
 
@@ -140,8 +136,6 @@ public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepos
         Mockito.when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(30, 4, 2017));
 
         Assertions.assertDoesNotThrow(() -> {
-            LeasingDeposits = GDK.getLeasingDeposits();
-
             Future<List<Entry>> entries = threadExecutor.submit(lec);
             calculatedEntries.addAll(entries.get());
 

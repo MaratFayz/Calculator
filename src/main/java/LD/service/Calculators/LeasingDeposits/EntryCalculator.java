@@ -57,7 +57,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
         this.depositRatesRepository = depositRatesRepository;
     }
 
-    //cоздание TreeMap с датами окончания по двум сценариям (сценарий-поулчатель обладает преимуществом)
+    //cоздание TreeMap с датами окончания по двум сценариям (сценарий-получатель обладает преимуществом)
     //при этом предполагается, что по сценарию-источнику в будущих периодах значения дат конца не проставлены.
     public static TreeMap<ZonedDateTime, ZonedDateTime> createPeriodsWithEndDatesForAllsLDLife(
             LeasingDeposit leasingDepositToCalculate, Scenario Scenario_LOAD,
@@ -321,45 +321,47 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         finalClosingdate);
 
                 if (!GeneralDataKeeper.getFrom().equals(GeneralDataKeeper.getTo())) {
-                    if (GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().getYear() < 0) {
-                        if ((closingdate.isEqual(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate()) ||
-                                closingdate.isAfter(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate())) &&
-                                closingdate.isBefore(GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom().toLocalDate())) {
-                            log.info("Осуществляется копирование со сценария {} на сценарий {}",
-                                    GeneralDataKeeper.getFrom()
-                                            .getName(), GeneralDataKeeper.getTo()
-                                            .getName());
+                    if(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo() != null) {
+                        if (GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().getYear() < 0) {
+                            if ((closingdate.isEqual(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate()) ||
+                                    closingdate.isAfter(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate())) &&
+                                    closingdate.isBefore(GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom().toLocalDate())) {
+                                log.info("Осуществляется копирование со сценария {} на сценарий {}",
+                                        GeneralDataKeeper.getFrom()
+                                                .getName(), GeneralDataKeeper.getTo()
+                                                .getName());
 
-                            LocalDate finalClosingdate1 = closingdate;
-                            List<Entry> L_entryTocopy = this.leasingDepositToCalculate.getEntries()
-                                    .stream()
-                                    .filter(entry -> entry.getEntryID()
-                                            .getScenario()
-                                            .equals(GeneralDataKeeper.getFrom()))
-                                    .collect(Collectors.toList());
+                                LocalDate finalClosingdate1 = closingdate;
+                                List<Entry> L_entryTocopy = this.leasingDepositToCalculate.getEntries()
+                                        .stream()
+                                        .filter(entry -> entry.getEntryID()
+                                                .getScenario()
+                                                .equals(GeneralDataKeeper.getFrom()))
+                                        .collect(Collectors.toList());
 
-                            L_entryTocopy = L_entryTocopy.stream()
-                                    .filter(entry -> entry.getEntryID()
-                                            .getPeriod()
-                                            .getDate()
-                                            .toLocalDate()
-                                            .isEqual(finalClosingdate1))
-                                    .collect(Collectors.toList());
+                                L_entryTocopy = L_entryTocopy.stream()
+                                        .filter(entry -> entry.getEntryID()
+                                                .getPeriod()
+                                                .getDate()
+                                                .toLocalDate()
+                                                .isEqual(finalClosingdate1))
+                                        .collect(Collectors.toList());
 
-                            Entry entryToCopy = L_entryTocopy.get(0);
+                                Entry entryToCopy = L_entryTocopy.get(0);
 
-                            EntryID newEntryID = entryToCopy.getEntryID()
-                                    .toBuilder()
-                                    .scenario(GeneralDataKeeper.getTo())
-                                    .CALCULATION_TIME(ZonedDateTime.now())
-                                    .build();
+                                EntryID newEntryID = entryToCopy.getEntryID()
+                                        .toBuilder()
+                                        .scenario(GeneralDataKeeper.getTo())
+                                        .CALCULATION_TIME(ZonedDateTime.now())
+                                        .build();
 
-                            Entry newEntry = entryToCopy.toBuilder()
-                                    .entryID(newEntryID)
-                                    .build();
-                            this.CalculatedStornoDeletedEntries.add(newEntry);
+                                Entry newEntry = entryToCopy.toBuilder()
+                                        .entryID(newEntryID)
+                                        .build();
+                                this.CalculatedStornoDeletedEntries.add(newEntry);
 
-                            continue;
+                                continue;
+                            }
                         }
                     }
                 }
@@ -1247,15 +1249,13 @@ public class EntryCalculator implements Callable<List<Entry>> {
         ZonedDateTime nextDateAfterLastWithTransaction_scenarioTO =
                 ZonedDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
-        if (Scenario_FROM.equals(Scenario_TO) && Scenario_FROM.getStatus()
-                .equals(ScenarioStornoStatus.ADDITION)) {
+        if (Scenario_FROM.equals(Scenario_TO) && Scenario_FROM.getStatus().equals(ScenarioStornoStatus.ADDITION)) {
             nextDateAfterLastWithTransaction_scenarioTO =
                     countFirstPeriodWithoutTransactionInScenario(Scenario_FROM, entries);
         }
 
         if (!Scenario_FROM.equals(Scenario_TO)) {
-            if (this.GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo() !=
-                    null) {
+            if (this.GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo() != null) {
                 nextDateAfterLastWithTransaction_scenarioTO =
                         this.GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo();
             } else {
@@ -1274,8 +1274,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 countFirstPeriodWithoutTransactionInScenario(Scenario_FROM, entries);
 
         //если сценарий-источник не равен сценарию-получателю, значит расчет = ADD => FULL
-        if (!this.GeneralDataKeeper.getTo()
-                .equals(this.GeneralDataKeeper.getFrom())) {
+        if (!this.GeneralDataKeeper.getTo().equals(this.GeneralDataKeeper.getFrom())) {
             if (!(nextDateAfterLastWithTransaction_scenarioFROM.withDayOfMonth(1)
                     .minusDays(1)
                     .isEqual(this.GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom()) ||
@@ -1392,7 +1391,6 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
         log.info("Расчет калькулятора завершен. Результат = {}", result);
         return result;
-
     }
 
     private BigDecimal calculateAccumDiscountRUB_RegLD2(LocalDate startCalculatingInclusive,
