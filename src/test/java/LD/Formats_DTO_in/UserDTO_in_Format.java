@@ -4,11 +4,13 @@ import LD.config.Security.model.User.User;
 import LD.config.Security.model.User.UserDTO_in;
 import LD.config.Security.model.User.UserTransform;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 
+@Disabled("Need implementation")
 public class UserDTO_in_Format
 {
 	@Autowired
