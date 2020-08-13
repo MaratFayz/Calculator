@@ -321,48 +321,47 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         finalClosingdate);
 
                 if (!GeneralDataKeeper.getFrom().equals(GeneralDataKeeper.getTo())) {
-                    if(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo() != null) {
-                        if (GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().getYear() < 0) {
-                            if ((closingdate.isEqual(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate()) ||
-                                    closingdate.isAfter(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate())) &&
-                                    closingdate.isBefore(GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom().toLocalDate())) {
-                                log.info("Осуществляется копирование со сценария {} на сценарий {}",
-                                        GeneralDataKeeper.getFrom()
-                                                .getName(), GeneralDataKeeper.getTo()
-                                                .getName());
+                    if (GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo() != null) {
+                        if ((closingdate.isEqual(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate()) ||
+                                closingdate.isAfter(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate())) &&
+                                closingdate.isBefore(GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom().toLocalDate())) {
+                            log.info("Осуществляется копирование со сценария {} на сценарий {}",
+                                    GeneralDataKeeper.getFrom()
+                                            .getName(), GeneralDataKeeper.getTo()
+                                            .getName());
 
-                                LocalDate finalClosingdate1 = closingdate;
-                                List<Entry> L_entryTocopy = this.leasingDepositToCalculate.getEntries()
-                                        .stream()
-                                        .filter(entry -> entry.getEntryID()
-                                                .getScenario()
-                                                .equals(GeneralDataKeeper.getFrom()))
-                                        .collect(Collectors.toList());
+                            LocalDate finalClosingdate1 = closingdate;
+                            List<Entry> L_entryTocopy = this.leasingDepositToCalculate.getEntries()
+                                    .stream()
+                                    .filter(entry -> entry.getEntryID()
+                                            .getScenario()
+                                            .equals(GeneralDataKeeper.getFrom()))
+                                    .collect(Collectors.toList());
 
-                                L_entryTocopy = L_entryTocopy.stream()
-                                        .filter(entry -> entry.getEntryID()
-                                                .getPeriod()
-                                                .getDate()
-                                                .toLocalDate()
-                                                .isEqual(finalClosingdate1))
-                                        .collect(Collectors.toList());
+                            L_entryTocopy = L_entryTocopy.stream()
+                                    .filter(entry -> entry.getEntryID()
+                                            .getPeriod()
+                                            .getDate()
+                                            .toLocalDate()
+                                            .isEqual(finalClosingdate1))
+                                    .collect(Collectors.toList());
 
-                                Entry entryToCopy = L_entryTocopy.get(0);
+                            Entry entryToCopy = L_entryTocopy.get(0);
 
-                                EntryID newEntryID = entryToCopy.getEntryID()
-                                        .toBuilder()
-                                        .scenario(GeneralDataKeeper.getTo())
-                                        .CALCULATION_TIME(ZonedDateTime.now())
-                                        .build();
+                            EntryID newEntryID = entryToCopy.getEntryID()
+                                    .toBuilder()
+                                    .scenario(GeneralDataKeeper.getTo())
+                                    .CALCULATION_TIME(ZonedDateTime.now())
+                                    .build();
 
-                                Entry newEntry = entryToCopy.toBuilder()
-                                        .entryID(newEntryID)
-                                        .build();
-                                this.CalculatedStornoDeletedEntries.add(newEntry);
+                            Entry newEntry = entryToCopy.toBuilder()
+                                    .entryID(newEntryID)
+                                    .build();
+                            this.CalculatedStornoDeletedEntries.add(newEntry);
 
-                                continue;
-                            }
+                            continue;
                         }
+
                     }
                 }
 

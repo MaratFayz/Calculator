@@ -59,7 +59,6 @@ import static org.junit.Assert.assertEquals;
 //8. Ввод данных обязателен для двух таблиц по одному депозиту (оссновные данные и дата конца - нужна хотя бы одна запись, иначе нет расчета).
 //9. Проверить, что берется последняя проводка по последнему закрытому периоду перед первой дыркой.
 
-@Disabled("Need to fix it")
 @ExtendWith(MockitoExtension.class)
 public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
@@ -102,12 +101,12 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
         //расчет сценария-получателя на ноябре
         //итого всего три транзакции на сценарии-получателе новые со стасом ACTUAL
         //также добавить сюда все транзакции до ноября = 32, которые будут сторнированы
-        Mockito.when(GDK.getLeasingDeposits()).thenReturn(List.of(leasingDeposit1));
-        Mockito.when(GDK.getFrom()).thenReturn(scenarioSource);
-        Mockito.when(GDK.getTo()).thenReturn(scenarioSource);
-        Mockito.when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(30, 9, 2018));
-        Mockito.when(GDK.getAllExRates()).thenReturn(ExR);
-        Mockito.when(GDK.getAllPeriods()).thenReturn(List.copyOf(periods.values()));
+        Mockito.lenient().when(GDK.getLeasingDeposits()).thenReturn(List.of(leasingDeposit1));
+        Mockito.lenient().when(GDK.getFrom()).thenReturn(scenarioSource);
+        Mockito.lenient().when(GDK.getTo()).thenReturn(scenarioSource);
+        Mockito.lenient().when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(30, 9, 2018));
+        Mockito.lenient().when(GDK.getAllExRates()).thenReturn(ExR);
+        Mockito.lenient().when(GDK.getAllPeriods()).thenReturn(List.copyOf(periods.values()));
 
         threadExecutor = Executors.newFixedThreadPool(10);
 
@@ -118,10 +117,10 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
         leasingDeposit1.getEntries().addAll(entries.get());
 
         //расчёт на сценарий-получатель
-        Mockito.when(GDK.getTo()).thenReturn(scenarioDestination);
-        Mockito.when(GDK.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(getDate(31, 8, 2018));
-        Mockito.when(GDK.getFirstOpenPeriod_ScenarioFrom()).thenReturn(getDate(30, 9, 2018));
-        Mockito.when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(31, 12, 2019));
+        Mockito.lenient().when(GDK.getTo()).thenReturn(scenarioDestination);
+        Mockito.lenient().when(GDK.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(getDate(31, 8, 2018));
+        Mockito.lenient().when(GDK.getFirstOpenPeriod_ScenarioFrom()).thenReturn(getDate(30, 9, 2018));
+        Mockito.lenient().when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(31, 12, 2019));
 
         calculatorTestForScenarioSourceDestination = new EntryCalculator(leasingDeposit1, GDK, depositRatesRepository);
 
@@ -133,7 +132,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
     @Test
     public void test2_NumberOfStornoTransactions() {
-        assertEquals(32, calculatorTestForScenarioSourceDestination.getCalculatedStornoDeletedEntries().stream()
+        assertEquals(18, calculatorTestForScenarioSourceDestination.getCalculatedStornoDeletedEntries().stream()
                 .filter(entry -> entry.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(entry -> entry.getStatus() == EntryStatus.STORNO)
                 .count());
@@ -141,7 +140,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
     @Test
     public void test3_NumberOfAllTransactionsStornoAndCalculated() {
-        assertEquals(48, calculatorTestForScenarioSourceDestination.getCalculatedStornoDeletedEntries().size());
+        assertEquals(34, calculatorTestForScenarioSourceDestination.getCalculatedStornoDeletedEntries().size());
     }
 
     @Test
@@ -1076,7 +1075,6 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
         ed_ld1_31032017_20102019.setEndDateID(endDateID_31032017_20102019);
         ed_ld1_31032017_20102019.setEnd_Date(getDate(20, 10, 2019));
 
-
         EndDateID endDateID_31082017_20122019 = EndDateID.builder()
                 .leasingDeposit_id(leasingDeposit1.getId())
                 .period(periods.get(getDate(31, 8, 2017)))
@@ -1110,25 +1108,8 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
         leasingDeposit1.setEnd_dates(Set.of(ed_ld1_31032017_20102019, ed_ld1_31082017_20122019, ed_ld1_31102017_20112019, ed_ld1_30112019_03112019));
         leasingDeposit1.setEntries(new HashSet<>());
 
-        LocalDate.of(2017, 3, 31).datesUntil(LocalDate.of(2019, 11, 1), java.time.Period.ofMonths(1)).forEach(date ->
+        LocalDate.of(2017, 3, 31).datesUntil(LocalDate.of(2018, 9, 1), java.time.Period.ofMonths(1)).forEach(date ->
         {
-/*			EntryID entryID_sourceScenario = EntryID.builder()
-					.leasingDeposit_id(leasingDeposit1.getId())
-					.CALCULATION_TIME(ZonedDateTime.now())
-					.scenario(scenarioSource)
-					.period(periods.get(getDate(date.lengthOfMonth(), date.getMonthValue(), date.getYear())))
-					.build();
-
-			Entry entry_sourceScenario = Entry.builder()
-					.entryID(entryID_sourceScenario)
-					.status(EntryStatus.ACTUAL)
-					.DISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q(BigDecimal.ZERO)
-					.DISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P(BigDecimal.ZERO)
-					.ACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.ZERO)
-					.build();
-
-			leasingDeposit1.getEntries().add(entry_sourceScenario);*/
-
             EntryID entryID_destinationSource = EntryID.builder()
                     .leasingDeposit_id(leasingDeposit1.getId())
                     .CALCULATION_TIME(ZonedDateTime.now())
@@ -1146,62 +1127,5 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
             leasingDeposit1.getEntries().add(entry_destinationScenario);
         });
-/*
-		leasingDeposit1.getEntries().stream().filter(entry -> entry.getEntryID().getPeriod().getDate().isEqual(ZonedDateTime.of(2019, 10, 31, 0, 0, 0, 0, ZoneId.of("UTC"))))
-				.forEach(entry -> entry.setEnd_date_at_this_period(ZonedDateTime.of(2019, 11, 20, 0,0,0,0, ZoneId.of("UTC"))));
-
-		leasingDeposit1.getEntries().stream().filter(entry -> entry.getEntryID().getPeriod().getDate().isEqual(ZonedDateTime.of(2019, 11, 30, 0, 0, 0, 0, ZoneId.of("UTC"))))
-				.forEach(entry -> entry.setEnd_date_at_this_period(ZonedDateTime.of(2019, 11, 3, 0,0,0,0, ZoneId.of("UTC"))));
-
-		leasingDeposit1.getEntries().stream()
-				.filter(entry -> entry.getEntryID().getScenario().equals(scenarioSource))
-				.filter(entry -> entry.getEntryID().getPeriod().getDate().isEqual(ZonedDateTime.of(2019, 10, 31, 0, 0, 0, 0, ZoneId.of("UTC"))))
-				.forEach(entry ->
-				{
-*//*					entry.setDISCONT_AT_START_DATE_cur_REG_LD_1_K(BigDecimal.valueOf(-11973));
-					entry.setDISCONT_AT_START_DATE_RUB_REG_LD_1_L(BigDecimal.valueOf(-704373));
-					getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M(BigDecimal.ZERO, LD1_31102019.getDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M().setScale(0, RoundingMode.HALF_UP));
-					getDeposit_sum_not_disc_RUB_REG_LD_1_N(BigDecimal.ZERO, LD1_31102019.getDeposit_sum_not_disc_RUB_REG_LD_1_N().setScale(0, RoundingMode.HALF_UP));
-					getEnd_date_at_this_period(ZonedDateTime.of(2019, 11, 20, 0, 0, 0, 0, ZoneId.of("UTC")), LD1_31102019.getEnd_date_at_this_period());
-					getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P(BigDecimal.ZERO, LD1_31102019.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().setScale(0, RoundingMode.HALF_UP));
-					getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q(BigDecimal.ZERO, LD1_31102019.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q().setScale(0, RoundingMode.HALF_UP));
-					getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R(BigDecimal.ZERO, LD1_31102019.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R().setScale(0, RoundingMode.HALF_UP));
-					getREVAL_CORR_DISC_rub_REG_LD_1_S(BigDecimal.ZERO, LD1_31102019.getREVAL_CORR_DISC_rub_REG_LD_1_S().setScale(0, RoundingMode.HALF_UP));
-					getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T(BigDecimal.ZERO, LD1_31102019.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T().setScale(0, RoundingMode.HALF_UP));
-					getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U().setScale(0, RoundingMode.HALF_UP));
-					getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V().setScale(0, RoundingMode.HALF_UP));
-					getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.ZERO, LD1_31102019.getCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X().setScale(0, RoundingMode.HALF_UP));
-
-					assertEquals(BigDecimal.valueOf(11657), LD1_31102019.getACCUM_AMORT_DISCONT_START_PERIOD_cur_REG_LD_2_H().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(412), LD1_31102019.getAMORT_DISCONT_CURRENT_PERIOD_cur_REG_LD_2_I().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(12070), LD1_31102019.getACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(725884), LD1_31102019.getACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(27173), LD1_31102019.getAMORT_DISCONT_CURRENT_PERIOD_RUB_REG_LD_2_M().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(753057), LD1_31102019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N().setScale(0, RoundingMode.HALF_UP));
-
-					assertEquals(BigDecimal.valueOf(87663), LD1_31102019.getDiscountedSum_at_current_end_date_cur_REG_LD_3_G().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(5923411), LD1_31102019.getINCOMING_LD_BODY_RUB_REG_LD_3_L().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(5923411), LD1_31102019.getOUTCOMING_LD_BODY_REG_LD_3_M().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.ZERO, LD1_31102019.getREVAL_LD_BODY_PLUS_REG_LD_3_N().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.ZERO, LD1_31102019.getREVAL_LD_BODY_MINUS_REG_LD_3_O().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(787682), LD1_31102019.getACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_3_R().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(815549), LD1_31102019.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_3_S().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(694), LD1_31102019.getREVAL_ACC_AMORT_PLUS_RUB_REG_LD_3_T().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.ZERO, LD1_31102019.getREVAL_ACC_AMORT_MINUS_RUB_REG_LD_3_U().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(-694), LD1_31102019.getSUM_PLUS_FOREX_DIFF_REG_LD_3_V().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.ZERO, LD1_31102019.getSUM_MINUS_FOREX_DIFF_REG_LD_3_W().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.ZERO, LD1_31102019.getDISPOSAL_BODY_RUB_REG_LD_3_X().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.ZERO, LD1_31102019.getDISPOSAL_DISCONT_RUB_REG_LD_3_Y().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(LeasingDepositDuration.ST, LD1_31102019.getLDTERM_REG_LD_3_Z());
-					assertEquals(BigDecimal.valueOf(5923411), LD1_31102019.getTERMRECLASS_BODY_CURRENTPERIOD_REG_LD_3_AA().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(815549), LD1_31102019.getTERMRECLASS_PERCENT_CURRENTPERIOD_REG_LD_3_AB().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(5923411), LD1_31102019.getTERMRECLASS_BODY_PREVPERIOD_REG_LD_3_AC().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(787682), LD1_31102019.getTERMRECLASS_PERCENT_PREVPERIOD_REG_LD_3_AD().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(5178807), LD1_31102019.getADVANCE_CURRENTPERIOD_REG_LD_3_AE().setScale(0, RoundingMode.HALF_UP));
-					assertEquals(BigDecimal.valueOf(5178807), LD1_31102019.getADVANCE_PREVPERIOD_REG_LD_3_AF().setScale(0, RoundingMode.HALF_UP));*//*
-				});*/
     }
-
 }
-
