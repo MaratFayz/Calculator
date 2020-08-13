@@ -1,5 +1,6 @@
 package TestsForLeasingDeposit.Calculator;
 
+import LD.config.Security.model.User.User;
 import LD.model.Company.Company;
 import LD.model.Counterpartner.Counterpartner;
 import LD.model.Currency.Currency;
@@ -21,11 +22,21 @@ import java.util.List;
 
 public class Builders {
 
-    public static Scenario getSC(String name, ScenarioStornoStatus status) {
+    public static Scenario getSC(String name, ScenarioStornoStatus status, User user) {
         Scenario c = new Scenario();
         c.setName(name);
         c.setStatus(status);
+        c.setLastChange(ZonedDateTime.now());
+        c.setUser(user);
         return c;
+    }
+
+    public static User getAnyUser() {
+        return User.builder()
+                .username("1")
+                .password("2")
+                .lastChange(ZonedDateTime.now())
+                .build();
     }
 
     public static ZonedDateTime getDate(int day, int month, int year) {
