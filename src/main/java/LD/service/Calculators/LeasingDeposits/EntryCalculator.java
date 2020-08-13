@@ -8,11 +8,10 @@ import LD.model.ExchangeRate.ExchangeRate;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Period.Period;
 import LD.model.Scenario.Scenario;
+import LD.repository.DepositRatesRepository;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import net.bytebuddy.asm.Advice;
 import org.springframework.data.jpa.domain.Specification;
-import LD.repository.DepositRatesRepository;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -84,8 +83,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                     .withZoneSameInstant(ZoneId.of("UTC")), end_date.getEnd_Date()
                                     .withZoneSameInstant(ZoneId.of("UTC")));
                         }
-                    }
-                    else {
+                    } else {
                         tm.put(end_date.getEndDateID()
                                 .getPeriod()
                                 .getDate()
@@ -177,8 +175,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 deposit_sum_discounted_on_firstEndDate =
                         countDiscountedValueFromStartDateToNeededDate(this.firstEndDate,
                                 this.leasingDepositToCalculate.getStart_date());
-            }
-            else {
+            } else {
                 deposit_sum_discounted_on_firstEndDate =
                         this.leasingDepositToCalculate.getDeposit_sum_not_disc();
             }
@@ -201,8 +198,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     countTransactionsForLD(EntriesExistingBeforeCalculating,
                             GeneralDataKeeper.getAllPeriods(), this.scenarioTo,
                             GeneralDataKeeper.getAllExRates()));
-        }
-        else {
+        } else {
             log.info("Депозит является удалённым");
             CalculatedStornoDeletedEntries =
                     changeStatusInLastEntries(EntriesExistingBeforeCalculating, scenarioTo,
@@ -232,8 +228,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     if (transaction.getStatus()
                             .equals(EntryStatus.ACTUAL)) {
                         return true;
-                    }
-                    else {
+                    } else {
                         return false;
                     }
                 })
@@ -246,8 +241,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                 .getScenario()
                                 .equals(scenarioWhereToChangeStatusInEntries)) {
                             return true;
-                        }
-                        else {
+                        } else {
                             return false;
                         }
                     })
@@ -307,8 +301,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                 this.leasingDepositToCalculate.getStart_date()));
 
         //Для случаев, когда все транзакции сделаны => чтоб не было новых
-        if (firstPeriodWithoutTransaction.isBefore(
-                min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month_InDays)) {
+        if (firstPeriodWithoutTransaction.isBefore(min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month_InDays)) {
             log.info(
                     "firstPeriodWithoutTransaction.datesUntil(min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month_InDays, java.time.Period.ofMonths(1)).collect(Collectors.toList()) = {}",
                     firstPeriodWithoutTransaction.datesUntil(
@@ -327,17 +320,11 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 log.info("Расчет периода с датой (после коррекции на последнюю дату) => {}",
                         finalClosingdate);
 
-                if (!GeneralDataKeeper.getFrom()
-                        .equals(GeneralDataKeeper.getTo())) {
-                    if (GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()
-                            .getYear() < 0) {
-                        if ((closingdate.isEqual(
-                                GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()
-                                        .toLocalDate()) || closingdate.isAfter(
-                                GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()
-                                        .toLocalDate())) && closingdate.isBefore(
-                                GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom()
-                                        .toLocalDate())) {
+                if (!GeneralDataKeeper.getFrom().equals(GeneralDataKeeper.getTo())) {
+                    if (GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().getYear() < 0) {
+                        if ((closingdate.isEqual(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate()) ||
+                                closingdate.isAfter(GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().toLocalDate())) &&
+                                closingdate.isBefore(GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom().toLocalDate())) {
                             log.info("Осуществляется копирование со сценария {} на сценарий {}",
                                     GeneralDataKeeper.getFrom()
                                             .getName(), GeneralDataKeeper.getTo()
@@ -396,8 +383,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 if (finalClosingdate.isBefore(GeneralDataKeeper.getFirstOpenPeriod_ScenarioTo())) {
                     t.setStatus_EntryMadeDuringOrAfterClosedPeriod(
                             EntryPeriodCreation.AFTER_CLOSING_PERIOD);
-                }
-                else {
+                } else {
                     t.setStatus_EntryMadeDuringOrAfterClosedPeriod(
                             EntryPeriodCreation.CURRENT_PERIOD);
                 }
@@ -423,8 +409,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                     .multiply(exRateAtStartDate));
                     t.setDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M(
                             t.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L());
-                }
-                else {
+                } else {
                     t.setDeposit_sum_not_disc_RUB_REG_LD_1_N(BigDecimal.ZERO);
                     t.setDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M(BigDecimal.ZERO);
                 }
@@ -447,8 +432,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                 countDiscountedValueFromStartDateToNeededDate(
                                         t.getEnd_date_at_this_period(),
                                         this.leasingDepositToCalculate.getStart_date());
-                    }
-                    else {
+                    } else {
                         deposit_sum_discounted_on_End_date_at_this_period =
                                 this.leasingDepositToCalculate.getDeposit_sum_not_disc();
                     }
@@ -472,8 +456,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                         findLastRevaluationOfDiscount(GeneralDataKeeper.getFrom(),
                                                 finalClosingdate,
                                                 CalculatedAndExistingBeforeCalculationEntries);
-                            }
-                            else {
+                            } else {
                                 ZonedDateTime prevDateBeforeFirstOpenPeriodForScenarioFrom =
                                         GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom()
                                                 .withDayOfMonth(1)
@@ -494,8 +477,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                                 lastCalculatedDiscountForScenarioTo :
                                                 lastCalculatedDiscountForScenarioFromOnDateBeforeFirstOpenPeriod1;
                             }
-                        }
-                        else {
+                        } else {
                             lastRevaluationOfDiscount =
                                     findLastRevaluationOfDiscount(scSAVE, finalClosingdate,
                                             CalculatedAndExistingBeforeCalculationEntries);
@@ -505,15 +487,13 @@ public class EntryCalculator implements Callable<List<Entry>> {
                             t.setDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R(
                                     t.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q()
                                             .subtract(t.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L()));
-                        }
-                        else {
+                        } else {
                             t.setDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R(
                                     t.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q()
                                             .subtract(lastRevaluationOfDiscount));
                         }
 
-                    }
-                    else {
+                    } else {
                         t.setDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R(BigDecimal.ZERO);
                     }
 
@@ -545,8 +525,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                     .orElseThrow(() -> new IllegalArgumentException(
                                             "Не найден курс на дату => " +
                                                     PrevClosingDate.toLocalDate()));
-                        }
-                        else {
+                        } else {
                             curExOnPrevClosingDate = allExRates.stream()
                                     .filter(er -> er.getExchangeRateID()
                                             .getDate()
@@ -568,8 +547,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                             "Не найден курс на дату => " +
                                                     PrevClosingDate.toLocalDate()));
                         }
-                    }
-                    else {
+                    } else {
                         curExOnPrevClosingDate = allExRates.stream()
                                 .filter(er -> er.getExchangeRateID()
                                         .getDate()
@@ -604,8 +582,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                     findLastCalculatedDiscount(GeneralDataKeeper.getFrom(),
                                             finalClosingdate,
                                             CalculatedAndExistingBeforeCalculationEntries);
-                        }
-                        else {
+                        } else {
                             ZonedDateTime prevDateBeforeFirstOpenPeriodForScenarioFrom =
                                     GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom()
                                             .withDayOfMonth(1)
@@ -624,8 +601,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                     BigDecimal.ZERO) != 0 ? lastCalculatedDiscountForScenarioTo :
                                     lastCalculatedDiscountForScenarioFromOnDateBeforeFirstOpenPeriod1;
                         }
-                    }
-                    else {
+                    } else {
                         lastCalculatedDiscount =
                                 findLastCalculatedDiscount(scSAVE, finalClosingdate,
                                         CalculatedAndExistingBeforeCalculationEntries);
@@ -638,16 +614,14 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                             .subtract(t.getDISCONT_AT_START_DATE_cur_REG_LD_1_K())
                                             .multiply(curExOnPrevClosingDate.subtract(
                                                     exRateAtStartDate)));
-                        }
-                        else {
+                        } else {
                             t.setREVAL_CORR_DISC_rub_REG_LD_1_S(
                                     t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()
                                             .subtract(lastCalculatedDiscount)
                                             .multiply(curExOnPrevClosingDate.subtract(
                                                     exRateAtStartDate)));
                         }
-                    }
-                    else {
+                    } else {
                         t.setREVAL_CORR_DISC_rub_REG_LD_1_S(BigDecimal.ZERO);
                     }
 
@@ -676,8 +650,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         t.setCORR_ACC_AMORT_DISC_rub_REG_LD_1_T(
                                 after_Discount_cur.subtract(before_Discount_cur)
                                         .multiply(curExOnPrevClosingDate));
-                    }
-                    else {
+                    } else {
                         t.setCORR_ACC_AMORT_DISC_rub_REG_LD_1_T(BigDecimal.ZERO);
                     }
 
@@ -691,8 +664,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         t.setCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V(
                                 t.getCORR_ACC_AMORT_DISC_rub_REG_LD_1_T());
                         t.setCORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X(BigDecimal.ZERO);
-                    }
-                    else if (t.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R()
+                    } else if (t.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R()
                             .compareTo(BigDecimal.ZERO) > 0) {
                         t.setCORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W(
                                 t.getDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R()
@@ -704,10 +676,9 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         t.setCORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V(
                                 BigDecimal.ZERO);
                     }
-                }
-                else {
-                    log.info(
-                            "Дата закрытия периода позже первого отчетного периода для депозита, дата заверешния депозита по сравнению с прошлым периодом не изменилась");
+                } else {
+                    log.info("Дата закрытия периода позже первого отчетного периода для депозита, " +
+                            "дата завершения депозита по сравнению с прошлым периодом не изменилась");
 
                     t.setREVAL_CORR_DISC_rub_REG_LD_1_S(BigDecimal.ZERO);
                     t.setDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P(BigDecimal.ZERO);
@@ -752,8 +723,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(
                                 countDiscountFromStartDateToNeededDate(
                                         t.getEnd_date_at_this_period(), finalClosingdate));
-                    }
-                    else {
+                    } else {
                         t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(
                                 countDiscountFromStartDateToNeededDate(
                                         t.getEnd_date_at_this_period(),
@@ -778,14 +748,12 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                         findLastTransaction(GeneralDataKeeper.getFrom(),
                                                 GeneralDataKeeper.getFrom(), PrevClosingDate,
                                                 CalculatedAndExistingBeforeCalculationEntries);
-                            }
-                            else {
+                            } else {
                                 lastTransactionIn2Scenarios =
                                         findLastTransaction(scSAVE, scSAVE, PrevClosingDate,
                                                 CalculatedAndExistingBeforeCalculationEntries);
                             }
-                        }
-                        else {
+                        } else {
                             lastTransactionIn2Scenarios =
                                     findLastTransaction(scSAVE, scSAVE, PrevClosingDate,
                                             CalculatedAndExistingBeforeCalculationEntries);
@@ -798,8 +766,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                 t.setACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K(
                                         lastTransactionIn2Scenarios.get(0)
                                                 .getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N());
-                            }
-                            else {
+                            } else {
                                 BigDecimal accumulatedDiscountRUB = BigDecimal.ZERO;
 
                                 if (!GeneralDataKeeper.getFrom()
@@ -813,8 +780,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                                     GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom()
                                                             .toLocalDate(), finalClosingdate,
                                                     allExRates, scSAVE, t));
-                                }
-                                else {
+                                } else {
                                     accumulatedDiscountRUB = calculateAccumDiscountRUB_RegLD2(
                                             this.startDateWithlastDayOfStartingMonth,
                                             finalClosingdate, allExRates, scSAVE, t);
@@ -824,13 +790,11 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                         accumulatedDiscountRUB);
                             }
                         }
-                    }
-                    else {
+                    } else {
                         t.setACCUM_AMORT_DISCONT_START_PERIOD_cur_REG_LD_2_H(BigDecimal.ZERO);
                         t.setACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K(BigDecimal.ZERO);
                     }
-                }
-                else {
+                } else {
                     t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(BigDecimal.ZERO);
                     t.setACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.ZERO);
                     t.setACCUM_AMORT_DISCONT_START_PERIOD_cur_REG_LD_2_H(BigDecimal.ZERO);
@@ -855,8 +819,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     t.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(
                             this.leasingDepositToCalculate.getDeposit_sum_not_disc()
                                     .add(t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()));
-                }
-                else {
+                } else {
                     BigDecimal lastCalculatedDiscount = BigDecimal.ZERO;
 
                     if (!GeneralDataKeeper.getFrom()
@@ -867,8 +830,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                     findLastCalculatedDiscount(GeneralDataKeeper.getFrom(),
                                             finalClosingdate,
                                             CalculatedAndExistingBeforeCalculationEntries);
-                        }
-                        else {
+                        } else {
                             lastCalculatedDiscount =
                                     findLastCalculatedDiscount(GeneralDataKeeper.getFrom(),
                                             GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom(),
@@ -879,8 +841,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                             findLastCalculatedDiscount(scSAVE, finalClosingdate,
                                                     CalculatedAndExistingBeforeCalculationEntries);
                         }
-                    }
-                    else {
+                    } else {
                         lastCalculatedDiscount =
                                 findLastCalculatedDiscount(scSAVE, finalClosingdate,
                                         CalculatedAndExistingBeforeCalculationEntries);
@@ -890,8 +851,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         t.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(
                                 this.leasingDepositToCalculate.getDeposit_sum_not_disc()
                                         .add(t.getDISCONT_AT_START_DATE_cur_REG_LD_1_K()));
-                    }
-                    else {
+                    } else {
                         t.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(
                                 this.leasingDepositToCalculate.getDeposit_sum_not_disc()
                                         .add(lastCalculatedDiscount));
@@ -924,8 +884,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                             t.getDiscountedSum_at_current_end_date_cur_REG_LD_3_G()
                                     .multiply(exRateAtStartDate));
                     t.setACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_3_R(BigDecimal.ZERO);
-                }
-                else {
+                } else {
                     BigDecimal ExRateOnPrevClosingdate = BigDecimal.ZERO;
 
                     if (!GeneralDataKeeper.getFrom()
@@ -952,8 +911,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                     .orElseThrow(() -> new IllegalArgumentException(
                                             "Не найден курс на дату => " +
                                                     PrevClosingDate.toLocalDate()));
-                        }
-                        else {
+                        } else {
                             ExRateOnPrevClosingdate = allExRates.stream()
                                     .filter(er -> er.getExchangeRateID()
                                             .getDate()
@@ -975,8 +933,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                             "Не найден курс на дату => " +
                                                     PrevClosingDate.toLocalDate()));
                         }
-                    }
-                    else {
+                    } else {
                         ExRateOnPrevClosingdate = allExRates.stream()
                                 .filter(er -> er.getExchangeRateID()
                                         .getDate()
@@ -1016,8 +973,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     t.setREVAL_LD_BODY_PLUS_REG_LD_3_N(t.getOUTCOMING_LD_BODY_REG_LD_3_M()
                             .subtract(t.getINCOMING_LD_BODY_RUB_REG_LD_3_L()));
                     t.setREVAL_LD_BODY_MINUS_REG_LD_3_O(BigDecimal.ZERO);
-                }
-                else {
+                } else {
                     t.setREVAL_LD_BODY_PLUS_REG_LD_3_N(BigDecimal.ZERO);
                     t.setREVAL_LD_BODY_MINUS_REG_LD_3_O(t.getOUTCOMING_LD_BODY_REG_LD_3_M()
                             .subtract(t.getINCOMING_LD_BODY_RUB_REG_LD_3_L()));
@@ -1037,8 +993,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                     .subtract(
                                             t.getACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_3_R())
                                     .subtract(t.getAMORT_DISCONT_CURRENT_PERIOD_RUB_REG_LD_2_M()));
-                }
-                else {
+                } else {
                     t.setREVAL_ACC_AMORT_MINUS_RUB_REG_LD_3_U(
                             t.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_3_S()
                                     .subtract(
@@ -1058,8 +1013,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                             .add(t.getREVAL_ACC_AMORT_MINUS_RUB_REG_LD_3_U())
                             .negate());
                     t.setSUM_MINUS_FOREX_DIFF_REG_LD_3_W(BigDecimal.ZERO);
-                }
-                else {
+                } else {
                     t.setSUM_MINUS_FOREX_DIFF_REG_LD_3_W(t.getREVAL_LD_BODY_PLUS_REG_LD_3_N()
                             .add(t.getREVAL_LD_BODY_MINUS_REG_LD_3_O())
                             .add(t.getREVAL_ACC_AMORT_PLUS_RUB_REG_LD_3_T())
@@ -1074,8 +1028,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     t.setDISPOSAL_BODY_RUB_REG_LD_3_X(t.getOUTCOMING_LD_BODY_REG_LD_3_M());
                     t.setDISPOSAL_DISCONT_RUB_REG_LD_3_Y(
                             t.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_3_S());
-                }
-                else {
+                } else {
                     t.setDISPOSAL_BODY_RUB_REG_LD_3_X(BigDecimal.ZERO);
                     t.setDISPOSAL_DISCONT_RUB_REG_LD_3_Y(BigDecimal.ZERO);
                 }
@@ -1083,8 +1036,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 if (Duration.between(finalClosingdate, t.getEnd_date_at_this_period())
                         .toDays() / 30.417 >= 12) {
                     t.setLDTERM_REG_LD_3_Z(LeasingDepositDuration.LT);
-                }
-                else {
+                } else {
                     t.setLDTERM_REG_LD_3_Z(LeasingDepositDuration.ST);
                 }
 
@@ -1096,13 +1048,11 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                 t.getOUTCOMING_LD_BODY_REG_LD_3_M());
                         t.setTERMRECLASS_PERCENT_CURRENTPERIOD_REG_LD_3_AB(
                                 t.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_3_S());
-                    }
-                    else {
+                    } else {
                         t.setTERMRECLASS_BODY_CURRENTPERIOD_REG_LD_3_AA(BigDecimal.ZERO);
                         t.setTERMRECLASS_PERCENT_CURRENTPERIOD_REG_LD_3_AB(BigDecimal.ZERO);
                     }
-                }
-                else {
+                } else {
                     t.setTERMRECLASS_BODY_CURRENTPERIOD_REG_LD_3_AA(BigDecimal.ZERO);
                     t.setTERMRECLASS_PERCENT_CURRENTPERIOD_REG_LD_3_AB(BigDecimal.ZERO);
                 }
@@ -1112,8 +1062,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     t.setADVANCE_CURRENTPERIOD_REG_LD_3_AE(
                             this.deposit_sum_discounted_on_firstEndDate.multiply(
                                     exRateAtStartDate));
-                }
-                else {
+                } else {
                     t.setADVANCE_CURRENTPERIOD_REG_LD_3_AE(BigDecimal.ZERO);
                 }
 
@@ -1128,8 +1077,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     t.setTERMRECLASS_PERCENT_PREVPERIOD_REG_LD_3_AD(
                             lde.getTERMRECLASS_PERCENT_CURRENTPERIOD_REG_LD_3_AB());
                     t.setADVANCE_PREVPERIOD_REG_LD_3_AF(lde.getADVANCE_CURRENTPERIOD_REG_LD_3_AE());
-                }
-                else {
+                } else {
                     t.setTERMRECLASS_BODY_PREVPERIOD_REG_LD_3_AC(BigDecimal.ZERO);
                     t.setTERMRECLASS_PERCENT_PREVPERIOD_REG_LD_3_AD(BigDecimal.ZERO);
                     t.setADVANCE_PREVPERIOD_REG_LD_3_AF(BigDecimal.ZERO);
@@ -1310,8 +1258,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     null) {
                 nextDateAfterLastWithTransaction_scenarioTO =
                         this.GeneralDataKeeper.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo();
-            }
-            else {
+            } else {
                 nextDateAfterLastWithTransaction_scenarioTO =
                         GeneralDataKeeper.getFirstOpenPeriod_ScenarioFrom();
             }
@@ -1370,8 +1317,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     .count() > 0) {
                 LastPeriodWithTransactionUTC =
                         ZonedDateTime.of(closingdate, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
-            }
-            else {
+            } else {
                 break;
             }
         }
