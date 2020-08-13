@@ -1,4 +1,4 @@
-package TestsForLeasingDeposit.Calculator.BetweenTwoScenarios;
+package LD.service.Calculators.LeasingDeposits;
 
 import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.User.User;
@@ -60,7 +60,7 @@ import static org.mockito.ArgumentMatchers.eq;
 
 @Disabled("Fix tests with mocking SecurityCotext or refactoring GDK class")
 @ExtendWith(MockitoExtension.class)
-public class Exceptions {
+public class GeneralDataKeeperTest {
 
     static Scenario scenarioSourceAddition;
     static Scenario scenarioDestinationFull;
