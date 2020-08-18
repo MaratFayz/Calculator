@@ -70,7 +70,7 @@ create table duration (
 );
 
 create table end_date (
-       end_date DATE not null,
+       end_date timestamp with time zone not null,
        date_time_last_change timestamp with time zone not null,
        leasing_deposit_id bigint not null,
        scenario_id bigint not null,
@@ -123,7 +123,7 @@ create table entries (
        termreclass_percent_prevperiod_reg_ld_3_ad DECIMAL(30,10) not null,
        deposit_sum_not_disc_rub_reg_ld_1_n DECIMAL(30,10) not null,
        discounted_sum_at_current_end_date_cur_reg_ld_3_g DECIMAL(30,10) not null,
-       end_date_at_this_period DATE not null,
+       end_date_at_this_period timestamp with time zone not null,
        date_time_last_change timestamp with time zone not null,
        percent_rate_for_period_forld decimal(19,2) not null,
        transaction_status entryStatus,

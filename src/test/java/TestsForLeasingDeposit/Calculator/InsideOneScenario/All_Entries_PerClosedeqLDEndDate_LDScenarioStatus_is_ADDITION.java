@@ -33,6 +33,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -94,6 +95,7 @@ public class All_Entries_PerClosedeqLDEndDate_LDScenarioStatus_is_ADDITION {
         Mockito.when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(30, 11, 2019));
         Mockito.when(GDK.getAllExRates()).thenReturn(ExR);
         Mockito.when(GDK.getAllPeriods()).thenReturn(List.copyOf(periods.values()));
+        Mockito.lenient().when(GDK.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC")));
 
         threadExecutor = Executors.newFixedThreadPool(10);
 
@@ -278,7 +280,18 @@ public class All_Entries_PerClosedeqLDEndDate_LDScenarioStatus_is_ADDITION {
                     .DISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q(BigDecimal.ZERO)
                     .DISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P(BigDecimal.ZERO)
                     .ACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.ZERO)
-
+                    .ADVANCE_PREVPERIOD_REG_LD_3_AF(BigDecimal.ZERO)
+                    .TERMRECLASS_PERCENT_PREVPERIOD_REG_LD_3_AD(BigDecimal.ZERO)
+                    .TERMRECLASS_BODY_PREVPERIOD_REG_LD_3_AC(BigDecimal.ZERO)
+                    .ADVANCE_CURRENTPERIOD_REG_LD_3_AE(BigDecimal.ZERO)
+                    .AMORT_DISCONT_CURRENT_PERIOD_cur_REG_LD_2_I(BigDecimal.ZERO)
+                    .AMORT_DISCONT_CURRENT_PERIOD_RUB_REG_LD_2_M(BigDecimal.ZERO)
+                    .TERMRECLASS_BODY_CURRENTPERIOD_REG_LD_3_AA(BigDecimal.ZERO)
+                    .TERMRECLASS_PERCENT_CURRENTPERIOD_REG_LD_3_AB(BigDecimal.ZERO)
+                    .ACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(BigDecimal.ZERO)
+                    .ACCUM_AMORT_DISCONT_START_PERIOD_cur_REG_LD_2_H(BigDecimal.ZERO)
+                    .DISCONT_AT_START_DATE_cur_REG_LD_1_K(BigDecimal.ZERO)
+                    .DISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P(BigDecimal.ZERO)
                     .build();
 
             leasingDeposit1.getEntries().add(entry);

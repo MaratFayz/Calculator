@@ -22,7 +22,7 @@ public class EndDate
 	@EmbeddedId
 	EndDateID endDateID;
 
-	@Column(name = "End_Date", nullable = false, columnDefinition = "DATE")
+	@Column(name = "End_Date", nullable = false)
 	private ZonedDateTime End_Date;
 
 	@ManyToOne(cascade = CascadeType.ALL)

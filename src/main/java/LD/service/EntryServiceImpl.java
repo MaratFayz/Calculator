@@ -154,7 +154,7 @@ public class EntryServiceImpl implements EntryService
 
 		log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
 
-		List<Entry> ActiveEntriesForAllDates = entryRepository.findByStatus(EntryStatus.ACTUAL);
+		List<Entry> ActiveEntriesForAllDates = entryRepository.findBystatus(EntryStatus.ACTUAL);
 
 		log.info("Все актуальные транзакции = {}", ActiveEntriesForAllDates);
 

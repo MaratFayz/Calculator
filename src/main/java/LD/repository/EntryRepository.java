@@ -12,5 +12,5 @@ import java.util.List;
 @Repository
 public interface EntryRepository extends JpaRepository<Entry, EntryID>, JpaSpecificationExecutor<Entry>
 {
-	List<Entry> findByStatus(EntryStatus entryStatus);
+	List<Entry> findBystatus(EntryStatus entryStatus);
 }
