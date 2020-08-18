@@ -32,6 +32,8 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -104,6 +106,7 @@ public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepos
     public void test1_IllegalArgument_FirstOpenPeriod_and_PeriodLastTransaction_are_NOT_EQUAL_OR_NOT_FOP_greater_one_period_than_PLT() throws ExecutionException, InterruptedException {
         Mockito.when(GDK.getFirstOpenPeriod_ScenarioFrom()).thenReturn(getDate(31, 3, 2020));
         Mockito.when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(31, 3, 2020));
+        Mockito.when(GDK.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC")));
 
         Throwable e = Assertions.assertThrows(ExecutionException.class, () -> {
             Future<List<Entry>> entries = threadExecutor.submit(lec);
@@ -120,7 +123,7 @@ public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepos
     public void test2_NoException_IF_FirstOpenPeriod_and_PeriodLastTransaction_are_EQUAL() throws ExecutionException, InterruptedException {
         Mockito.when(GDK.getFirstOpenPeriod_ScenarioFrom()).thenReturn(getDate(31, 3, 2017));
         Mockito.when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(31, 3, 2017));
-        Mockito.when(GDK.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(null);
+        Mockito.when(GDK.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC")));
 
         Assertions.assertDoesNotThrow(() -> {
             Future<List<Entry>> entries = threadExecutor.submit(lec);
@@ -134,6 +137,7 @@ public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepos
     public void test3_NoException_IF_FirstOpenPeriod_greater_one_period_than_PeriodLastTransaction() throws ExecutionException, InterruptedException {
         Mockito.when(GDK.getFirstOpenPeriod_ScenarioFrom()).thenReturn(getDate(30, 4, 2017));
         Mockito.when(GDK.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(30, 4, 2017));
+        Mockito.when(GDK.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC")));
 
         Assertions.assertDoesNotThrow(() -> {
             Future<List<Entry>> entries = threadExecutor.submit(lec);
