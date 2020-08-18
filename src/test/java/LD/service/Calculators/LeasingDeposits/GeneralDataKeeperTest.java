@@ -44,6 +44,7 @@ import java.util.concurrent.ExecutorService;
 
 import static TestsForLeasingDeposit.Calculator.Builders.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -58,7 +59,7 @@ import static org.mockito.ArgumentMatchers.eq;
 //8. Ввод данных обязателен для двух таблиц по одному депозиту (оссновные данные и дата конца - нужна хотя бы одна запись, иначе нет расчета).
 //9. Проверить, что берется последняя проводка по последнему закрытому периоду перед первой дыркой.
 
-@Disabled("Fix tests with mocking SecurityCotext or refactoring GDK class")
+@Disabled("Fix tests with mocking SecurityContext or refactoring GDK class")
 @ExtendWith(MockitoExtension.class)
 public class GeneralDataKeeperTest {
 
@@ -155,7 +156,7 @@ public class GeneralDataKeeperTest {
         Mockito.when(authentication.getName()).thenReturn(user.getUsername());
         Mockito.when(userRepository.findByUsername(eq(user.getUsername()))).thenReturn(user);
 
-        Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             GDK.getDataFromDB(scenarioSource, scenarioDestination);
         });
 
@@ -286,7 +287,7 @@ public class GeneralDataKeeperTest {
 
         Mockito.when(periodsClosedRepository.findAll(Mockito.any(Specification.class))).thenReturn(List.of(pcDA), List.of(pcSA));
 
-        Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             GDK.getDataFromDB(scenarioSource, scenarioDestination);
         });
 
@@ -327,7 +328,7 @@ public class GeneralDataKeeperTest {
 
         Mockito.when(periodsClosedRepository.findAll(Mockito.any(Specification.class))).thenReturn(List.of(pcDA), List.of(pcSA));
 
-        Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             GDK.getDataFromDB(scenarioSource, scenarioDestination);
         });
 
@@ -415,7 +416,7 @@ public class GeneralDataKeeperTest {
 
         Mockito.when(periodsClosedRepository.findAll(Mockito.any(Specification.class))).thenReturn(List.of(pcDA), List.of(pcSA));
 
-        Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             GDK.getDataFromDB(copyDate, scenarioSource, scenarioDestination);
         });
 
@@ -457,7 +458,7 @@ public class GeneralDataKeeperTest {
 
         Mockito.when(periodsClosedRepository.findAll(Mockito.any(Specification.class))).thenReturn(List.of(pcDA), List.of(pcSA));
 
-        Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             GDK.getDataFromDB(copyDate, scenarioSource, scenarioDestination);
         });
 
@@ -642,11 +643,21 @@ public class GeneralDataKeeperTest {
 
         Mockito.when(leasingDepositRepository.findAll(Mockito.any(Specification.class))).thenReturn(new ArrayList(), cv);
 
-        Throwable thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             GDK.getDataFromDB(scenarioSource, scenarioDestination);
         });
 
         assertEquals("Дата первого открытого периода сценария-источника всегда должна быть меньше ИЛИ равно первому открытому периоду сценария-получателя", thrown.getMessage());
+    }
+
+    @Test
+    public void getDataFromDB_shouldThrowException_whenCopyDateIsNull() {
+        Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
+            GeneralDataKeeper gdk = new GeneralDataKeeper();
+            gdk.getDataFromDB(null, 1L, 2L);
+        });
+
+        assertEquals("Wrong! copyDate equals null!", exception.getMessage());
     }
 
     public static void InitializeGeneraldata() {
