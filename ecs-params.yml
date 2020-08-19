@@ -1,9 +1,0 @@
-version: 1
-task_definition:
-  services:
-    calculator:
-      cpu_shares: 50
-      mem_limit: 524288000
-    database:
-      cpu_shares: 50
-      mem_limit: 524288000
