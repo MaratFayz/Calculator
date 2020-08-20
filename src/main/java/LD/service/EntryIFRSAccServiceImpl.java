@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,139 +26,123 @@ import static LD.service.Calculators.LeasingDeposits.GeneralDataKeeper.specFirst
 
 @Service
 @Log4j2
-public class EntryIFRSAccServiceImpl implements EntryIFRSAccService
-{
-	@Autowired
-	EntryIFRSAccRepository entryIFRSAccRepository;
-	@Autowired
-	EntryIFRSAccTransform entryIFRSAccTransform;
-	@Autowired
-	ScenarioRepository scenarioRepository;
-	@Autowired
-	PeriodsClosedRepository periodsClosedRepository;
-	@Autowired
-	IFRSAccountRepository ifrsAccountRepository;
-	@Autowired
-	UserRepository userRepository;
+public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
 
-	@Override
-	public List<EntryIFRSAccDTO_out> getAllEntriesIFRSAcc()
-	{
-		List<EntryIFRSAcc> resultFormDB = entryIFRSAccRepository.findAll();
-		List<EntryIFRSAccDTO_out> resultFormDB_out = new ArrayList<>();
+    @Autowired
+    EntryIFRSAccRepository entryIFRSAccRepository;
+    @Autowired
+    EntryIFRSAccTransform entryIFRSAccTransform;
+    @Autowired
+    ScenarioRepository scenarioRepository;
+    @Autowired
+    PeriodsClosedRepository periodsClosedRepository;
+    @Autowired
+    IFRSAccountRepository ifrsAccountRepository;
+    @Autowired
+    UserRepository userRepository;
 
-		if(resultFormDB.size() == 0)
-		{
-			resultFormDB_out.add(new EntryIFRSAccDTO_out());
-		}
-		else
-		{
-			resultFormDB_out = resultFormDB.stream()
-					.map(entryIFRSAcc -> entryIFRSAccTransform.EntryIFRSAcc_to_EntryIFRSAcc_DTO_out(entryIFRSAcc))
-					.collect(Collectors.toList());
-		}
+    @Override
+    public List<EntryIFRSAccDTO_out> getAllEntriesIFRSAcc() {
+        List<EntryIFRSAcc> resultFormDB = entryIFRSAccRepository.findAll();
+        List<EntryIFRSAccDTO_out> resultFormDB_out = new ArrayList<>();
 
-		return resultFormDB_out;
-	}
+        if (resultFormDB.size() == 0) {
+            resultFormDB_out.add(new EntryIFRSAccDTO_out());
+        } else {
+            resultFormDB_out = resultFormDB.stream()
+                    .map(entryIFRSAcc -> entryIFRSAccTransform.EntryIFRSAcc_to_EntryIFRSAcc_DTO_out(entryIFRSAcc))
+                    .collect(Collectors.toList());
+        }
 
-	@Override
-	public List<EntryIFRSAccDTO_out_form> getAllEntriesIFRSAcc_for2Scenarios(Long scenarioToId)
-	{
-		final Scenario scenario_to = scenarioRepository.findById(scenarioToId)
-				.orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioToId + " отсутствует в базе данных"));
+        return resultFormDB_out;
+    }
 
-		log.info("Был получен сценарий-получатель = {}", scenario_to);
+    @Override
+    public List<EntryIFRSAccDTO_out_form> getAllEntriesIFRSAcc_for2Scenarios(Long scenarioToId) {
+        final Scenario scenario_to = scenarioRepository.findById(scenarioToId)
+                .orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioToId + " отсутствует в базе данных"));
 
-		final Period firstOpenPeriodForScenarioTo =
-				periodsClosedRepository.findAll(specFirstClosedPeriod(scenario_to)).get(0).getPeriodsClosedID()
-						.getPeriod();
+        log.info("Был получен сценарий-получатель = {}", scenario_to);
 
-		log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
+        final Period firstOpenPeriodForScenarioTo =
+                periodsClosedRepository.findAll(specFirstClosedPeriod(scenario_to)).get(0).getPeriodsClosedID()
+                        .getPeriod();
 
-		ArrayList<EntryIFRSAcc> notAggregateEntries = new ArrayList<>(entryIFRSAccRepository.findAll()
-				.stream()
-				.filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().equals(firstOpenPeriodForScenarioTo))
-				.filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getEntryID().getScenario().equals(scenario_to))
-				.filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getStatus().equals(EntryStatus.ACTUAL))
-				.collect(Collectors.toList()));
+        log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
 
-		ArrayList<Long> ifrsAccs = new ArrayList<>(notAggregateEntries.stream()
-				.map(entryIFRSAcc -> entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId())
-				.collect(Collectors.toList()));
+        ArrayList<EntryIFRSAcc> notAggregateEntries = new ArrayList<>(entryIFRSAccRepository.findAll()
+                .stream()
+                .filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().equals(firstOpenPeriodForScenarioTo))
+                .filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getEntryID().getScenario().equals(scenario_to))
+                .filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getStatus().equals(EntryStatus.ACTUAL))
+                .collect(Collectors.toList()));
 
-		ArrayList<EntryIFRSAccDTO_out_form> aggregatedEntries = new ArrayList<>();
+        ArrayList<Long> ifrsAccs = new ArrayList<>(notAggregateEntries.stream()
+                .map(entryIFRSAcc -> entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId())
+                .collect(Collectors.toList()));
 
-		ifrsAccs.stream().forEach(iA -> {
-			aggregatedEntries.add(notAggregateEntries.stream()
-					.filter(entryIFRSAcc -> entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId() == iA)
-					.reduce(new EntryIFRSAccDTO_out_form(),
-							(result, reducingEntry) -> {
-								EntryIFRSAccDTO_out_form trE = entryIFRSAccTransform
-										.EntryIFRSAcc_to_EntryIFRSAcc_DTO_out_form(reducingEntry);
+        ArrayList<EntryIFRSAccDTO_out_form> aggregatedEntries = new ArrayList<>();
 
-								result = trE.toBuilder().sum(result.getSum().add(trE.getSum())).build();
+        ifrsAccs.stream().forEach(acc -> {
+            List<EntryIFRSAcc> ifrsEntriesForAcc = notAggregateEntries.stream()
+                    .filter(entryIFRSAcc -> entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId() == acc)
+                    .collect(Collectors.toList());
 
-								return result;
-							},
-							(entry1, entry2) -> {
-								EntryIFRSAccDTO_out_form result =
-										entry1.toBuilder().sum(entry2.getSum().add(entry1.getSum())).build();
+            EntryIFRSAccDTO_out_form aggregatedEntryForAcc =
+                    entryIFRSAccTransform.EntryIFRSAcc_to_EntryIFRSAcc_DTO_out_form(ifrsEntriesForAcc.get(0));
+            aggregatedEntryForAcc.setSum(BigDecimal.ZERO);
 
-								return result;
-							}));
-		});
+            for (EntryIFRSAcc entry : ifrsEntriesForAcc) {
+                aggregatedEntryForAcc.setSum(aggregatedEntryForAcc.getSum().add(entry.getSum()));
+            };
 
-		return aggregatedEntries;
-	}
+            aggregatedEntries.add(aggregatedEntryForAcc);
+        });
 
-	@Override
-	public EntryIFRSAcc getEntryIFRSAcc(EntryIFRSAccID id)
-	{
-		return entryIFRSAccRepository.findById(id).orElseThrow(NotFoundException::new);
-	}
+        return aggregatedEntries;
+    }
 
-	@Override
-	public EntryIFRSAcc saveNewEntryIFRSAcc(EntryIFRSAcc entryIFRSAcc)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		entryIFRSAcc.setUser(userRepository.findByUsername(username));
+    @Override
+    public EntryIFRSAcc getEntryIFRSAcc(EntryIFRSAccID id) {
+        return entryIFRSAccRepository.findById(id).orElseThrow(NotFoundException::new);
+    }
 
-		entryIFRSAcc.setLastChange(ZonedDateTime.now());
+    @Override
+    public EntryIFRSAcc saveNewEntryIFRSAcc(EntryIFRSAcc entryIFRSAcc) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        entryIFRSAcc.setUser(userRepository.findByUsername(username));
 
-		log.info("Проводка на счетах МСФО для сохранения = {}", entryIFRSAcc);
+        entryIFRSAcc.setLastChange(ZonedDateTime.now());
 
-		return entryIFRSAccRepository.saveAndFlush(entryIFRSAcc);
-	}
+        log.info("Проводка на счетах МСФО для сохранения = {}", entryIFRSAcc);
 
-	@Override
-	public EntryIFRSAcc updateEntryIFRSAcc(EntryIFRSAccID id, EntryIFRSAcc entryIFRSAcc)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		entryIFRSAcc.setUser(userRepository.findByUsername(username));
+        return entryIFRSAccRepository.saveAndFlush(entryIFRSAcc);
+    }
 
-		entryIFRSAcc.setLastChange(ZonedDateTime.now());
+    @Override
+    public EntryIFRSAcc updateEntryIFRSAcc(EntryIFRSAccID id, EntryIFRSAcc entryIFRSAcc) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        entryIFRSAcc.setUser(userRepository.findByUsername(username));
 
-		EntryIFRSAcc entryIFRSAccToUpdate = getEntryIFRSAcc(id);
+        entryIFRSAcc.setLastChange(ZonedDateTime.now());
 
-		BeanUtils.copyProperties(entryIFRSAcc, entryIFRSAccToUpdate);
+        EntryIFRSAcc entryIFRSAccToUpdate = getEntryIFRSAcc(id);
 
-		entryIFRSAccRepository.saveAndFlush(entryIFRSAccToUpdate);
+        BeanUtils.copyProperties(entryIFRSAcc, entryIFRSAccToUpdate);
 
-		return entryIFRSAccToUpdate;
-	}
+        entryIFRSAccRepository.saveAndFlush(entryIFRSAccToUpdate);
 
-	@Override
-	public boolean delete(EntryIFRSAccID id)
-	{
-		try
-		{
-			entryIFRSAccRepository.deleteById(id);
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
+        return entryIFRSAccToUpdate;
+    }
 
-		return true;
-	}
+    @Override
+    public boolean delete(EntryIFRSAccID id) {
+        try {
+            entryIFRSAccRepository.deleteById(id);
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
 }
