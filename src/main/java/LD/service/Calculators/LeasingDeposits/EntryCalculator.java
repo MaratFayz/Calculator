@@ -486,7 +486,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                             CalculatedAndExistingBeforeCalculationEntries);
                         }
 
-                        if (lastRevaluationOfDiscount.equals(BigDecimal.ZERO)) {
+                        if (lastRevaluationOfDiscount.compareTo(BigDecimal.ZERO) == 0) {
                             t.setDISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R(
                                     t.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q()
                                             .subtract(t.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L()).setScale(10, RoundingMode.HALF_UP));
@@ -611,7 +611,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     }
 
                     if (this.getLDdurationDays() > 365) {
-                        if (lastCalculatedDiscount.equals(BigDecimal.ZERO)) {
+                        if (lastCalculatedDiscount.compareTo(BigDecimal.ZERO) == 0) {
                             t.setREVAL_CORR_DISC_rub_REG_LD_1_S(
                                     t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()
                                             .subtract(t.getDISCONT_AT_START_DATE_cur_REG_LD_1_K())
@@ -725,12 +725,12 @@ public class EntryCalculator implements Callable<List<Entry>> {
                             .isAfter(finalClosingdate)) {
                         t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(
                                 countDiscountFromStartDateToNeededDate(
-                                        t.getEnd_date_at_this_period(), finalClosingdate));
+                                        t.getEnd_date_at_this_period(), finalClosingdate).setScale(10, RoundingMode.HALF_UP));
                     } else {
                         t.setACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(
                                 countDiscountFromStartDateToNeededDate(
                                         t.getEnd_date_at_this_period(),
-                                        t.getEnd_date_at_this_period()));
+                                        t.getEnd_date_at_this_period()).setScale(10, RoundingMode.HALF_UP));
                     }
 
                     if (PrevClosingDate.isAfter(this.leasingDepositToCalculate.getStart_date()
@@ -820,8 +820,8 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 //Reg.LeasingDeposit.model.LeasingDeposit.2---------------------END
 
                 //Reg.LeasingDeposit.model.LeasingDeposit.3---------------------START
-                if (!t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()
-                        .equals(BigDecimal.ZERO)) {
+                if (t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()
+                        .compareTo(BigDecimal.ZERO) != 0) {
                     t.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(
                             this.leasingDepositToCalculate.getDeposit_sum_not_disc()
                                     .add(t.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()).setScale(10, RoundingMode.HALF_UP));
@@ -853,7 +853,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                         CalculatedAndExistingBeforeCalculationEntries);
                     }
 
-                    if (lastCalculatedDiscount.equals(BigDecimal.ZERO)) {
+                    if (lastCalculatedDiscount.compareTo(BigDecimal.ZERO) == 0) {
                         t.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(
                                 this.leasingDepositToCalculate.getDeposit_sum_not_disc()
                                         .add(t.getDISCONT_AT_START_DATE_cur_REG_LD_1_K()).setScale(10, RoundingMode.HALF_UP));
@@ -885,7 +885,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                 "Не найден курс на дату => " + finalClosingdate));
 
                 if (finalClosingdate.toLocalDate()
-                        .equals(this.startDateWithlastDayOfStartingMonth)) {
+                        .isEqual(this.startDateWithlastDayOfStartingMonth)) {
                     t.setINCOMING_LD_BODY_RUB_REG_LD_3_L(
                             t.getDiscountedSum_at_current_end_date_cur_REG_LD_3_G()
                                     .multiply(exRateAtStartDate).setScale(10, RoundingMode.HALF_UP));
@@ -1176,8 +1176,8 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 .filter(transaction -> transaction.getEntryID()
                         .getScenario()
                         .equals(scenarioWhereFind))
-                .filter(transaction -> !transaction.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()
-                        .equals(BigDecimal.ZERO))
+                .filter(transaction -> transaction.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()
+                        .compareTo(BigDecimal.ZERO) != 0)
                 .collect(TreeMap::new, (tm, transaction) -> {
                     tm.put(transaction.getEntryID()
                                     .getPeriod()
@@ -1208,8 +1208,8 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         .getScenario()
                         .equals(scSAVE))
                 .collect(TreeMap::new, (tm, transaction) -> {
-                    if (!transaction.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q()
-                            .equals(BigDecimal.ZERO)) {
+                    if (transaction.getDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q()
+                            .compareTo(BigDecimal.ZERO) != 0) {
                         tm.put(transaction.getEntryID()
                                         .getPeriod()
                                         .getDate(),
@@ -1316,7 +1316,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                             .getPeriod()
                             .getDate()
                             .toLocalDate()
-                            .equals(finalClosingdate))
+                            .isEqual(finalClosingdate))
                     .count() > 0) {
                 LastPeriodWithTransactionUTC =
                         ZonedDateTime.of(closingdate, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
