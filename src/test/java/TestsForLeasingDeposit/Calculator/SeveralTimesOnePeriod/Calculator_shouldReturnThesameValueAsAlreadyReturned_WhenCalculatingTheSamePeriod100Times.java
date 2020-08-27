@@ -15,9 +15,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
-import testEntityCreation.EntryComparator;
-import testEntityCreation.TestDataKeeper;
-import testEntityCreation.TestEntitiesKeeper;
+import Utils.EntryComparator;
+import Utils.TestDataKeeper;
+import Utils.TestEntitiesKeeper;
 
 import java.io.FileInputStream;
 import java.io.IOException;
