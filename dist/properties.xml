@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PROPERTIES>
+    <CBR_URL> http://www.cbr.ru/scripts/XML_dynamic.asp? </CBR_URL>
+    <DATE_FROM_NAME> date_req1 </DATE_FROM_NAME>
+    <DATE_TO_NAME> date_req2 </DATE_TO_NAME>
+    <CURRENCY_VALUE> VAL_NM_RQ </CURRENCY_VALUE>
+</PROPERTIES>
