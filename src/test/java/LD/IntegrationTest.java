@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ExtendWith(SpringExtension.class)
-//@Testcontainers
+@Testcontainers
 public class IntegrationTest {
 
     private MockMvc mockMvc;
@@ -42,16 +42,16 @@ public class IntegrationTest {
     private WebApplicationContext wac;
 
     // will be shared between test methods
-//    @Container
-//    public static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:12")
-//            .withDatabaseName("leasingdepositsdb")
-//            .withUsername("postgres")
-//            .withPassword("ZZZXXX5!#~a");
+    @Container
+    public static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:12")
+            .withDatabaseName("leasingdepositsdb")
+            .withUsername("postgres")
+            .withPassword("ZZZXXX5!#~a");
 
-//    @Test
-//    void shouldReturnTrue_whenContainerIsRunning() {
-//        assertTrue(postgreSQLContainer.isRunning());
-//    }
+    @Test
+    void shouldReturnTrue_whenContainerIsRunning() {
+        assertTrue(postgreSQLContainer.isRunning());
+    }
 
     @BeforeEach
     public void setup() throws Exception {
