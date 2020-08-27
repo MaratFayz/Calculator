@@ -1,4 +1,4 @@
-package testEntityCreation;
+package Utils.Entities;
 
 import LD.model.Enums.EntryPeriodCreation;
 import LD.model.Enums.EntryStatus;

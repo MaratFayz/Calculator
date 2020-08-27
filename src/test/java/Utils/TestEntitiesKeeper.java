@@ -1,4 +1,4 @@
-package testEntityCreation;
+package Utils;
 
 import LD.config.DateFormat;
 import LD.config.Security.model.User.User;
@@ -18,6 +18,7 @@ import LD.model.ExchangeRate.ExchangeRateID;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Period.Period;
 import LD.model.Scenario.Scenario;
+import Utils.Entities.*;
 import lombok.Data;
 
 import java.time.LocalDate;

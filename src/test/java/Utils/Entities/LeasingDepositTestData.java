@@ -1,4 +1,4 @@
-package testEntityCreation;
+package Utils.Entities;
 
 import LD.model.Enums.STATUS_X;
 import lombok.Data;

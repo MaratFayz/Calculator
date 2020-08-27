@@ -1,13 +1,13 @@
-package testEntityCreation;
+package Utils.Entities;
 
 import lombok.Data;
 
 @Data
-public class CurrencyTestData {
+public class ScenarioTestData {
 
     Long id;
     String name;
-    String short_name;
+    String status;
     Long userCode;
     String lastChange;
 }

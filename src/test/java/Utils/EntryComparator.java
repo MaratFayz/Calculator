@@ -1,4 +1,4 @@
-package testEntityCreation;
+package Utils;
 
 import LD.model.Entry.Entry;
 import LD.model.Entry.EntryID;

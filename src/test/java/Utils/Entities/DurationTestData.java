@@ -1,13 +1,14 @@
-package testEntityCreation;
+package Utils.Entities;
 
 import lombok.Data;
 
 @Data
-public class ScenarioTestData {
+public class DurationTestData {
 
     Long id;
+    int min_MONTH;
+    int max_MONTH;
     String name;
-    String status;
     Long userCode;
     String lastChange;
 }

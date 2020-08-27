@@ -1,4 +1,4 @@
-package testEntityCreation;
+package Utils.Entities;
 
 import lombok.Data;
 
