@@ -1,18 +1,18 @@
 package LD.rest;
 
-import LD.config.Security.model.Authority.ALL_AUTHORITIES;
 import LD.model.Currency.Currency_out;
 import LD.service.CurrencyService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -26,66 +26,63 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @WebMvcTest(CurrencyController.class)
-public class CurrencyControllerTest
-{
-	@Autowired
-	private MockMvc mvc;
-	@MockBean
-	private UserDetailsService userDetailsService;
-	@Autowired
-	private WebApplicationContext context;
-	@MockBean
-	private CurrencyService currencyService;
+public class CurrencyControllerTest {
 
-	private ArrayList<Currency_out> currencyList;
-	Currency_out RUB;
-	Currency_out USD;
-	Currency_out EUR;
+    @Autowired
+    private MockMvc mvc;
+    @MockBean
+    private UserDetailsService userDetailsService;
+    @Autowired
+    private WebApplicationContext context;
+    @MockBean
+    private CurrencyService currencyService;
 
-	@Before
-	public void setup() {
-		mvc = MockMvcBuilders
-				.webAppContextSetup(context)
-				.apply(springSecurity())
-				.build();
-	}
+    private ArrayList<Currency_out> currencyList;
+    Currency_out RUB;
+    Currency_out USD;
+    Currency_out EUR;
 
-	@Before
-	public void createListOfValues()
-	{
-		this.currencyList = new ArrayList<>();
-		RUB = Currency_out.builder().short_name("RUB").build();
-		USD = Currency_out.builder().short_name("USD").build();
-		EUR = Currency_out.builder().short_name("EUR").build();
+    @BeforeEach
+    public void setup() {
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+    }
 
-		this.currencyList.add(RUB);
-		this.currencyList.add(USD);
-		this.currencyList.add(EUR);
-	}
+    @BeforeEach
+    public void createListOfValues() {
+        this.currencyList = new ArrayList<>();
+        RUB = Currency_out.builder().short_name("RUB").build();
+        USD = Currency_out.builder().short_name("USD").build();
+        EUR = Currency_out.builder().short_name("EUR").build();
 
-	@Test
-	@WithMockUser(authorities = "CURRENCY_READER")
-	public void return_AllValues_when_getRequest() throws Exception
-	{
-		when(currencyService.getAllCurrencies()).thenReturn(this.currencyList);
+        this.currencyList.add(RUB);
+        this.currencyList.add(USD);
+        this.currencyList.add(EUR);
+    }
 
-		mvc.perform(MockMvcRequestBuilders.get("/currencies")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$", hasSize(3)));
+    @Test
+    @WithMockUser(authorities = "CURRENCY_READER")
+    public void return_AllValues_when_getRequest() throws Exception {
+        when(currencyService.getAllCurrencies()).thenReturn(this.currencyList);
+
+        mvc.perform(MockMvcRequestBuilders.get("/currencies")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)));
 //				.andExpect((ResultMatcher) jsonPath("$[0].short_name", is(RUB.getShort_name())))
 //				.andExpect((ResultMatcher) jsonPath("$[1].short_name", is(USD.getShort_name())))
 //				.andExpect((ResultMatcher) jsonPath("$[2].short_name", is(EUR.getShort_name())));
-	}
+    }
 
-	@Test
-	@WithMockUser(authorities = "CURRENCY_READER")
-	public void return_access_denied_when_deleteRequest() throws Exception
-	{
-		mvc.perform(MockMvcRequestBuilders.delete("/currencies/1")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().is(403));
-	}
+    @Test
+    @WithMockUser(authorities = "CURRENCY_READER")
+    public void return_access_denied_when_deleteRequest() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.delete("/currencies/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(403));
+    }
 }

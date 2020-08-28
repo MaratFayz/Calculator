@@ -8,6 +8,8 @@ import LD.service.ScenarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.ZonedDateTime;
+
 @Component
 public class DepositRateTransform
 {
@@ -53,13 +55,20 @@ public class DepositRateTransform
 
 	public DepositRateID getDepositRatesID(Long company_id, Long currency_id, Long duration_id, Long scenario_id, String startDate, String endDate)
 	{
+		ZonedDateTime end_period = DateFormat.parsingDate(endDate);
+		ZonedDateTime start_period = DateFormat.parsingDate(startDate);
+
+		if(start_period.isAfter(end_period)) {
+			throw new IllegalStateException("ОШИБКА! Дата начала действия ставки депозита позже, чем дата начала");
+		}
+
 		return DepositRateID.builder()
 				.company(companyService.getCompany(company_id))
 				.currency(currencyService.getCurrency(currency_id))
 				.duration(durationService.getDuration(duration_id))
-				.END_PERIOD(DateFormat.parsingDate(endDate))
+				.END_PERIOD(end_period)
 				.scenario(scenarioService.getScenario(scenario_id))
-				.START_PERIOD(DateFormat.parsingDate(startDate))
+				.START_PERIOD(start_period)
 				.build();
 	}
 }

@@ -21,7 +21,7 @@ public class EntryIFRSAcc
 	@EmbeddedId
 	private EntryIFRSAccID entryIFRSAccID;
 
-	@Column(columnDefinition = "DECIMAL(30,10)", nullable = false)
+	@Column(columnDefinition = "DECIMAL(30,10)", scale = 10, precision = 30, nullable = false)
 	private BigDecimal sum;
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

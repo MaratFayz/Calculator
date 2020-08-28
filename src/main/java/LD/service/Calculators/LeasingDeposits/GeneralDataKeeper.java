@@ -15,6 +15,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import LD.repository.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -64,10 +66,14 @@ public class GeneralDataKeeper {
     }
 
     public void getDataFromDB(ZonedDateTime copyDate, Long scenarioFrom_id, Long scenarioTo_id) {
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
+        SecurityContext context = SecurityContextHolder.getContext();
+        Authentication authentication = context.getAuthentication();
+        String username = authentication.getName();
+
         this.user = userRepository.findByUsername(username);
+
+        if(copyDate == null)
+            throw new IllegalArgumentException("Wrong! copyDate equals null!");
 
         this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo = copyDate;
 
@@ -142,10 +148,9 @@ public class GeneralDataKeeper {
             }
 
             if (this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo != null) {
-                if (!this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo.isBefore(
-                        this.firstOpenPeriod_ScenarioFrom)) {
-                    log.info(
-                            "Дата начала копирования со сценария-источника всегда должна быть меньше любого первого открытого периода каждого из двух сценариев, либо равна null");
+                if (!this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo.isBefore(this.firstOpenPeriod_ScenarioFrom)) {
+                    log.info("Дата начала копирования со сценария-источника всегда должна быть меньше любого первого " +
+                            "открытого периода каждого из двух сценариев, либо равна null");
 
                     throw new IllegalArgumentException(
                             "Дата начала копирования со сценария-источника всегда должна быть меньше любого первого открытого периода каждого из двух сценариев, либо равна null");
