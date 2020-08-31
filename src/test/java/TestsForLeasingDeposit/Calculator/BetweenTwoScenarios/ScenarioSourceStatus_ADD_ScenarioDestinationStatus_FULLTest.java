@@ -23,9 +23,7 @@ import LD.model.Scenario.Scenario;
 import LD.repository.DepositRatesRepository;
 import LD.service.Calculators.LeasingDeposits.EntryCalculator;
 import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
-import TestsForLeasingDeposit.Calculator.Builders;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -156,7 +154,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
         //31.08.2018
         var LD1_31082018 = leasingDeposit1.getEntries().stream()
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 8, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(31, 8, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .collect(Collectors.toList()).get(0);
 
@@ -205,7 +203,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //30.09.2018
         var LD1_30092018 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(30, 9, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(30, 9, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -255,7 +253,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //31.10.2018
         var LD1_31102018 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 10, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(31, 10, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -305,7 +303,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //30.11.2018
         var LD1_30112018 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(30, 11, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(30, 11, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -355,7 +353,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //31.12.2018
         var LD1_31122018 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 12, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(31, 12, 2018).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -405,7 +403,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //31.01.2019
         var LD1_31012019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 1, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(31, 1, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -455,7 +453,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //28.02.2019
         var LD1_28022019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(28, 2, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(28, 2, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -505,7 +503,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //31.03.2019
         var LD1_31032019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 3, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(31, 3, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -555,7 +553,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //30.04.2019
         var LD1_30042019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(30, 4, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(30, 4, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -605,7 +603,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //31.05.2019
         var LD1_31052019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 5, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(31, 5, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -655,7 +653,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //30.06.2019
         var LD1_30062019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(30, 6, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(30, 6, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -705,7 +703,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //31.07.2019
         var LD1_31072019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 7, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(31, 7, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -755,7 +753,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //31.08.2019
         var LD1_31082019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 8, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(31, 8, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -805,7 +803,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //30.09.2019
         var LD_ScenarioDestination_30092019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(30, 9, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(30, 9, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -855,7 +853,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //31.10.2019
         var LD_ScenarioDestination_31102019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(31, 10, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(31, 10, 2019).withZoneSameInstant(ZoneId.of("Europe/Moscow"))))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);
@@ -905,7 +903,7 @@ public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
 
         //30.11.2019
         var LD_ScenarioDestination_30112019 = leasingDeposit1.getEntries().stream()
-                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(Builders.getDate(30, 11, 2019)))
+                .filter(tr -> tr.getEntryID().getPeriod().getDate().isEqual(getDate(30, 11, 2019)))
                 .filter(tr -> tr.getEntryID().getScenario().equals(scenarioDestination))
                 .filter(tr -> tr.getStatus().equals(EntryStatus.ACTUAL))
                 .collect(Collectors.toList()).get(0);

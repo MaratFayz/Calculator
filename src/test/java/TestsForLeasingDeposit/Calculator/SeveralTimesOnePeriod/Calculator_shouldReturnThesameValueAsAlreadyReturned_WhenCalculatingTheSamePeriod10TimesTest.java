@@ -28,7 +28,7 @@ import static TestsForLeasingDeposit.Calculator.Builders.getDate;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @ExtendWith(MockitoExtension.class)
-public class Calculator_shouldReturnThesameValueAsAlreadyReturned_WhenCalculatingTheSamePeriod100Times {
+public class Calculator_shouldReturnThesameValueAsAlreadyReturned_WhenCalculatingTheSamePeriod100TimesTest {
 
     TestEntitiesKeeper testEntitiesKeeper;
     @Mock
@@ -60,7 +60,7 @@ public class Calculator_shouldReturnThesameValueAsAlreadyReturned_WhenCalculatin
 
         Entry expectedEntry = testEntitiesKeeper.getEntries_expected().get(0);
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10; i++) {
             assertDoesNotThrow(() -> {
                 lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
                 Future<List<Entry>> entries = threadExecutor.submit(lec);
