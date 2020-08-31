@@ -56,7 +56,7 @@ import static org.junit.Assert.assertNull;
 //9. Проверить, что берется последняя проводка по последнему закрытому периоду перед первой дыркой.
 
 @ExtendWith(MockitoExtension.class)
-public class LeasingDeposit_with_DELETE_status {
+public class LeasingDeposit_with_DELETE_statusTest {
 
     Scenario fact;
     Currency usd;

@@ -47,9 +47,9 @@ import static org.junit.Assert.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @DataJpaTest
-@ContextConfiguration(classes = {testGDK.Config.class, PostgreSQLEnumType.class})
+@ContextConfiguration(classes = {testGDKTest.Config.class, PostgreSQLEnumType.class})
 @Disabled("Refactoring to repository classes")
-public class testGDK {
+public class testGDKTest {
 
     @Configuration
     @EnableJpaRepositories(basePackages = "LD.repository")

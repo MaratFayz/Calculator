@@ -59,7 +59,7 @@ import static org.junit.Assert.assertEquals;
 //9. Проверить, что берется последняя проводка по последнему закрытому периоду перед первой дыркой.
 
 @ExtendWith(SpringExtension.class)
-public class All_Entries_PerClosedeqLDEndDate_LDScenarioStatus_is_FULL {
+public class All_Entries_PerClosedeqLDEndDate_LDScenarioStatus_is_FULLTest {
 
     static Scenario plan2020;
     static Currency usd;

@@ -56,7 +56,7 @@ import static org.junit.Assert.assertEquals;
 //9. Проверить, что берется последняя проводка по последнему закрытому периоду перед первой дыркой.
 
 @ExtendWith(SpringExtension.class)
-public class leasingDeposit_has_only_oneEntry {
+public class leasingDeposit_has_only_oneEntryTest {
 
     static Scenario fact;
     static Currency usd;

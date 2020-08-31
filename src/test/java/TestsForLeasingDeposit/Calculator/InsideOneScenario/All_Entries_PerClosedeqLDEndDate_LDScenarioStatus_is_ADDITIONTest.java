@@ -57,7 +57,7 @@ import static org.junit.Assert.assertEquals;
 //9. Проверить, что берется последняя проводка по последнему закрытому периоду перед первой дыркой.
 
 @ExtendWith(MockitoExtension.class)
-public class All_Entries_PerClosedeqLDEndDate_LDScenarioStatus_is_ADDITION {
+public class All_Entries_PerClosedeqLDEndDate_LDScenarioStatus_is_ADDITIONTest {
 
     Scenario fact;
     Currency usd;

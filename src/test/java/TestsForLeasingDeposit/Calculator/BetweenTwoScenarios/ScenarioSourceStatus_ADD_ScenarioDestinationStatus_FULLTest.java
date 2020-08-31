@@ -58,7 +58,7 @@ import static org.junit.Assert.assertEquals;
 //9. Проверить, что берется последняя проводка по последнему закрытому периоду перед первой дыркой.
 
 @ExtendWith(MockitoExtension.class)
-public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULL {
+public class ScenarioSourceStatus_ADD_ScenarioDestinationStatus_FULLTest {
 
     static Scenario scenarioSource;
     static Scenario scenarioDestination;

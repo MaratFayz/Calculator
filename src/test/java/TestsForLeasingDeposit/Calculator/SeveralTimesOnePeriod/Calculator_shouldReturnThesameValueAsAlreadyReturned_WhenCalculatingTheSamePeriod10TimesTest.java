@@ -28,7 +28,7 @@ import static TestsForLeasingDeposit.Calculator.Builders.getDate;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @ExtendWith(MockitoExtension.class)
-public class Calculator_shouldReturnThesameValueAsAlreadyReturned_WhenCalculatingTheSamePeriod100TimesTest {
+public class Calculator_shouldReturnThesameValueAsAlreadyReturned_WhenCalculatingTheSamePeriod10TimesTest {
 
     TestEntitiesKeeper testEntitiesKeeper;
     @Mock

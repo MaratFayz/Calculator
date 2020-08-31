@@ -57,7 +57,7 @@ import static org.junit.Assert.assertEquals;
 //9. Проверить, что берется последняя проводка по последнему закрытому периоду перед первой дыркой.
 
 @ExtendWith(MockitoExtension.class)
-public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepositEndDate_FirstOpenPeriod_IS_HIGHER_Than_LastPeriodWithTransaction {
+public class leasingDeposit_has_only_oneEntry_FirstOpenPeriod_LOWER_LeasingDepositEndDate_FirstOpenPeriod_IS_HIGHER_Than_LastPeriodWithTransactionTest {
 
     Scenario fact, plan2020;
     Currency usd;
