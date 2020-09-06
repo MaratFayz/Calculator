@@ -20,7 +20,7 @@ import LD.model.Scenario.Scenario;
 import LD.repository.DepositRatesRepository;
 import LD.service.Calculators.LeasingDeposits.EntryCalculator;
 import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
-import TestsForLeasingDeposit.Calculator.Builders;
+import Utils.Builders;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,8 +41,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static TestsForLeasingDeposit.Calculator.Builders.getAnyUser;
-import static TestsForLeasingDeposit.Calculator.Builders.getDate;
+import static Utils.Builders.getAnyUser;
+import static Utils.Builders.getDate;
 import static org.junit.Assert.assertEquals;
 
 //перечень тестов:

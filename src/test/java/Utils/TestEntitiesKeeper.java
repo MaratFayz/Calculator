@@ -41,6 +41,9 @@ public class TestEntitiesKeeper {
     Counterpartner counterpartner;
     LocalDate periods_start;
     LocalDate periods_end;
+    ZonedDateTime firstOpenPeriodScenarioFrom;
+    ZonedDateTime firstOpenPeriodScenarioTo;
+    ZonedDateTime periodInScenarioFromForCopyingEntriesToScenarioTo;
     List<Period> periods = new ArrayList<>();
     List<Duration> durations = new ArrayList<>();
     List<DepositRate> depositRates = new ArrayList<>();
@@ -55,48 +58,93 @@ public class TestEntitiesKeeper {
 
         user = toUser(testDataKeeper.getUser());
         company = toCompany(testDataKeeper.getCompany());
-        testDataKeeper.getScenarios().forEach(sc -> scenarios.add(toScenario(sc)));
-        testDataKeeper.getCurrencies().forEach(cu -> currencies.add(toCurrency(cu)));
+
+        if (testDataKeeper.getScenarios() != null) {
+            testDataKeeper.getScenarios().forEach(sc -> scenarios.add(toScenario(sc)));
+        }
+
+        if (testDataKeeper.getCurrencies() != null) {
+            testDataKeeper.getCurrencies().forEach(cu -> currencies.add(toCurrency(cu)));
+        }
+
         counterpartner = toCounterpartner(testDataKeeper.getCounterpartner());
         periods_start = toLocalDate(testDataKeeper.getPeriods_start());
         periods_end = toLocalDate(testDataKeeper.getPeriods_end());
 
-        periods_start.datesUntil(periods_end, java.time.Period.ofMonths(1)).collect(Collectors.toList()).forEach(date -> {
-            LocalDate d = date.plusMonths(1).withDayOfMonth(1).minusDays(1);
+        if (testDataKeeper.getFirstOpenPeriodScenarioFrom() != null) {
+            firstOpenPeriodScenarioFrom = DateFormat.parsingDate(testDataKeeper.getFirstOpenPeriodScenarioFrom());
+        }
 
-            Period period = Period.builder().date(ZonedDateTime.of(d, LocalTime.MIDNIGHT, ZoneId.of("UTC")))
-                    .build();
-            periods.add(period);
-        });
+        if (testDataKeeper.getFirstOpenPeriodScenarioTo() != null) {
+            firstOpenPeriodScenarioTo = DateFormat.parsingDate(testDataKeeper.getFirstOpenPeriodScenarioTo());
+        }
 
-        testDataKeeper.getDurations().forEach(d -> durations.add(toDuration(d)));
-        testDataKeeper.getDepositRates().forEach(dr -> depositRates.add(toDepositRates(dr)));
+        if (testDataKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo() != null) {
+            periodInScenarioFromForCopyingEntriesToScenarioTo =
+                    DateFormat.parsingDate(testDataKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo());
+        }
 
-        testDataKeeper.getEnd_dates().forEach(ed -> endDates.add(toEndDates(ed)));
-        testDataKeeper.getEntries_into_leasingDeposit().forEach(e -> entries_into_leasingDeposit.add(toEntry(e)));
-        testDataKeeper.getLeasingDeposits().forEach(ld -> leasingDeposits.add(toLeasingDeposits(ld)));
+        if (periods_start.plusMonths(1).isBefore(periods_end) || periods_start.plusMonths(1).isEqual(periods_end)) {
+            periods_start.datesUntil(periods_end, java.time.Period.ofMonths(1)).collect(Collectors.toList()).forEach(date -> {
+                LocalDate d = date.plusMonths(1).withDayOfMonth(1).minusDays(1);
 
-        leasingDeposits.forEach(ld -> {
-            entries_into_leasingDeposit.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
-                    .forEach(e -> {
-                        ld.getEntries().add(e);
-                        e.setLeasingDeposit(ld);
-                    });
-        });
+                Period period = Period.builder().date(ZonedDateTime.of(d, LocalTime.MIDNIGHT, ZoneId.of("UTC")))
+                        .build();
+                periods.add(period);
+            });
+        } else {
+            throw new IllegalStateException("Error: periods_start is greater than periods_end!");
+        }
+
+        if (testDataKeeper.getDurations() != null) {
+            testDataKeeper.getDurations().forEach(d -> durations.add(toDuration(d)));
+        }
+
+        if (testDataKeeper.getDepositRates() != null) {
+            testDataKeeper.getDepositRates().forEach(dr -> depositRates.add(toDepositRates(dr)));
+        }
+
+        if (testDataKeeper.getEnd_dates() != null) {
+            testDataKeeper.getEnd_dates().forEach(ed -> endDates.add(toEndDates(ed)));
+        }
+
+        if (testDataKeeper.getEntries_into_leasingDeposit() != null) {
+            testDataKeeper.getEntries_into_leasingDeposit().forEach(e -> entries_into_leasingDeposit.add(toEntry(e)));
+        }
+
+        if (testDataKeeper.getLeasingDeposits() != null) {
+            testDataKeeper.getLeasingDeposits().forEach(ld -> leasingDeposits.add(toLeasingDeposits(ld)));
+        } else {
+            throw new IllegalStateException("Error: there are no leasing deposits!");
+        }
+
+        if (entries_into_leasingDeposit != null) {
+            leasingDeposits.forEach(ld -> {
+                entries_into_leasingDeposit.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
+                        .forEach(e -> {
+                            ld.getEntries().add(e);
+                            e.setLeasingDeposit(ld);
+                        });
+            });
+        }
 
         leasingDeposits.forEach(ld -> {
             endDates.stream().filter(e -> e.getEndDateID().getLeasingDeposit_id() == ld.getId())
                     .forEach(e -> ld.getEnd_dates().add(e));
         });
 
-        testDataKeeper.getEntries_expected().forEach(e -> entries_expected.add(toEntry(e)));
+        if (testDataKeeper.getEntries_expected() != null) {
+            testDataKeeper.getEntries_expected().forEach(e -> entries_expected.add(toEntry(e)));
 
-        leasingDeposits.forEach(ld -> {
-            entries_expected.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
-                    .forEach(e -> e.setLeasingDeposit(ld));
-        });
+            leasingDeposits.forEach(ld -> {
+                entries_expected.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
+                        .forEach(e -> e.setLeasingDeposit(ld));
+            });
+        }
 
-        testDataKeeper.getExchangeRates().forEach(er -> exRates.add((toExchangeRate(er))));
+        if (testDataKeeper.getExchangeRates() != null) {
+            testDataKeeper.getExchangeRates().forEach(er -> exRates.add((toExchangeRate(er))));
+        }
     }
 
     Entry toEntry(EntryTestData testEntryToEntry) {

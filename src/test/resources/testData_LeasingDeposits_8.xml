@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!--leasingDeposit_has_only_oneEntryTest-->
+<!--LeasingDeposit_has_no_Entries_FirstOpenPeriod_LOWER_LeasingDepositEndDateTest-->
 <testData>
     <user>
         <id>1</id>
@@ -40,7 +40,7 @@
     </counterpartner>
     <periods_start>01.01.2010</periods_start>
     <periods_end>31.12.2030</periods_end>
-    <firstOpenPeriodScenarioTo>31.03.2020</firstOpenPeriodScenarioTo>
+    <firstOpenPeriodScenarioTo>31.08.2019</firstOpenPeriodScenarioTo>
     <durations>
         <duration>
             <id>1</id>
@@ -121,7 +121,7 @@
             <lastChange>21.08.2020</lastChange>
         </end_date>
     </end_dates>
-    <entries_into_leasingDeposit>
+    <entries_expected>
         <entry>
             <leasingDepositCode>1</leasingDepositCode>
             <scenarioCode>1</scenarioCode>
@@ -176,8 +176,6 @@
             <advance_currentperiod_reg_ld_3_ae>0.0000000000</advance_currentperiod_reg_ld_3_ae>
             <advance_prevperiod_reg_ld_3_af>0.0000000000</advance_prevperiod_reg_ld_3_af>
         </entry>
-    </entries_into_leasingDeposit>
-    <entries_expected>
         <entry>
             <leasingDepositCode>1</leasingDepositCode>
             <scenarioCode>1</scenarioCode>
@@ -1721,7 +1719,7 @@
             <end_date_at_this_period>20.11.2019</end_date_at_this_period>
             <percentRateForPeriodForLD>5</percentRateForPeriodForLD>
             <status>ACTUAL</status>
-            <status_EntryMadeDuringOrAfterClosedPeriod>AFTER_CLOSING_PERIOD</status_EntryMadeDuringOrAfterClosedPeriod>
+            <status_EntryMadeDuringOrAfterClosedPeriod>CURRENT_PERIOD</status_EntryMadeDuringOrAfterClosedPeriod>
             <discont_at_start_date_cur_reg_ld_1_k>-11973</discont_at_start_date_cur_reg_ld_1_k>
             <discont_at_start_date_rub_reg_ld_1_l>-704373</discont_at_start_date_rub_reg_ld_1_l>
             <discont_at_start_date_rub_forifrsacc_reg_ld_1_m>0</discont_at_start_date_rub_forifrsacc_reg_ld_1_m>
@@ -1767,171 +1765,6 @@
             <termreclass_percent_prevperiod_reg_ld_3_ad>733182</termreclass_percent_prevperiod_reg_ld_3_ad>
             <advance_currentperiod_reg_ld_3_ae>5178807</advance_currentperiod_reg_ld_3_ae>
             <advance_prevperiod_reg_ld_3_af>5178807</advance_prevperiod_reg_ld_3_af>
-        </entry>
-        <entry>
-            <leasingDepositCode>1</leasingDepositCode>
-            <scenarioCode>1</scenarioCode>
-            <period>30.09.2019</period>
-            <calculation_time>21.08.2020</calculation_time>
-            <end_date_at_this_period>20.11.2019</end_date_at_this_period>
-            <percentRateForPeriodForLD>5</percentRateForPeriodForLD>
-            <status>ACTUAL</status>
-            <status_EntryMadeDuringOrAfterClosedPeriod>AFTER_CLOSING_PERIOD</status_EntryMadeDuringOrAfterClosedPeriod>
-            <discont_at_start_date_cur_reg_ld_1_k>-11973</discont_at_start_date_cur_reg_ld_1_k>
-            <discont_at_start_date_rub_reg_ld_1_l>-704373</discont_at_start_date_rub_reg_ld_1_l>
-            <discont_at_start_date_rub_forifrsacc_reg_ld_1_m>0</discont_at_start_date_rub_forifrsacc_reg_ld_1_m>
-            <deposit_sum_not_disc_rub_reg_ld_1_n>0.0000000000</deposit_sum_not_disc_rub_reg_ld_1_n>
-            <discont_sum_at_new_end_date_cur_reg_ld_1_p>0</discont_sum_at_new_end_date_cur_reg_ld_1_p>
-            <disc_sum_at_new_end_date_rub_reg_ld_1_q>0</disc_sum_at_new_end_date_rub_reg_ld_1_q>
-            <disc_diff_betw_disconts_rub_reg_ld_1_r>0</disc_diff_betw_disconts_rub_reg_ld_1_r>
-            <reval_corr_disc_rub_reg_ld_1_s>0</reval_corr_disc_rub_reg_ld_1_s>
-            <corr_acc_amort_disc_rub_reg_ld_1_t>0</corr_acc_amort_disc_rub_reg_ld_1_t>
-            <corr_new_date_less_corr_acc_amort_disc_rub_reg_ld_1_x>0
-            </corr_new_date_less_corr_acc_amort_disc_rub_reg_ld_1_x>
-            <corr_new_date_higher_discont_rub_reg_ld_1_u>0.0000000000</corr_new_date_higher_discont_rub_reg_ld_1_u>
-            <corr_new_date_higher_corr_acc_amort_disc_rub_reg_ld_1_v>0.0000000000
-            </corr_new_date_higher_corr_acc_amort_disc_rub_reg_ld_1_v>
-            <corr_new_date_less_discont_rub_reg_ld_1_w>0</corr_new_date_less_discont_rub_reg_ld_1_w>
-            <accum_amort_discont_start_period_cur_reg_ld_2_h>11260
-            </accum_amort_discont_start_period_cur_reg_ld_2_h>
-            <amort_discont_current_period_cur_reg_ld_2_i>397</amort_discont_current_period_cur_reg_ld_2_i>
-            <accum_amort_discont_end_period_cur_reg_ld_2_j>11657
-            </accum_amort_discont_end_period_cur_reg_ld_2_j>
-            <accum_amort_discont_start_period_rub_reg_ld_2_k>699694
-            </accum_amort_discont_start_period_rub_reg_ld_2_k>
-            <amort_discont_current_period_rub_reg_ld_2_m>26190</amort_discont_current_period_rub_reg_ld_2_m>
-            <accum_amort_discont_end_period_rub_reg_ld_2_n>725884</accum_amort_discont_end_period_rub_reg_ld_2_n>
-            <discountedsum_at_current_end_date_cur_reg_ld_3_g>87663</discountedsum_at_current_end_date_cur_reg_ld_3_g>
-            <incoming_ld_body_rub_reg_ld_3_l>5923411</incoming_ld_body_rub_reg_ld_3_l>
-            <outcoming_ld_body_reg_ld_3_m>5923411</outcoming_ld_body_reg_ld_3_m>
-            <reval_ld_body_plus_reg_ld_3_n>0</reval_ld_body_plus_reg_ld_3_n>
-            <reval_ld_body_minus_reg_ld_3_o>0</reval_ld_body_minus_reg_ld_3_o>
-            <accum_amort_discont_start_period_rub_reg_ld_3_r>760823
-            </accum_amort_discont_start_period_rub_reg_ld_3_r>
-            <accum_amort_discont_end_period_rub_reg_ld_3_s>787682</accum_amort_discont_end_period_rub_reg_ld_3_s>
-            <reval_acc_amort_plus_rub_reg_ld_3_t>669</reval_acc_amort_plus_rub_reg_ld_3_t>
-            <reval_acc_amort_minus_rub_reg_ld_3_u>0</reval_acc_amort_minus_rub_reg_ld_3_u>
-            <sum_plus_forex_diff_reg_ld_3_v>-669</sum_plus_forex_diff_reg_ld_3_v>
-            <sum_minus_forex_diff_reg_ld_3_w>0</sum_minus_forex_diff_reg_ld_3_w>
-            <disposal_body_rub_reg_ld_3_x>0</disposal_body_rub_reg_ld_3_x>
-            <disposal_discont_rub_reg_ld_3_y>0</disposal_discont_rub_reg_ld_3_y>
-            <ldterm_reg_ld_3_z>ST</ldterm_reg_ld_3_z>>
-            <termreclass_body_currentperiod_reg_ld_3_aa>5923411</termreclass_body_currentperiod_reg_ld_3_aa>
-            <termreclass_percent_currentperiod_reg_ld_3_ab>787682</termreclass_percent_currentperiod_reg_ld_3_ab>
-            <termreclass_body_prevperiod_reg_ld_3_ac>5923411</termreclass_body_prevperiod_reg_ld_3_ac>
-            <termreclass_percent_prevperiod_reg_ld_3_ad>760823</termreclass_percent_prevperiod_reg_ld_3_ad>
-            <advance_currentperiod_reg_ld_3_ae>5178807</advance_currentperiod_reg_ld_3_ae>
-            <advance_prevperiod_reg_ld_3_af>5178807</advance_prevperiod_reg_ld_3_af>
-        </entry>
-        <entry>
-            <leasingDepositCode>1</leasingDepositCode>
-            <scenarioCode>1</scenarioCode>
-            <period>31.10.2019</period>
-            <calculation_time>21.08.2020</calculation_time>
-            <end_date_at_this_period>20.11.2019</end_date_at_this_period>
-            <percentRateForPeriodForLD>5</percentRateForPeriodForLD>
-            <status>ACTUAL</status>
-            <status_EntryMadeDuringOrAfterClosedPeriod>AFTER_CLOSING_PERIOD</status_EntryMadeDuringOrAfterClosedPeriod>
-            <discont_at_start_date_cur_reg_ld_1_k>-11973</discont_at_start_date_cur_reg_ld_1_k>
-            <discont_at_start_date_rub_reg_ld_1_l>-704373</discont_at_start_date_rub_reg_ld_1_l>
-            <discont_at_start_date_rub_forifrsacc_reg_ld_1_m>0</discont_at_start_date_rub_forifrsacc_reg_ld_1_m>
-            <deposit_sum_not_disc_rub_reg_ld_1_n>0.0000000000</deposit_sum_not_disc_rub_reg_ld_1_n>
-            <discont_sum_at_new_end_date_cur_reg_ld_1_p>0</discont_sum_at_new_end_date_cur_reg_ld_1_p>
-            <disc_sum_at_new_end_date_rub_reg_ld_1_q>0</disc_sum_at_new_end_date_rub_reg_ld_1_q>
-            <disc_diff_betw_disconts_rub_reg_ld_1_r>0</disc_diff_betw_disconts_rub_reg_ld_1_r>
-            <reval_corr_disc_rub_reg_ld_1_s>0</reval_corr_disc_rub_reg_ld_1_s>
-            <corr_acc_amort_disc_rub_reg_ld_1_t>0</corr_acc_amort_disc_rub_reg_ld_1_t>
-            <corr_new_date_less_corr_acc_amort_disc_rub_reg_ld_1_x>0
-            </corr_new_date_less_corr_acc_amort_disc_rub_reg_ld_1_x>
-            <corr_new_date_higher_discont_rub_reg_ld_1_u>0.0000000000</corr_new_date_higher_discont_rub_reg_ld_1_u>
-            <corr_new_date_higher_corr_acc_amort_disc_rub_reg_ld_1_v>0.0000000000
-            </corr_new_date_higher_corr_acc_amort_disc_rub_reg_ld_1_v>
-            <corr_new_date_less_discont_rub_reg_ld_1_w>0</corr_new_date_less_discont_rub_reg_ld_1_w>
-            <accum_amort_discont_start_period_cur_reg_ld_2_h>11657
-            </accum_amort_discont_start_period_cur_reg_ld_2_h>
-            <amort_discont_current_period_cur_reg_ld_2_i>412</amort_discont_current_period_cur_reg_ld_2_i>
-            <accum_amort_discont_end_period_cur_reg_ld_2_j>12070
-            </accum_amort_discont_end_period_cur_reg_ld_2_j>
-            <accum_amort_discont_start_period_rub_reg_ld_2_k>725884
-            </accum_amort_discont_start_period_rub_reg_ld_2_k>
-            <amort_discont_current_period_rub_reg_ld_2_m>27173</amort_discont_current_period_rub_reg_ld_2_m>
-            <accum_amort_discont_end_period_rub_reg_ld_2_n>753057</accum_amort_discont_end_period_rub_reg_ld_2_n>
-            <discountedsum_at_current_end_date_cur_reg_ld_3_g>87663</discountedsum_at_current_end_date_cur_reg_ld_3_g>
-            <incoming_ld_body_rub_reg_ld_3_l>5923411</incoming_ld_body_rub_reg_ld_3_l>
-            <outcoming_ld_body_reg_ld_3_m>5923411</outcoming_ld_body_reg_ld_3_m>
-            <reval_ld_body_plus_reg_ld_3_n>0</reval_ld_body_plus_reg_ld_3_n>
-            <reval_ld_body_minus_reg_ld_3_o>0</reval_ld_body_minus_reg_ld_3_o>
-            <accum_amort_discont_start_period_rub_reg_ld_3_r>787682
-            </accum_amort_discont_start_period_rub_reg_ld_3_r>
-            <accum_amort_discont_end_period_rub_reg_ld_3_s>815549</accum_amort_discont_end_period_rub_reg_ld_3_s>
-            <reval_acc_amort_plus_rub_reg_ld_3_t>694</reval_acc_amort_plus_rub_reg_ld_3_t>
-            <reval_acc_amort_minus_rub_reg_ld_3_u>0</reval_acc_amort_minus_rub_reg_ld_3_u>
-            <sum_plus_forex_diff_reg_ld_3_v>-694</sum_plus_forex_diff_reg_ld_3_v>
-            <sum_minus_forex_diff_reg_ld_3_w>0</sum_minus_forex_diff_reg_ld_3_w>
-            <disposal_body_rub_reg_ld_3_x>0</disposal_body_rub_reg_ld_3_x>
-            <disposal_discont_rub_reg_ld_3_y>0</disposal_discont_rub_reg_ld_3_y>
-            <ldterm_reg_ld_3_z>ST</ldterm_reg_ld_3_z>
-            <termreclass_body_currentperiod_reg_ld_3_aa>5923411</termreclass_body_currentperiod_reg_ld_3_aa>
-            <termreclass_percent_currentperiod_reg_ld_3_ab>815549</termreclass_percent_currentperiod_reg_ld_3_ab>
-            <termreclass_body_prevperiod_reg_ld_3_ac>5923411</termreclass_body_prevperiod_reg_ld_3_ac>
-            <termreclass_percent_prevperiod_reg_ld_3_ad>787682</termreclass_percent_prevperiod_reg_ld_3_ad>
-            <advance_currentperiod_reg_ld_3_ae>5178807</advance_currentperiod_reg_ld_3_ae>
-            <advance_prevperiod_reg_ld_3_af>5178807</advance_prevperiod_reg_ld_3_af>
-        </entry>
-        <entry>
-            <leasingDepositCode>1</leasingDepositCode>
-            <scenarioCode>1</scenarioCode>
-            <period>30.11.2019</period>
-            <calculation_time>21.08.2020</calculation_time>
-            <end_date_at_this_period>03.11.2019</end_date_at_this_period>
-            <percentRateForPeriodForLD>5</percentRateForPeriodForLD>
-            <status>ACTUAL</status>
-            <status_EntryMadeDuringOrAfterClosedPeriod>AFTER_CLOSING_PERIOD</status_EntryMadeDuringOrAfterClosedPeriod>
-            <discont_at_start_date_cur_reg_ld_1_k>-11973</discont_at_start_date_cur_reg_ld_1_k>
-            <discont_at_start_date_rub_reg_ld_1_l>-704373</discont_at_start_date_rub_reg_ld_1_l>
-            <discont_at_start_date_rub_forifrsacc_reg_ld_1_m>0</discont_at_start_date_rub_forifrsacc_reg_ld_1_m>
-            <deposit_sum_not_disc_rub_reg_ld_1_n>0.0000000000</deposit_sum_not_disc_rub_reg_ld_1_n>
-            <discont_sum_at_new_end_date_cur_reg_ld_1_p>-12137</discont_sum_at_new_end_date_cur_reg_ld_1_p>
-            <disc_sum_at_new_end_date_rub_reg_ld_1_q>-714056</disc_sum_at_new_end_date_rub_reg_ld_1_q>
-            <disc_diff_betw_disconts_rub_reg_ld_1_r>11733</disc_diff_betw_disconts_rub_reg_ld_1_r>
-            <reval_corr_disc_rub_reg_ld_1_s>1743</reval_corr_disc_rub_reg_ld_1_s>
-            <corr_acc_amort_disc_rub_reg_ld_1_t>1855</corr_acc_amort_disc_rub_reg_ld_1_t>
-            <corr_new_date_less_corr_acc_amort_disc_rub_reg_ld_1_x>1855
-            </corr_new_date_less_corr_acc_amort_disc_rub_reg_ld_1_x>
-            <corr_new_date_higher_discont_rub_reg_ld_1_u>0.0000000000</corr_new_date_higher_discont_rub_reg_ld_1_u>
-            <corr_new_date_higher_corr_acc_amort_disc_rub_reg_ld_1_v>0.0000000000
-            </corr_new_date_higher_corr_acc_amort_disc_rub_reg_ld_1_v>
-            <corr_new_date_less_discont_rub_reg_ld_1_w>13476</corr_new_date_less_discont_rub_reg_ld_1_w>
-            <accum_amort_discont_start_period_cur_reg_ld_2_h>12097
-            </accum_amort_discont_start_period_cur_reg_ld_2_h>
-            <amort_discont_current_period_cur_reg_ld_2_i>40</amort_discont_current_period_cur_reg_ld_2_i>
-            <accum_amort_discont_end_period_cur_reg_ld_2_j>12137
-            </accum_amort_discont_end_period_cur_reg_ld_2_j>
-            <accum_amort_discont_start_period_rub_reg_ld_2_k>754770
-            </accum_amort_discont_start_period_rub_reg_ld_2_k>
-            <amort_discont_current_period_rub_reg_ld_2_m>2539</amort_discont_current_period_rub_reg_ld_2_m>
-            <accum_amort_discont_end_period_rub_reg_ld_2_n>757310</accum_amort_discont_end_period_rub_reg_ld_2_n>
-            <discountedsum_at_current_end_date_cur_reg_ld_3_g>87863</discountedsum_at_current_end_date_cur_reg_ld_3_g>
-            <incoming_ld_body_rub_reg_ld_3_l>5936886</incoming_ld_body_rub_reg_ld_3_l>
-            <outcoming_ld_body_reg_ld_3_m>5694508</outcoming_ld_body_reg_ld_3_m>
-            <reval_ld_body_plus_reg_ld_3_n>0</reval_ld_body_plus_reg_ld_3_n>
-            <reval_ld_body_minus_reg_ld_3_o>-242378</reval_ld_body_minus_reg_ld_3_o>
-            <accum_amort_discont_start_period_rub_reg_ld_3_r>817405
-            </accum_amort_discont_start_period_rub_reg_ld_3_r>
-            <accum_amort_discont_end_period_rub_reg_ld_3_s>786632</accum_amort_discont_end_period_rub_reg_ld_3_s>
-            <reval_acc_amort_plus_rub_reg_ld_3_t>0</reval_acc_amort_plus_rub_reg_ld_3_t>
-            <reval_acc_amort_minus_rub_reg_ld_3_u>-33312</reval_acc_amort_minus_rub_reg_ld_3_u>
-            <sum_plus_forex_diff_reg_ld_3_v>0</sum_plus_forex_diff_reg_ld_3_v>
-            <sum_minus_forex_diff_reg_ld_3_w>275690</sum_minus_forex_diff_reg_ld_3_w>
-            <disposal_body_rub_reg_ld_3_x>5694508</disposal_body_rub_reg_ld_3_x>
-            <disposal_discont_rub_reg_ld_3_y>786632</disposal_discont_rub_reg_ld_3_y>
-            <ldterm_reg_ld_3_z>ST</ldterm_reg_ld_3_z>
-            <termreclass_body_currentperiod_reg_ld_3_aa>0</termreclass_body_currentperiod_reg_ld_3_aa>
-            <termreclass_percent_currentperiod_reg_ld_3_ab>0</termreclass_percent_currentperiod_reg_ld_3_ab>
-            <termreclass_body_prevperiod_reg_ld_3_ac>5923410.57179</termreclass_body_prevperiod_reg_ld_3_ac>
-            <termreclass_percent_prevperiod_reg_ld_3_ad>815549.13522</termreclass_percent_prevperiod_reg_ld_3_ad>
-            <advance_currentperiod_reg_ld_3_ae>5178806.61640</advance_currentperiod_reg_ld_3_ae>
-            <advance_prevperiod_reg_ld_3_af>5178806.61640</advance_prevperiod_reg_ld_3_af>
         </entry>
     </entries_expected>
     <exchangeRates>

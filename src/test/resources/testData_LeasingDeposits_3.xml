@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!--leasingDeposit_has_only_oneEntryTest-->
+<!--LeasingDeposit_with_DELETE_statusTest-->
 <testData>
     <user>
         <id>1</id>
@@ -82,7 +82,7 @@
             <deposit_sum_not_disc>100000.0</deposit_sum_not_disc>
             <scenarioCode>1</scenarioCode>
             <is_created>X</is_created>
-            <is_deleted></is_deleted>
+            <is_deleted>X</is_deleted>
             <userCode>1</userCode>
             <lastChange>21.08.2020</lastChange>
         </leasingDeposit>
@@ -176,8 +176,6 @@
             <advance_currentperiod_reg_ld_3_ae>0.0000000000</advance_currentperiod_reg_ld_3_ae>
             <advance_prevperiod_reg_ld_3_af>0.0000000000</advance_prevperiod_reg_ld_3_af>
         </entry>
-    </entries_into_leasingDeposit>
-    <entries_expected>
         <entry>
             <leasingDepositCode>1</leasingDepositCode>
             <scenarioCode>1</scenarioCode>
@@ -1933,7 +1931,7 @@
             <advance_currentperiod_reg_ld_3_ae>5178806.61640</advance_currentperiod_reg_ld_3_ae>
             <advance_prevperiod_reg_ld_3_af>5178806.61640</advance_prevperiod_reg_ld_3_af>
         </entry>
-    </entries_expected>
+    </entries_into_leasingDeposit>
     <exchangeRates>
         <exchangeRate>
             <currencyCode>1</currencyCode>

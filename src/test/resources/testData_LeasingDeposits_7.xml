@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!--leasingDeposit_has_only_oneEntryTest-->
+<!--LeasingDeposit_has_no_Entries_FirstOpenPeriod_GREATER_LeasingDepositEndDateTest-->
 <testData>
     <user>
         <id>1</id>
@@ -121,7 +121,7 @@
             <lastChange>21.08.2020</lastChange>
         </end_date>
     </end_dates>
-    <entries_into_leasingDeposit>
+    <entries_expected>
         <entry>
             <leasingDepositCode>1</leasingDepositCode>
             <scenarioCode>1</scenarioCode>
@@ -176,8 +176,6 @@
             <advance_currentperiod_reg_ld_3_ae>0.0000000000</advance_currentperiod_reg_ld_3_ae>
             <advance_prevperiod_reg_ld_3_af>0.0000000000</advance_prevperiod_reg_ld_3_af>
         </entry>
-    </entries_into_leasingDeposit>
-    <entries_expected>
         <entry>
             <leasingDepositCode>1</leasingDepositCode>
             <scenarioCode>1</scenarioCode>

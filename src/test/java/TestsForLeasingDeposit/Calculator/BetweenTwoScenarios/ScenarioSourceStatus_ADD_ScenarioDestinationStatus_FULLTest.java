@@ -43,7 +43,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import static TestsForLeasingDeposit.Calculator.Builders.*;
+import static Utils.Builders.*;
 import static org.junit.Assert.assertEquals;
 
 //перечень тестов:

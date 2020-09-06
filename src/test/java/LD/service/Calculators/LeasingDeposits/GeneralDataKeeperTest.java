@@ -19,10 +19,7 @@ import LD.model.PeriodsClosed.PeriodsClosed;
 import LD.model.PeriodsClosed.PeriodsClosedID;
 import LD.model.Scenario.Scenario;
 import LD.repository.*;
-import LD.service.Calculators.LeasingDeposits.EntryCalculator;
-import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
 import org.junit.Assert;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -42,10 +39,9 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
-import static TestsForLeasingDeposit.Calculator.Builders.*;
+import static Utils.Builders.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
 //перечень тестов:
