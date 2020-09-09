@@ -4,7 +4,7 @@ import LD.config.Security.model.User.User;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.Scenario.Scenario;
 import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
-import TestsForLeasingDeposit.Calculator.Builders;
+import Utils.Builders;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
