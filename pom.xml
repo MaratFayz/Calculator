@@ -53,7 +53,7 @@
                     <reuseForks>false</reuseForks>
                     <useSystemClassLoader>true</useSystemClassLoader>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
-                    <forkedProcessExitTimeoutInSeconds>120</forkedProcessExitTimeoutInSeconds>
+                    <forkedProcessExitTimeoutInSeconds>200</forkedProcessExitTimeoutInSeconds>
                 </configuration>
             </plugin>
         </plugins>
