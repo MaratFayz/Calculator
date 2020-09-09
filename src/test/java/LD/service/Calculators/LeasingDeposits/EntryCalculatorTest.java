@@ -10,6 +10,7 @@ import Utils.Builders;
 import Utils.EntryComparator;
 import Utils.TestEntitiesKeeper;
 import Utils.XmlDataLoader.LoadXmlFileForLeasingDepositsTest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,6 +22,9 @@ import org.springframework.data.jpa.domain.Specification;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -50,7 +54,7 @@ public class EntryCalculatorTest {
     LeasingDeposit leasingDepositToCalculate;
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_1.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturn10SameEntries_whenInputsAreCorrectAnd10Calculations.xml")
     void calculate_shouldReturn10SameEntries_whenInputsAreCorrectAnd10Calculations() {
         Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("FACT")).findFirst().get());
         Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("FACT")).findFirst().get());
@@ -80,7 +84,7 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_2.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnCorrectEntries_whenDepositEndDateIsLessFirstOpenPeriodAndEntryExists.xml")
     public void calculate_shouldReturnCorrectEntries_whenDepositEndDateIsLessFirstOpenPeriodAndEntryExists() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
@@ -108,7 +112,7 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_3.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnAllDeletedEntries_whenDepositIsDeleted.xml")
     public void calculate_shouldReturnAllDeletedEntries_whenDepositIsDeleted() throws ExecutionException, InterruptedException {
         Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(gdk.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
@@ -135,7 +139,7 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_4.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldNotReturnAnyEntries_whenDepositEndDateIsLessCalculationPeriod.xml")
     public void calculate_shouldNotReturnAnyEntries_whenDepositEndDateIsLessCalculationPeriod() throws ExecutionException, InterruptedException {
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
 
@@ -161,7 +165,7 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_5.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnOneNewEntryAndOneStornoEntry_whenEntryForCalculationPeriodExistsAndScenarioIsAddition.xml")
     public void calculate_shouldReturnOneNewEntryAndOneStornoEntry_whenEntryForCalculationPeriodExistsAndScenarioIsAddition() throws ExecutionException, InterruptedException {
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
 
@@ -193,7 +197,7 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_6.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnAllNewEntriesAndAllStornoEntries_whenScenarioIsFull.xml")
     public void calculate_shouldReturnAllNewEntriesAndAllStornoEntries_whenScenarioIsFull() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
 
@@ -231,7 +235,7 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_7.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnCorrectEntries_whenDepositEndDateIsLessFirstOpenPeriodAndNoEntries.xml")
     public void calculate_shouldReturnCorrectEntries_whenDepositEndDateIsLessFirstOpenPeriodAndNoEntries() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
@@ -259,7 +263,7 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_8.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnCorrectEntries_whenDepositEndDateIsHigherFirstOpenPeriodAndNoEntries.xml")
     public void calculate_shouldReturnCorrectEntries_whenDepositEndDateIsHigherFirstOpenPeriodAndNoEntries() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
@@ -287,7 +291,7 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_9.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnCorrectEntries_whenScenarioFromAdditionAndScenarioToFull.xml")
     public void calculate_shouldReturnCorrectEntries_whenScenarioFromAdditionAndScenarioToFull() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         //расчет на сценарии-источнике
         //копирование сентября и октября со сценария-источника
@@ -329,7 +333,7 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testData_LeasingDeposits_10.xml")
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnNotDiscountedEntries_whenLdDurationIsLess12Months.xml")
     public void calculate_shouldReturnNotDiscountedEntries_whenLdDurationIsLess12Months() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
@@ -354,5 +358,85 @@ public class EntryCalculatorTest {
         assertEquals(Builders.getDate(31, 1, 2019), lec.getFirstPeriodWithoutTransactionUTC());
         assertEquals(2, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
+    }
+
+    @Test
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldThrowException_whenFirstOpenPeriodOfScenarioIsNotEqualToOrOneMonthMoreThanPeriodOfLastEntry.xml")
+    public void calculate_shouldThrowException_whenFirstOpenPeriodOfScenarioIsNotEqualToOrOneMonthMoreThanPeriodOfLastEntry() {
+        Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.ADDITION).collect(Collectors.toList()).get(0));
+        Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.FULL).collect(Collectors.toList()).get(0));
+        Mockito.when(gdk.getFirstOpenPeriod_ScenarioFrom()).thenReturn(getDate(31, 3, 2020));
+        Mockito.when(gdk.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(31, 3, 2020));
+        Mockito.when(gdk.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC")));
+
+        threadExecutor = Executors.newFixedThreadPool(10);
+
+        leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
+        lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
+        Specification<DepositRate> dr = lec.getDepRateForLD(leasingDepositToCalculate, lec.getLDdurationMonths());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+
+        Throwable e = Assertions.assertThrows(ExecutionException.class, () -> {
+            Future<List<Entry>> entries = threadExecutor.submit(lec);
+            calculatedEntries.addAll(entries.get());
+
+            threadExecutor.shutdown();
+        });
+
+        assertEquals(e.getCause().getMessage(), "Транзакции лизингового депозита не соответствуют закрытому периоду: " +
+                "период последней рассчитанной транзакции должен быть или равен первому открытому периоду или должен быть меньше строго на один период");
+    }
+
+    @Test
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldNotThrowException_whenFirstOpenPeriodOfScenarioIsEqualToPeriodOfLastEntry.xml")
+    public void calculate_shouldNotThrowException_whenFirstOpenPeriodOfScenarioIsEqualToPeriodOfLastEntry() {
+        Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.ADDITION).collect(Collectors.toList()).get(0));
+        Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.FULL).collect(Collectors.toList()).get(0));
+        Mockito.when(gdk.getFirstOpenPeriod_ScenarioFrom()).thenReturn(getDate(31, 3, 2017));
+        Mockito.when(gdk.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(31, 3, 2017));
+        Mockito.when(gdk.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC")));
+        Mockito.when(gdk.getAllExRates()).thenReturn(testEntitiesKeeper.getExRates());
+        Mockito.when(gdk.getAllPeriods()).thenReturn(testEntitiesKeeper.getPeriods());
+
+        threadExecutor = Executors.newFixedThreadPool(10);
+
+        leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
+        lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
+        Specification<DepositRate> dr = lec.getDepRateForLD(leasingDepositToCalculate, lec.getLDdurationMonths());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+
+        Assertions.assertDoesNotThrow(() -> {
+            Future<List<Entry>> entries = threadExecutor.submit(lec);
+            calculatedEntries.addAll(entries.get());
+
+            threadExecutor.shutdown();
+        });
+    }
+
+    @Test
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldNotThrowException_whenFirstOpenPeriodOfScenarioIsOneMonthMoreThanPeriodOfLastEntry.xml")
+    public void calculate_shouldNotThrowException_whenFirstOpenPeriodOfScenarioIsOneMonthMoreThanPeriodOfLastEntry() {
+        Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.ADDITION).collect(Collectors.toList()).get(0));
+        Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.FULL).collect(Collectors.toList()).get(0));
+        Mockito.when(gdk.getFirstOpenPeriod_ScenarioFrom()).thenReturn(getDate(30, 4, 2017));
+        Mockito.when(gdk.getFirstOpenPeriod_ScenarioTo()).thenReturn(getDate(30, 4, 2017));
+        Mockito.when(gdk.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC")));
+        Mockito.when(gdk.getAllExRates()).thenReturn(testEntitiesKeeper.getExRates());
+        Mockito.when(gdk.getAllPeriods()).thenReturn(testEntitiesKeeper.getPeriods());
+
+        threadExecutor = Executors.newFixedThreadPool(10);
+
+        leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
+        lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
+        Specification<DepositRate> dr = lec.getDepRateForLD(leasingDepositToCalculate, lec.getLDdurationMonths());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+
+        Assertions.assertDoesNotThrow(() -> {
+            Future<List<Entry>> entries = threadExecutor.submit(lec);
+            calculatedEntries.addAll(entries.get());
+
+            threadExecutor.shutdown();
+        });
+
     }
 }
