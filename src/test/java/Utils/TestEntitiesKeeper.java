@@ -12,9 +12,12 @@ import LD.model.EndDate.EndDate;
 import LD.model.EndDate.EndDateID;
 import LD.model.Entry.Entry;
 import LD.model.Entry.EntryID;
+import LD.model.EntryIFRSAcc.EntryIFRSAcc;
+import LD.model.EntryIFRSAcc.EntryIFRSAccID;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.ExchangeRate.ExchangeRate;
 import LD.model.ExchangeRate.ExchangeRateID;
+import LD.model.IFRSAccount.IFRSAccount;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Period.Period;
 import LD.model.Scenario.Scenario;
@@ -29,6 +32,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 @Data
 public class TestEntitiesKeeper {
@@ -52,34 +58,108 @@ public class TestEntitiesKeeper {
     List<ExchangeRate> exRates = new ArrayList<>();
     List<Entry> entries_into_leasingDeposit = new ArrayList<>();
     List<Entry> entries_expected = new ArrayList<>();
+    Entry entryForEntryIfrsCalculation;
+    List<EntryIFRSAcc> entriesIfrsExcepted = new ArrayList<>();
+    List<IFRSAccount> ifrsAccounts = new ArrayList<>();
 
-    public TestEntitiesKeeper(TestDataKeeper testDataKeeper) {
+    public static TestEntitiesKeeper transformDataKeeperIntoEntitiesKeeper(TestDataKeeper testDataKeeper) {
+        return new TestEntitiesKeeper(testDataKeeper);
+    }
+
+    private TestEntitiesKeeper(TestDataKeeper testDataKeeper) {
         this.testDataKeeper = testDataKeeper;
+        transformDataIntoEntities();
+    }
 
+    private void transformDataIntoEntities() {
+        createUser();
+        createCompany();
+        createScenarios();
+        createCurrencies();
+        createCounterpartner();
+        createPeriods();
+        createDurations();
+        createDepositRates();
+        createEndDates();
+        createEntriesIntoLeasingDeposits();
+        createLeasingDeposits();
+        addEntriesIntoLeasingDeposits();
+        addEndDatesIntoLeasingDeposits();
+        createExpectedEntries();
+        pasteLeasingDepositIntoExpectedEntries();
+        createExchangeRates();
+        createEntryForCalculationEntryIfrs();
+        createIfrsAccounts();
+        createEntriesIfrsAccounts();
+    }
+
+    private void createUser() {
         user = toUser(testDataKeeper.getUser());
-        company = toCompany(testDataKeeper.getCompany());
+    }
 
-        if (testDataKeeper.getScenarios() != null) {
+    private void createCompany() {
+        company = toCompany(testDataKeeper.getCompany());
+    }
+
+    private void createScenarios() {
+        if (nonNull(testDataKeeper.getScenarios())) {
             testDataKeeper.getScenarios().forEach(sc -> scenarios.add(toScenario(sc)));
         }
+    }
 
-        if (testDataKeeper.getCurrencies() != null) {
+    private void createCurrencies() {
+        if (nonNull(testDataKeeper.getCurrencies())) {
             testDataKeeper.getCurrencies().forEach(cu -> currencies.add(toCurrency(cu)));
         }
+    }
 
+    private void createCounterpartner() {
         counterpartner = toCounterpartner(testDataKeeper.getCounterpartner());
+    }
+
+    private void createEntriesIntoLeasingDeposits() {
+        if (nonNull(testDataKeeper.getEntries_into_leasingDeposit())) {
+            testDataKeeper.getEntries_into_leasingDeposit().forEach(e -> entries_into_leasingDeposit.add(toEntry(e)));
+        }
+    }
+
+    private void createLeasingDeposits() {
+        if (nonNull(testDataKeeper.getLeasingDeposits())) {
+            testDataKeeper.getLeasingDeposits().forEach(ld -> leasingDeposits.add(toLeasingDeposits(ld)));
+        }
+    }
+
+    private void createEndDates() {
+        if (nonNull(testDataKeeper.getEnd_dates())) {
+            testDataKeeper.getEnd_dates().forEach(ed -> endDates.add(toEndDates(ed)));
+        }
+    }
+
+    private void createDepositRates() {
+        if (nonNull(testDataKeeper.getDepositRates())) {
+            testDataKeeper.getDepositRates().forEach(dr -> depositRates.add(toDepositRates(dr)));
+        }
+    }
+
+    private void createDurations() {
+        if (nonNull(testDataKeeper.getDurations())) {
+            testDataKeeper.getDurations().forEach(d -> durations.add(toDuration(d)));
+        }
+    }
+
+    private void createPeriods() {
         periods_start = toLocalDate(testDataKeeper.getPeriods_start());
         periods_end = toLocalDate(testDataKeeper.getPeriods_end());
 
-        if (testDataKeeper.getFirstOpenPeriodScenarioFrom() != null) {
+        if (nonNull(testDataKeeper.getFirstOpenPeriodScenarioFrom())) {
             firstOpenPeriodScenarioFrom = DateFormat.parsingDate(testDataKeeper.getFirstOpenPeriodScenarioFrom());
         }
 
-        if (testDataKeeper.getFirstOpenPeriodScenarioTo() != null) {
+        if (nonNull(testDataKeeper.getFirstOpenPeriodScenarioTo())) {
             firstOpenPeriodScenarioTo = DateFormat.parsingDate(testDataKeeper.getFirstOpenPeriodScenarioTo());
         }
 
-        if (testDataKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo() != null) {
+        if (nonNull(testDataKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo())) {
             periodInScenarioFromForCopyingEntriesToScenarioTo =
                     DateFormat.parsingDate(testDataKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo());
         }
@@ -96,58 +176,97 @@ public class TestEntitiesKeeper {
             throw new IllegalStateException("Error: periods_start is greater than periods_end!");
         }
 
-        if (testDataKeeper.getDurations() != null) {
-            testDataKeeper.getDurations().forEach(d -> durations.add(toDuration(d)));
-        }
+    }
 
-        if (testDataKeeper.getDepositRates() != null) {
-            testDataKeeper.getDepositRates().forEach(dr -> depositRates.add(toDepositRates(dr)));
-        }
+    private void createEntryForCalculationEntryIfrs() {
+        entryForEntryIfrsCalculation = toEntry(testDataKeeper.getEntryForEntryIfrsCalculation());
+    }
 
-        if (testDataKeeper.getEnd_dates() != null) {
-            testDataKeeper.getEnd_dates().forEach(ed -> endDates.add(toEndDates(ed)));
-        }
-
-        if (testDataKeeper.getEntries_into_leasingDeposit() != null) {
-            testDataKeeper.getEntries_into_leasingDeposit().forEach(e -> entries_into_leasingDeposit.add(toEntry(e)));
-        }
-
-        if (testDataKeeper.getLeasingDeposits() != null) {
-            testDataKeeper.getLeasingDeposits().forEach(ld -> leasingDeposits.add(toLeasingDeposits(ld)));
-        } else {
-            throw new IllegalStateException("Error: there are no leasing deposits!");
-        }
-
-        if (entries_into_leasingDeposit != null) {
-            leasingDeposits.forEach(ld -> {
-                entries_into_leasingDeposit.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
-                        .forEach(e -> {
-                            ld.getEntries().add(e);
-                            e.setLeasingDeposit(ld);
-                        });
-            });
-        }
-
+    private void pasteLeasingDepositIntoExpectedEntries() {
         leasingDeposits.forEach(ld -> {
-            endDates.stream().filter(e -> e.getEndDateID().getLeasingDeposit_id() == ld.getId())
-                    .forEach(e -> ld.getEnd_dates().add(e));
+            entries_expected.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
+                    .forEach(e -> e.setLeasingDeposit(ld));
         });
+    }
 
-        if (testDataKeeper.getEntries_expected() != null) {
-            testDataKeeper.getEntries_expected().forEach(e -> entries_expected.add(toEntry(e)));
+    private void addEntriesIntoLeasingDeposits() {
+        leasingDeposits.forEach(ld -> {
+            entries_into_leasingDeposit.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
+                    .forEach(e -> {
+                        ld.getEntries().add(e);
+                        e.setLeasingDeposit(ld);
+                    });
+        });
+    }
 
-            leasingDeposits.forEach(ld -> {
-                entries_expected.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
-                        .forEach(e -> e.setLeasingDeposit(ld));
-            });
+    private void createEntriesIfrsAccounts() {
+        if (nonNull(testDataKeeper.getEntriesIfrsExcepted())) {
+            testDataKeeper.getEntriesIfrsExcepted().forEach(e -> entriesIfrsExcepted.add(toIfrsEntry(e)));
         }
+    }
 
-        if (testDataKeeper.getExchangeRates() != null) {
+    private void createIfrsAccounts() {
+        if (nonNull(testDataKeeper.getIfrsAccounts())) {
+            testDataKeeper.getIfrsAccounts().forEach(iAcc -> ifrsAccounts.add(toIfrsAcc(iAcc)));
+        }
+    }
+
+    private void createExchangeRates() {
+        if (nonNull(testDataKeeper.getExchangeRates())) {
             testDataKeeper.getExchangeRates().forEach(er -> exRates.add((toExchangeRate(er))));
         }
     }
 
-    Entry toEntry(EntryTestData testEntryToEntry) {
+    private void createExpectedEntries() {
+        if (nonNull(testDataKeeper.getEntries_expected())) {
+            testDataKeeper.getEntries_expected().forEach(e -> entries_expected.add(toEntry(e)));
+        }
+    }
+
+    private void addEndDatesIntoLeasingDeposits() {
+        leasingDeposits.forEach(ld -> {
+            endDates.stream().filter(e -> e.getEndDateID().getLeasingDeposit_id() == ld.getId())
+                    .forEach(e -> ld.getEnd_dates().add(e));
+        });
+    }
+
+    private IFRSAccount toIfrsAcc(IfrsAccountTestData testIfrsAccountToIfrsAccount) {
+        return IFRSAccount.builder().id(testIfrsAccountToIfrsAccount.getId())
+                .account_code(testIfrsAccountToIfrsAccount.getAccount_code())
+                .account_name(testIfrsAccountToIfrsAccount.getAccount_name())
+                .ct(testIfrsAccountToIfrsAccount.getCt())
+                .dr(testIfrsAccountToIfrsAccount.getDr())
+                .flow_code(testIfrsAccountToIfrsAccount.getFlow_code())
+                .flow_name(testIfrsAccountToIfrsAccount.getFlow_name())
+                .isInverseSum(testIfrsAccountToIfrsAccount.isInverseSum())
+                .mappingFormAndColumn(testIfrsAccountToIfrsAccount.getMappingFormAndColumn())
+                .pa(testIfrsAccountToIfrsAccount.getPa())
+                .sh(testIfrsAccountToIfrsAccount.getSh())
+                .user(this.user.getId().equals(testIfrsAccountToIfrsAccount.getUserCode()) ? user : null)
+                .lastChange(DateFormat.parsingDate(testIfrsAccountToIfrsAccount.getLastChange()))
+                .build();
+    }
+
+    private EntryIFRSAcc toIfrsEntry(EntryIfrsAccTestData testEntryIfrsToEntryIfrs) {
+        EntryIFRSAccID entryIFRSAccID = EntryIFRSAccID.builder()
+                .entry(entryForEntryIfrsCalculation)
+                .ifrsAccount(this.ifrsAccounts.stream().filter(i -> i.getId().equals(testEntryIfrsToEntryIfrs.getIfrsAccountCode())).collect(Collectors.toList()).get(0))
+                .build();
+
+        return EntryIFRSAcc.builder()
+                .entryIFRSAccID(entryIFRSAccID)
+                .sum(testEntryIfrsToEntryIfrs.getSum())
+                .user(this.user.getId().equals(testEntryIfrsToEntryIfrs.getUserCode()) ? user : null)
+                .lastChange(DateFormat.parsingDate(testEntryIfrsToEntryIfrs.getLastChange()))
+                .build();
+
+    }
+
+    private Entry toEntry(EntryTestData testEntryToEntry) {
+        if (isNull(testEntryToEntry)) {
+            return null;
+        }
+
         EntryID entryID = EntryID.builder()
                 .CALCULATION_TIME(DateFormat.parsingDate(testEntryToEntry.getCalculation_time()))
                 .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testEntryToEntry.getScenarioCode())).collect(Collectors.toList()).get(0))
@@ -203,7 +322,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    ExchangeRate toExchangeRate(ExchangeRateTestData testExchangeRateToExchangeRate) {
+    private ExchangeRate toExchangeRate(ExchangeRateTestData testExchangeRateToExchangeRate) {
         ExchangeRateID exchangeRateID = ExchangeRateID.builder()
                 .currency(this.currencies.stream().filter(c -> c.getId().equals(testExchangeRateToExchangeRate.getCurrencyCode())).collect(Collectors.toList()).get(0))
                 .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testExchangeRateToExchangeRate.getScenarioCode())).collect(Collectors.toList()).get(0))
@@ -217,7 +336,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    EndDate toEndDates(EndDateTestData testEndDateToEndDate) {
+    private EndDate toEndDates(EndDateTestData testEndDateToEndDate) {
         EndDateID endDateID = EndDateID.builder()
                 .leasingDeposit_id(testEndDateToEndDate.getLeasingDepositCode())
                 .period(this.periods.stream().filter(p -> p.getDate().isEqual(DateFormat.parsingDate(testEndDateToEndDate.getPeriod()))).collect(Collectors.toList()).get(0))
@@ -232,7 +351,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    LeasingDeposit toLeasingDeposits(LeasingDepositTestData testLeasingDepositToLeasingDeposit) {
+    private LeasingDeposit toLeasingDeposits(LeasingDepositTestData testLeasingDepositToLeasingDeposit) {
         return LeasingDeposit.builder().id(testLeasingDepositToLeasingDeposit.getId())
                 .company(this.company.getId().equals(testLeasingDepositToLeasingDeposit.getCompanyCode()) ? company : null)
                 .counterpartner(this.counterpartner.getId().equals(testLeasingDepositToLeasingDeposit.getCounterpartnerCode()) ? counterpartner : null)
@@ -249,7 +368,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    DepositRate toDepositRates(DepositRateTestData testDepositRateToDepositRate) {
+    private DepositRate toDepositRates(DepositRateTestData testDepositRateToDepositRate) {
         ZonedDateTime end_period = DateFormat.parsingDate(testDepositRateToDepositRate.getEnd_PERIOD());
         ZonedDateTime start_period = DateFormat.parsingDate(testDepositRateToDepositRate.getStart_PERIOD());
 
@@ -273,7 +392,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    Duration toDuration(DurationTestData testDurationToDuration) {
+    private Duration toDuration(DurationTestData testDurationToDuration) {
         return Duration.builder().id(testDurationToDuration.getId())
                 .name(testDurationToDuration.getName())
                 .MIN_MONTH(testDurationToDuration.getMin_MONTH())
@@ -283,7 +402,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    User toUser(UserTestData testUserToUser) {
+    private User toUser(UserTestData testUserToUser) {
         return User.builder().id(testUserToUser.getId())
                 .username(testUserToUser.getUsername())
                 .password(testUserToUser.getPassword())
@@ -291,7 +410,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    Company toCompany(CompanyTestData testCompanyToCompany) {
+    private Company toCompany(CompanyTestData testCompanyToCompany) {
         return Company.builder().id(testCompanyToCompany.getId())
                 .name(testCompanyToCompany.getName())
                 .code(testCompanyToCompany.getCode())
@@ -300,7 +419,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    Scenario toScenario(ScenarioTestData testScenarioToScenario) {
+    private Scenario toScenario(ScenarioTestData testScenarioToScenario) {
         return Scenario.builder().id(testScenarioToScenario.getId())
                 .name(testScenarioToScenario.getName())
                 .status(ScenarioStornoStatus.valueOf(testScenarioToScenario.getStatus()))
@@ -309,7 +428,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    Currency toCurrency(CurrencyTestData testCurrencyToCurrency) {
+    private Currency toCurrency(CurrencyTestData testCurrencyToCurrency) {
         return Currency.builder().id(testCurrencyToCurrency.getId())
                 .name(testCurrencyToCurrency.getName())
                 .short_name(testCurrencyToCurrency.getShort_name())
@@ -318,7 +437,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    Counterpartner toCounterpartner(CounterpartnerTestData testCPtoCP) {
+    private Counterpartner toCounterpartner(CounterpartnerTestData testCPtoCP) {
         return Counterpartner.builder().id(testCPtoCP.getId())
                 .name(testCPtoCP.getName())
                 .user(this.user.getId().equals(testCPtoCP.getUserCode()) ? user : null)
@@ -326,7 +445,7 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    LocalDate toLocalDate(String dateToTransform) {
+    private LocalDate toLocalDate(String dateToTransform) {
         return DateFormat.parsingDate(dateToTransform).toLocalDate();
     }
 }

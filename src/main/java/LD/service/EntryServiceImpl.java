@@ -1,8 +1,6 @@
 package LD.service;
 
 import LD.config.Security.Repository.UserRepository;
-import LD.model.Company.Company;
-import LD.model.Company.CompanyDTO_out;
 import LD.model.Entry.*;
 import LD.model.EntryIFRSAcc.EntryIFRSAcc;
 import LD.model.Enums.EntryStatus;
@@ -12,7 +10,7 @@ import LD.model.Scenario.Scenario;
 import LD.repository.*;
 import LD.rest.exceptions.NotFoundException;
 import LD.service.Calculators.LeasingDeposits.EntryCalculator;
-import LD.service.Calculators.LeasingDeposits.EntryIFRSAccCalculator;
+import LD.service.Calculators.LeasingDeposits.EntryIfrsAccCalculator;
 import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
@@ -108,7 +106,7 @@ public class EntryServiceImpl implements EntryService
 		entryRepository.saveAll(allEntries);
 
 		//определить суммы на счетах МСФО
-		EntryIFRSAccCalculator ldeIFRSAcc = new EntryIFRSAccCalculator(allEntries.stream().toArray(Entry[]::new), GDK);
+		EntryIfrsAccCalculator ldeIFRSAcc = new EntryIfrsAccCalculator(allEntries.stream().toArray(Entry[]::new), GDK);
 		List<EntryIFRSAcc> resultEntryInIFRS = ldeIFRSAcc.compute();
 
 		log.info("После калькулятора транзакции по счетам МСФО стали равны = {}", resultEntryInIFRS);

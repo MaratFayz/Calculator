@@ -15,14 +15,14 @@ import java.util.concurrent.RecursiveTask;
 import java.util.stream.Collectors;
 
 @Log4j2
-public class EntryIFRSAccCalculator extends RecursiveTask<List<EntryIFRSAcc>> {
+public class EntryIfrsAccCalculator extends RecursiveTask<List<EntryIFRSAcc>> {
 
     private static final int THRESHOLD = 10;
     List<EntryIFRSAcc> mappedResult;
     Entry[] allEntries;
     GeneralDataKeeper GDK;
 
-    public EntryIFRSAccCalculator(Entry[] allEntries, GeneralDataKeeper GDK) {
+    public EntryIfrsAccCalculator(Entry[] allEntries, GeneralDataKeeper GDK) {
         log.info("Создание объекта-калькулятора для МСФО счетов");
         this.mappedResult = new ArrayList<>();
         this.allEntries = allEntries;
@@ -45,12 +45,12 @@ public class EntryIFRSAccCalculator extends RecursiveTask<List<EntryIFRSAcc>> {
         }
     }
 
-    private List<EntryIFRSAccCalculator> createSubtasks() {
-        List<EntryIFRSAccCalculator> dividedTasks = new ArrayList<>();
+    private List<EntryIfrsAccCalculator> createSubtasks() {
+        List<EntryIfrsAccCalculator> dividedTasks = new ArrayList<>();
 
-        dividedTasks.add(new EntryIFRSAccCalculator(
+        dividedTasks.add(new EntryIfrsAccCalculator(
                 Arrays.copyOfRange(allEntries, 0, allEntries.length / 2), GDK));
-        dividedTasks.add(new EntryIFRSAccCalculator(
+        dividedTasks.add(new EntryIfrsAccCalculator(
                 Arrays.copyOfRange(allEntries, allEntries.length / 2,
                         allEntries.length), GDK));
 
