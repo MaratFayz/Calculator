@@ -47,6 +47,9 @@ public class TestEntitiesKeeper {
     Counterpartner counterpartner;
     LocalDate periods_start;
     LocalDate periods_end;
+    ZonedDateTime firstOpenPeriodScenarioFrom;
+    ZonedDateTime firstOpenPeriodScenarioTo;
+    ZonedDateTime periodInScenarioFromForCopyingEntriesToScenarioTo;
     List<Period> periods = new ArrayList<>();
     List<Duration> durations = new ArrayList<>();
     List<DepositRate> depositRates = new ArrayList<>();
@@ -93,6 +96,7 @@ public class TestEntitiesKeeper {
     private void createUser() {
         user = toUser(testDataKeeper.getUser());
     }
+
     private void createCompany() {
         company = toCompany(testDataKeeper.getCompany());
     }
@@ -147,16 +151,32 @@ public class TestEntitiesKeeper {
         periods_start = toLocalDate(testDataKeeper.getPeriods_start());
         periods_end = toLocalDate(testDataKeeper.getPeriods_end());
 
-        periods_start.datesUntil(periods_end, java.time.Period.ofMonths(1)).collect(Collectors.toList()).forEach(date -> {
-            LocalDate d = date.plusMonths(1).withDayOfMonth(1).minusDays(1);
+        if (nonNull(testDataKeeper.getFirstOpenPeriodScenarioFrom())) {
+            firstOpenPeriodScenarioFrom = DateFormat.parsingDate(testDataKeeper.getFirstOpenPeriodScenarioFrom());
+        }
 
-            Period period = Period.builder().date(ZonedDateTime.of(d, LocalTime.MIDNIGHT, ZoneId.of("UTC")))
-                    .build();
-            periods.add(period);
-        });
+        if (nonNull(testDataKeeper.getFirstOpenPeriodScenarioTo())) {
+            firstOpenPeriodScenarioTo = DateFormat.parsingDate(testDataKeeper.getFirstOpenPeriodScenarioTo());
+        }
+
+        if (nonNull(testDataKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo())) {
+            periodInScenarioFromForCopyingEntriesToScenarioTo =
+                    DateFormat.parsingDate(testDataKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo());
+        }
+
+        if (periods_start.plusMonths(1).isBefore(periods_end) || periods_start.plusMonths(1).isEqual(periods_end)) {
+            periods_start.datesUntil(periods_end, java.time.Period.ofMonths(1)).collect(Collectors.toList()).forEach(date -> {
+                LocalDate d = date.plusMonths(1).withDayOfMonth(1).minusDays(1);
+
+                Period period = Period.builder().date(ZonedDateTime.of(d, LocalTime.MIDNIGHT, ZoneId.of("UTC")))
+                        .build();
+                periods.add(period);
+            });
+        } else {
+            throw new IllegalStateException("Error: periods_start is greater than periods_end!");
+        }
+
     }
-
-
 
     private void createEntryForCalculationEntryIfrs() {
         entryForEntryIfrsCalculation = toEntry(testDataKeeper.getEntryForEntryIfrsCalculation());
@@ -210,10 +230,6 @@ public class TestEntitiesKeeper {
         });
     }
 
-
-
-
-
     private IFRSAccount toIfrsAcc(IfrsAccountTestData testIfrsAccountToIfrsAccount) {
         return IFRSAccount.builder().id(testIfrsAccountToIfrsAccount.getId())
                 .account_code(testIfrsAccountToIfrsAccount.getAccount_code())
@@ -243,6 +259,7 @@ public class TestEntitiesKeeper {
                 .user(this.user.getId().equals(testEntryIfrsToEntryIfrs.getUserCode()) ? user : null)
                 .lastChange(DateFormat.parsingDate(testEntryIfrsToEntryIfrs.getLastChange()))
                 .build();
+
     }
 
     private Entry toEntry(EntryTestData testEntryToEntry) {

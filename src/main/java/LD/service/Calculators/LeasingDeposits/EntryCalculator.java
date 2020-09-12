@@ -1028,9 +1028,9 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     t.setSUM_PLUS_FOREX_DIFF_REG_LD_3_V(BigDecimal.ZERO);
                 }
 
-                if (t.getEnd_date_at_this_period()
+                if (t.getEnd_date_at_this_period().isEqual(finalClosingdate) || (t.getEnd_date_at_this_period()
                         .isBefore(finalClosingdate) && t.getEnd_date_at_this_period()
-                        .isAfter(finalClosingdate.withDayOfMonth(1))) {
+                        .isAfter(finalClosingdate.withDayOfMonth(1)))) {
                     t.setDISPOSAL_BODY_RUB_REG_LD_3_X(t.getOUTCOMING_LD_BODY_REG_LD_3_M().setScale(10, RoundingMode.HALF_UP));
                     t.setDISPOSAL_DISCONT_RUB_REG_LD_3_Y(
                             t.getACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_3_S().setScale(10, RoundingMode.HALF_UP));

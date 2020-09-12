@@ -18,6 +18,9 @@ public class TestDataKeeper {
     CounterpartnerTestData counterpartner;
     String periods_start;
     String periods_end;
+    String firstOpenPeriodScenarioFrom;
+    String firstOpenPeriodScenarioTo;
+    String periodInScenarioFromForCopyingEntriesToScenarioTo;
     List<DurationTestData> durations;
     List<DepositRateTestData> depositRates;
     List<LeasingDepositTestData> leasingDeposits;

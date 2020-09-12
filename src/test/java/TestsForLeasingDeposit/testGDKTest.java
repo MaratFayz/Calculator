@@ -19,7 +19,7 @@ import LD.model.Scenario.Scenario;
 import LD.repository.*;
 import LD.service.Calculators.LeasingDeposits.EntryCalculator;
 import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
-import TestsForLeasingDeposit.Calculator.Builders;
+import Utils.Builders;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +42,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import static TestsForLeasingDeposit.Calculator.Builders.getAnyUser;
+import static Utils.Builders.getAnyUser;
 import static org.junit.Assert.assertEquals;
 
 @ExtendWith(SpringExtension.class)
