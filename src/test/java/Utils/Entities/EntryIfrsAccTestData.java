@@ -11,12 +11,6 @@ import java.time.ZonedDateTime;
 
 @Data
 public class EntryIfrsAccTestData {
-
-    private Long leasingDepositCode;
-    private Long scenarioCode;
-    private String period;
-    private String calculation_time;
-
     private Long ifrsAccountCode;
     private BigDecimal sum;
     private Long userCode;

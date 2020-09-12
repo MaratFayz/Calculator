@@ -1,5 +1,6 @@
 package Utils;
 
+import LD.model.Entry.Entry;
 import Utils.Entities.*;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.Data;
@@ -26,4 +27,5 @@ public class TestDataKeeper {
     List<IfrsAccountTestData> ifrsAccounts;
     List<EntryIfrsAccTestData> entriesIfrsExcepted;
     List<ExchangeRateTestData> exchangeRates;
+    EntryTestData entryForEntryIfrsCalculation;
 }
