@@ -33,7 +33,7 @@ public class EndDateTransform
 
 		return EndDate.builder()
 				.endDateID(edID)
-				.End_Date(parsingDate(endDateDTO_in.getEnd_Date()))
+				.endDate(parsingDate(endDateDTO_in.getEnd_Date()))
 				.leasingDeposit(leasingDepositService.getLeasingDeposit(endDateDTO_in.getLeasingDeposit_id()))
 				.build();
 	}
@@ -41,7 +41,7 @@ public class EndDateTransform
 	public EndDateDTO_out EndDates_to_EndDatesDTO_out(EndDate endDate)
 	{
 		return EndDateDTO_out.builder()
-				.End_Date(DateFormat.formatDate(endDate.getEnd_Date()))
+				.End_Date(DateFormat.formatDate(endDate.getEndDate()))
 				.leasingDeposit_id(endDate.getLeasingDeposit().getId())
 				.scenario(endDate.endDateID.getScenario().getId())
 				.period(endDate.endDateID.getPeriod().getId())

@@ -22,8 +22,8 @@ public class EndDate
 	@EmbeddedId
 	EndDateID endDateID;
 
-	@Column(name = "End_Date", nullable = false)
-	private ZonedDateTime End_Date;
+	@Column(name = "endDate", nullable = false)
+	private ZonedDateTime endDate;
 
 	@ManyToOne(cascade = CascadeType.ALL)
 	@MapsId(value = "leasingDeposit_id")

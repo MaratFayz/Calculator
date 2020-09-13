@@ -761,7 +761,7 @@ public class GeneralDataKeeperTest {
 
         EndDate ed_ld1_31032017_20102019 = new EndDate();
         ed_ld1_31032017_20102019.setEndDateID(endDateID_31032017_20102019);
-        ed_ld1_31032017_20102019.setEnd_Date(getDate(20, 10, 2019));
+        ed_ld1_31032017_20102019.setEndDate(getDate(20, 10, 2019));
 
 
         EndDateID endDateID_31082017_20122019 = EndDateID.builder()
@@ -772,7 +772,7 @@ public class GeneralDataKeeperTest {
 
         EndDate ed_ld1_31082017_20122019 = new EndDate();
         ed_ld1_31082017_20122019.setEndDateID(endDateID_31082017_20122019);
-        ed_ld1_31082017_20122019.setEnd_Date(getDate(20, 12, 2019));
+        ed_ld1_31082017_20122019.setEndDate(getDate(20, 12, 2019));
 
         EndDateID endDateID_31102017_20112019 = EndDateID.builder()
                 .leasingDeposit_id(leasingDeposit1.getId())
@@ -782,7 +782,7 @@ public class GeneralDataKeeperTest {
 
         EndDate ed_ld1_31102017_20112019 = new EndDate();
         ed_ld1_31102017_20112019.setEndDateID(endDateID_31102017_20112019);
-        ed_ld1_31102017_20112019.setEnd_Date(getDate(20, 11, 2019));
+        ed_ld1_31102017_20112019.setEndDate(getDate(20, 11, 2019));
 
         EndDateID endDateID_30112019_03112019 = EndDateID.builder()
                 .leasingDeposit_id(leasingDeposit1.getId())
@@ -792,7 +792,7 @@ public class GeneralDataKeeperTest {
 
         EndDate ed_ld1_30112019_03112019 = new EndDate();
         ed_ld1_30112019_03112019.setEndDateID(endDateID_30112019_03112019);
-        ed_ld1_30112019_03112019.setEnd_Date(getDate(03, 11, 2019));
+        ed_ld1_30112019_03112019.setEndDate(getDate(03, 11, 2019));
 
         leasingDeposit1.setEnd_dates(Set.of(ed_ld1_31032017_20102019, ed_ld1_31082017_20122019, ed_ld1_31102017_20112019, ed_ld1_30112019_03112019));
         leasingDeposit1.setEntries(new HashSet<>());

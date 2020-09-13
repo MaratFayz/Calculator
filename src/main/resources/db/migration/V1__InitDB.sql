@@ -70,7 +70,7 @@ create table duration (
 );
 
 create table end_date (
-       end_date timestamp with time zone not null,
+       endDate timestamp with time zone not null,
        date_time_last_change timestamp with time zone not null,
        leasing_deposit_id bigint not null,
        scenario_id bigint not null,

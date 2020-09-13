@@ -19,6 +19,7 @@ import LD.model.Scenario.Scenario;
 import LD.repository.*;
 import LD.service.Calculators.LeasingDeposits.EntryCalculator;
 import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
+import LD.service.Calculators.LeasingDeposits.SupportEntryCalculator;
 import Utils.Builders;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -300,16 +301,16 @@ public class testGDKTest {
 
         EndDate ed_ld1_31032017_20102019 = new EndDate();
         ed_ld1_31032017_20102019.setEndDateID(endDateID_31032017_20102019);
-        ed_ld1_31032017_20102019.setEnd_Date(Builders.getDate(20, 10, 2019));
+        ed_ld1_31032017_20102019.setEndDate(Builders.getDate(20, 10, 2019));
 
         leasingDeposit1.setEnd_dates(Set.of(ed_ld1_31032017_20102019));
 
         leasingDeposit1 = testEntityManager.persist(leasingDeposit1);
         testEntityManager.flush();
 
-        Mockito.when(calculator.getLDdurationMonths()).thenReturn((int) java.time.Duration.between(leasingDeposit1.getStart_date(), leasingDeposit1.getEnd_dates().stream().map(ed -> ed.getEnd_Date()).collect(Collectors.toList()).get(0)).toDays() / (365 / 12));
+        Mockito.when(calculator.getLDdurationMonths()).thenReturn((int) java.time.Duration.between(leasingDeposit1.getStart_date(), leasingDeposit1.getEnd_dates().stream().map(ed -> ed.getEndDate()).collect(Collectors.toList()).get(0)).toDays() / (365 / 12));
 
-        assertEquals(List.of(BigDecimal.valueOf(5.0).setScale(2)), depositRatesRepository.findAll(EntryCalculator.getDepRateForLD(leasingDeposit1, calculator.getLDdurationMonths())).stream().map(dr -> dr.getRATE()).collect(Collectors.toList()));
+        assertEquals(List.of(BigDecimal.valueOf(5.0).setScale(2)), depositRatesRepository.findAll(SupportEntryCalculator.equalToDepositParameters(leasingDeposit1, calculator.getLDdurationMonths())).stream().map(dr -> dr.getRATE()).collect(Collectors.toList()));
     }
 
     @Test
@@ -333,16 +334,16 @@ public class testGDKTest {
 
         EndDate ed_ld1_31032018_20102020 = new EndDate();
         ed_ld1_31032018_20102020.setEndDateID(endDateID_31032018_20102020);
-        ed_ld1_31032018_20102020.setEnd_Date(Builders.getDate(20, 10, 2020));
+        ed_ld1_31032018_20102020.setEndDate(Builders.getDate(20, 10, 2020));
 
         leasingDeposit1.setEnd_dates(Set.of(ed_ld1_31032018_20102020));
 
         leasingDeposit1 = testEntityManager.persist(leasingDeposit1);
         testEntityManager.flush();
 
-        Mockito.when(calculator.getLDdurationMonths()).thenReturn((int) java.time.Duration.between(leasingDeposit1.getStart_date(), leasingDeposit1.getEnd_dates().stream().map(ed -> ed.getEnd_Date()).collect(Collectors.toList()).get(0)).toDays() / (365 / 12));
+        Mockito.when(calculator.getLDdurationMonths()).thenReturn((int) java.time.Duration.between(leasingDeposit1.getStart_date(), leasingDeposit1.getEnd_dates().stream().map(ed -> ed.getEndDate()).collect(Collectors.toList()).get(0)).toDays() / (365 / 12));
 
-        assertEquals(List.of(BigDecimal.valueOf(5000).setScale(2)), depositRatesRepository.findAll(EntryCalculator.getDepRateForLD(leasingDeposit1, calculator.getLDdurationMonths())).stream().map(dr -> dr.getRATE()).collect(Collectors.toList()));
+        assertEquals(List.of(BigDecimal.valueOf(5000).setScale(2)), depositRatesRepository.findAll(SupportEntryCalculator.equalToDepositParameters(leasingDeposit1, calculator.getLDdurationMonths())).stream().map(dr -> dr.getRATE()).collect(Collectors.toList()));
     }
 
     @Test
@@ -366,16 +367,16 @@ public class testGDKTest {
 
         EndDate ed_ld1_31032018_20102020 = new EndDate();
         ed_ld1_31032018_20102020.setEndDateID(endDateID_31032018_20102020);
-        ed_ld1_31032018_20102020.setEnd_Date(Builders.getDate(20, 10, 2020));
+        ed_ld1_31032018_20102020.setEndDate(Builders.getDate(20, 10, 2020));
 
         leasingDeposit1.setEnd_dates(Set.of(ed_ld1_31032018_20102020));
 
         leasingDeposit1 = testEntityManager.persist(leasingDeposit1);
         testEntityManager.flush();
 
-        Mockito.when(calculator.getLDdurationMonths()).thenReturn((int) java.time.Duration.between(leasingDeposit1.getStart_date(), leasingDeposit1.getEnd_dates().stream().map(ed -> ed.getEnd_Date()).collect(Collectors.toList()).get(0)).toDays() / (365 / 12));
+        Mockito.when(calculator.getLDdurationMonths()).thenReturn((int) java.time.Duration.between(leasingDeposit1.getStart_date(), leasingDeposit1.getEnd_dates().stream().map(ed -> ed.getEndDate()).collect(Collectors.toList()).get(0)).toDays() / (365 / 12));
 
-        assertEquals(List.of(BigDecimal.valueOf(300).setScale(2)), depositRatesRepository.findAll(EntryCalculator.getDepRateForLD(leasingDeposit1, calculator.getLDdurationMonths())).stream().map(dr -> dr.getRATE()).collect(Collectors.toList()));
+        assertEquals(List.of(BigDecimal.valueOf(300).setScale(2)), depositRatesRepository.findAll(SupportEntryCalculator.equalToDepositParameters(leasingDeposit1, calculator.getLDdurationMonths())).stream().map(dr -> dr.getRATE()).collect(Collectors.toList()));
     }
 
     @Test
@@ -403,7 +404,7 @@ public class testGDKTest {
 
         EndDate ed_ld1_10012017_20122017 = new EndDate();
         ed_ld1_10012017_20122017.setEndDateID(endDateID_10012017_20122017);
-        ed_ld1_10012017_20122017.setEnd_Date(Builders.getDate(20, 12, 2017));
+        ed_ld1_10012017_20122017.setEndDate(Builders.getDate(20, 12, 2017));
 
         leasingDeposit1.setEnd_dates(Set.of(ed_ld1_10012017_20122017));
 //		leasingDeposit1 = testEntityManager.persist(leasingDeposit1);
@@ -412,11 +413,11 @@ public class testGDKTest {
         //testEntityManager.persist(ed_ld1_10012017_20122017);
 
 
-        Mockito.when(calculator.getLDdurationMonths()).thenReturn((int) java.time.Duration.between(leasingDeposit1.getStart_date(), leasingDeposit1.getEnd_dates().stream().map(ed -> ed.getEnd_Date()).collect(Collectors.toList()).get(0)).toDays() / (365 / 12));
+        Mockito.when(calculator.getLDdurationMonths()).thenReturn((int) java.time.Duration.between(leasingDeposit1.getStart_date(), leasingDeposit1.getEnd_dates().stream().map(ed -> ed.getEndDate()).collect(Collectors.toList()).get(0)).toDays() / (365 / 12));
 
-        System.out.println("depositRatesRepository.findAll(EntryCalculator.getDepRateForLD(leasingDeposit1, calculator.getLDdurationMonths())) = " + depositRatesRepository.findAll(EntryCalculator.getDepRateForLD(leasingDeposit1, calculator.getLDdurationMonths())));
+        System.out.println("depositRatesRepository.findAll(SupportEntryCalculator.equalToDepositParameters(leasingDeposit1, calculator.getLDdurationMonths())) = " + depositRatesRepository.findAll(SupportEntryCalculator.equalToDepositParameters(leasingDeposit1, calculator.getLDdurationMonths())));
 
-        assertEquals(List.of(BigDecimal.valueOf(-200).setScale(2)), depositRatesRepository.findAll(EntryCalculator.getDepRateForLD(leasingDeposit1, calculator.getLDdurationMonths())).stream().map(dr -> dr.getRATE()).collect(Collectors.toList()));
+        assertEquals(List.of(BigDecimal.valueOf(-200).setScale(2)), depositRatesRepository.findAll(SupportEntryCalculator.equalToDepositParameters(leasingDeposit1, calculator.getLDdurationMonths())).stream().map(dr -> dr.getRATE()).collect(Collectors.toList()));
     }
 
 }

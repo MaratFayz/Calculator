@@ -11,7 +11,7 @@ import LD.repository.LeasingDepositRepository;
 import LD.repository.PeriodsClosedRepository;
 import LD.repository.ScenarioRepository;
 import LD.rest.exceptions.NotFoundException;
-import LD.service.Calculators.LeasingDeposits.EntryCalculator;
+import LD.service.Calculators.LeasingDeposits.SupportEntryCalculator;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,149 +29,136 @@ import static LD.service.Calculators.LeasingDeposits.GeneralDataKeeper.specFirst
 
 @Service
 @Log4j2
-public class LeasingDepositsServiceImpl implements LeasingDepositService
-{
-	@Autowired
-	LeasingDepositRepository leasingDepositRepository;
-	@Autowired
-	LeasingDepositTransform leasingDepositTransform;
-	@Autowired
-	ScenarioRepository scenarioRepository;
-	@Autowired
-	PeriodsClosedRepository periodsClosedRepository;
-	@Autowired
-	UserRepository userRepository;
+public class LeasingDepositsServiceImpl implements LeasingDepositService {
 
-	@Override
-	public List<LeasingDepositDTO_out> getAllLeasingDeposits()
-	{
-		List<LeasingDeposit> resultFormDB = leasingDepositRepository.findAll();
-		List<LeasingDepositDTO_out> resultFormDB_out = new ArrayList<>();
+    @Autowired
+    LeasingDepositRepository leasingDepositRepository;
+    @Autowired
+    LeasingDepositTransform leasingDepositTransform;
+    @Autowired
+    ScenarioRepository scenarioRepository;
+    @Autowired
+    PeriodsClosedRepository periodsClosedRepository;
+    @Autowired
+    UserRepository userRepository;
 
-		if(resultFormDB.size() == 0)
-		{
-			resultFormDB_out.add(new LeasingDepositDTO_out());
-		}
-		else
-		{
-			resultFormDB_out = resultFormDB.stream()
-					.map(ld -> leasingDepositTransform.LeasingDeposit_to_LeasingDepositDTO_out(ld))
-					.collect(Collectors.toList());
-		}
+    @Override
+    public List<LeasingDepositDTO_out> getAllLeasingDeposits() {
+        List<LeasingDeposit> resultFormDB = leasingDepositRepository.findAll();
+        List<LeasingDepositDTO_out> resultFormDB_out = new ArrayList<>();
 
-		return resultFormDB_out;
-	}
+        if (resultFormDB.size() == 0) {
+            resultFormDB_out.add(new LeasingDepositDTO_out());
+        } else {
+            resultFormDB_out = resultFormDB.stream()
+                    .map(ld -> leasingDepositTransform.LeasingDeposit_to_LeasingDepositDTO_out(ld))
+                    .collect(Collectors.toList());
+        }
 
-	@Override
-	public List<LeasingDepositDTO_out_onPeriodFor2Scenarios> getAllLeasingDepositsOnPeriodFor2Scenarios(Long scenarioFromId,
-																										Long scenarioToId)
-	{
-		final Scenario scenario_from = scenarioRepository.findById(scenarioFromId)
-				.orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioFromId + " отсутствует в базе данных"));
+        return resultFormDB_out;
+    }
 
-		log.info("Был получен сценарий-источник = {}", scenario_from);
+    @Override
+    public List<LeasingDepositDTO_out_onPeriodFor2Scenarios> getAllLeasingDepositsOnPeriodFor2Scenarios(Long scenarioFromId,
+                                                                                                        Long scenarioToId) {
+        final Scenario scenario_from = scenarioRepository.findById(scenarioFromId)
+                .orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioFromId + " отсутствует в базе данных"));
 
-		final Scenario scenario_to = scenarioRepository.findById(scenarioToId)
-				.orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioToId + " отсутствует в базе данных"));
+        log.info("Был получен сценарий-источник = {}", scenario_from);
 
-		log.info("Был получен сценарий-получатель = {}", scenario_to);
+        final Scenario scenario_to = scenarioRepository.findById(scenarioToId)
+                .orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioToId + " отсутствует в базе данных"));
 
-		final ZonedDateTime firstOpenPeriodForScenarioTo =
-			periodsClosedRepository.findAll(specFirstClosedPeriod(scenario_to)).get(0).getPeriodsClosedID()
-					.getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC"));
+        log.info("Был получен сценарий-получатель = {}", scenario_to);
 
-		log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
+        final ZonedDateTime firstOpenPeriodForScenarioTo =
+                periodsClosedRepository.findAll(specFirstClosedPeriod(scenario_to)).get(0).getPeriodsClosedID()
+                        .getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC"));
 
-		List<LeasingDepositDTO_out_onPeriodFor2Scenarios> leasingDepositFor2Scenarios = leasingDepositRepository.findAll().stream()
-				.map(ld -> {
-					TreeMap<ZonedDateTime, ZonedDateTime> endDatesForLd =
-							EntryCalculator.createPeriodsWithEndDatesForAllsLDLife(ld, scenario_from, scenario_to);
+        log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
 
-					log.info("Был сформирован treemap для дат окончания = {}", endDatesForLd);
+        List<LeasingDepositDTO_out_onPeriodFor2Scenarios> leasingDepositFor2Scenarios = leasingDepositRepository.findAll().stream()
+                .map(ld -> {
+                    TreeMap<ZonedDateTime, ZonedDateTime> endDatesForLd = SupportEntryCalculator.calculateDateUntilThatEntriesMustBeCalculated(ld, scenario_to).getMappingPeriodEndDate();
 
-					ZonedDateTime endDateForFirstOpenPeriodScenarioTo = endDatesForLd.floorEntry(firstOpenPeriodForScenarioTo).getValue();
+                    log.info("Был сформирован treemap для дат окончания = {}", endDatesForLd);
 
-					log.info("Была определёна конечная дата для первого открытого периода сценария-получателя = {}", endDateForFirstOpenPeriodScenarioTo);
+                    ZonedDateTime endDateForFirstOpenPeriodScenarioTo = endDatesForLd.floorEntry(firstOpenPeriodForScenarioTo).getValue();
 
-					LeasingDepositDTO_out_onPeriodFor2Scenarios mappedld = leasingDepositTransform
-							.LeasingDeposit_to_LeasingDepositDTO_out_onPeriodFor2Scenarios(ld, endDateForFirstOpenPeriodScenarioTo);
+                    log.info("Была определена конечная дата для первого открытого периода сценария-получателя = {}", endDateForFirstOpenPeriodScenarioTo);
 
-					log.info("Был получен out экземпляр депозита = {}", mappedld);
+                    LeasingDepositDTO_out_onPeriodFor2Scenarios mappedld = leasingDepositTransform
+                            .LeasingDeposit_to_LeasingDepositDTO_out_onPeriodFor2Scenarios(ld, endDateForFirstOpenPeriodScenarioTo);
 
-					return mappedld;
-				})
-				.filter(ld_mapped -> {
-					ZonedDateTime parsedEndDate = DateFormat.parsingDate(ld_mapped.getEndDate());
+                    log.info("Был получен out экземпляр депозита = {}", mappedld);
 
-					log.info("Был получен parsedEndDate депозита = {}", parsedEndDate);
-					log.info("firstOpenPeriodForScenarioTo = {}", firstOpenPeriodForScenarioTo);
+                    return mappedld;
+                })
+                .filter(ld_mapped -> {
+                    ZonedDateTime parsedEndDate = DateFormat.parsingDate(ld_mapped.getEndDate());
 
-					boolean isShow = parsedEndDate.isAfter(firstOpenPeriodForScenarioTo)
-							|| parsedEndDate.withDayOfMonth(1).isEqual(firstOpenPeriodForScenarioTo.withDayOfMonth(1)) ? true : false;
+                    log.info("Был получен parsedEndDate депозита = {}", parsedEndDate);
+                    log.info("firstOpenPeriodForScenarioTo = {}", firstOpenPeriodForScenarioTo);
 
-					log.info("parsedEndDate.isAfter(firstOpenPeriodForScenarioTo) = {}", parsedEndDate.isAfter(firstOpenPeriodForScenarioTo));
-					log.info("parsedEndDate.withDayOfMonth(1).isEqual(firstOpenPeriodForScenarioTo.withDayOfMonth(1)) = {}", parsedEndDate.withDayOfMonth(1).isEqual(firstOpenPeriodForScenarioTo.withDayOfMonth(1)));
-					log.info("isShow = {}", isShow);
+                    boolean isShow = parsedEndDate.isAfter(firstOpenPeriodForScenarioTo)
+                            || parsedEndDate.withDayOfMonth(1).isEqual(firstOpenPeriodForScenarioTo.withDayOfMonth(1)) ? true : false;
 
-					return isShow;
-				})
-				.collect(Collectors.toList());
+                    log.info("parsedEndDate.isAfter(firstOpenPeriodForScenarioTo) = {}", parsedEndDate.isAfter(firstOpenPeriodForScenarioTo));
+                    log.info("parsedEndDate.withDayOfMonth(1).isEqual(firstOpenPeriodForScenarioTo.withDayOfMonth(1)) = {}", parsedEndDate.withDayOfMonth(1).isEqual(firstOpenPeriodForScenarioTo.withDayOfMonth(1)));
+                    log.info("isShow = {}", isShow);
 
-		log.info("Выводимые депозиты = {}", leasingDepositFor2Scenarios);
+                    return isShow;
+                })
+                .collect(Collectors.toList());
 
-		return leasingDepositFor2Scenarios;
-	}
+        log.info("Выводимые депозиты = {}", leasingDepositFor2Scenarios);
 
-	@Override
-	public LeasingDeposit getLeasingDeposit(Long id)
-	{
-		return leasingDepositRepository.findById(id).orElseThrow(NotFoundException::new);
-	}
+        return leasingDepositFor2Scenarios;
+    }
 
-	@Override
-	public LeasingDeposit saveNewLeasingDeposit(LeasingDeposit leasingDeposit)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		leasingDeposit.setUser(userRepository.findByUsername(username));
+    @Override
+    public LeasingDeposit getLeasingDeposit(Long id) {
+        return leasingDepositRepository.findById(id).orElseThrow(NotFoundException::new);
+    }
 
-		leasingDeposit.setLastChange(ZonedDateTime.now());
+    @Override
+    public LeasingDeposit saveNewLeasingDeposit(LeasingDeposit leasingDeposit) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        leasingDeposit.setUser(userRepository.findByUsername(username));
 
-		log.info("Лизинговый депозит для сохранения = {}", leasingDeposit);
+        leasingDeposit.setLastChange(ZonedDateTime.now());
 
-		return leasingDepositRepository.save(leasingDeposit);
-	}
+        log.info("Лизинговый депозит для сохранения = {}", leasingDeposit);
 
-	@Override
-	public LeasingDeposit updateLeasingDeposit(Long id, LeasingDeposit leasingDeposit)
-	{
-		leasingDeposit.setId(id);
+        return leasingDepositRepository.save(leasingDeposit);
+    }
 
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		leasingDeposit.setUser(userRepository.findByUsername(username));
+    @Override
+    public LeasingDeposit updateLeasingDeposit(Long id, LeasingDeposit leasingDeposit) {
+        leasingDeposit.setId(id);
 
-		leasingDeposit.setLastChange(ZonedDateTime.now());
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        leasingDeposit.setUser(userRepository.findByUsername(username));
 
-		LeasingDeposit leasingDepositToUpdate = getLeasingDeposit(id);
+        leasingDeposit.setLastChange(ZonedDateTime.now());
 
-		BeanUtils.copyProperties(leasingDeposit, leasingDepositToUpdate);
+        LeasingDeposit leasingDepositToUpdate = getLeasingDeposit(id);
 
-		leasingDepositRepository.saveAndFlush(leasingDepositToUpdate);
+        BeanUtils.copyProperties(leasingDeposit, leasingDepositToUpdate);
 
-		return leasingDepositToUpdate;
-	}
+        leasingDepositRepository.saveAndFlush(leasingDepositToUpdate);
 
-	@Override
-	public boolean delete(Long id)
-	{
-		try
-		{
-			leasingDepositRepository.deleteById(id);
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
+        return leasingDepositToUpdate;
+    }
 
-		return true;
-	}
+    @Override
+    public boolean delete(Long id) {
+        try {
+            leasingDepositRepository.deleteById(id);
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
 }
