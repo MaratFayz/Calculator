@@ -105,7 +105,7 @@ public class EntryCalculatorTest {
         threadExecutor.shutdown();
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
-        assertEquals(BigDecimal.valueOf(88027.34), lec.getDeposit_sum_discounted_on_firstEndDate().setScale(2, RoundingMode.HALF_UP));
+        assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
         assertEquals(Builders.getDate(30, 4, 2017), lec.getFirstPeriodWithoutTransactionUTC());
         assertEquals(32, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
@@ -256,7 +256,7 @@ public class EntryCalculatorTest {
         threadExecutor.shutdown();
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
-        assertEquals(BigDecimal.valueOf(88027.34), lec.getDeposit_sum_discounted_on_firstEndDate().setScale(2, RoundingMode.HALF_UP));
+        assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
         assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstPeriodWithoutTransactionUTC());
         assertEquals(33, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
@@ -284,7 +284,7 @@ public class EntryCalculatorTest {
         threadExecutor.shutdown();
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
-        assertEquals(BigDecimal.valueOf(88027.34), lec.getDeposit_sum_discounted_on_firstEndDate().setScale(2, RoundingMode.HALF_UP));
+        assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
         assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstPeriodWithoutTransactionUTC());
         assertEquals(30, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
@@ -354,7 +354,7 @@ public class EntryCalculatorTest {
         threadExecutor.shutdown();
 
         assertEquals(BigDecimal.valueOf(100000).setScale(0, RoundingMode.HALF_UP), leasingDepositToCalculate.getDeposit_sum_not_disc().setScale(0, RoundingMode.HALF_UP));
-        assertEquals(BigDecimal.valueOf(100000).setScale(0, RoundingMode.HALF_UP), lec.getDeposit_sum_discounted_on_firstEndDate().setScale(0, RoundingMode.HALF_UP));
+        assertEquals(BigDecimal.valueOf(100000).setScale(0, RoundingMode.HALF_UP), lec.getDepositSumDiscountedOnFirstEndDate().setScale(0, RoundingMode.HALF_UP));
         assertEquals(Builders.getDate(31, 1, 2019), lec.getFirstPeriodWithoutTransactionUTC());
         assertEquals(2, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);

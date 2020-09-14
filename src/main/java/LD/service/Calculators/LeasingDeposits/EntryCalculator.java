@@ -31,13 +31,13 @@ public class EntryCalculator implements Callable<List<Entry>> {
     ArrayList<Entry> CalculatedStornoDeletedEntries;
     DepositRatesRepository depositRatesRepository;
     BigDecimal LDYearPercent;
-    private BigDecimal deposit_sum_discounted_on_firstEndDate;
+    private BigDecimal depositSumDiscountedOnFirstEndDate;
     private ZonedDateTime firstEndDate;
     private BigDecimal percentPerDay;
     private int LDdurationDays;
     private int LDdurationMonths;
     private ZonedDateTime FirstPeriodWithoutTransactionUTC;
-    private ZonedDateTime min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Day;
+    private ZonedDateTime dateUntilThatEntriesMustBeCalculated;
     private TreeMap<ZonedDateTime, ZonedDateTime> mappingPeriodEndDate;
     private LocalDate depositLastDayOfFirstMonth;
     private GeneralDataKeeper GeneralDataKeeper;
@@ -96,24 +96,18 @@ public class EntryCalculator implements Callable<List<Entry>> {
             this.LDYearPercent = supportData.getDepositYearRate();
             log.info("Конец расчета ставки депозита. Ставка равна = {}", LDYearPercent);
 
-            this.min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Day =
-                    this.countActualClosingDateForTheFirstOpenPeriod(firstOpenPeriod);
-            log.info("min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Day = {}",
-                    min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Day);
+            this.dateUntilThatEntriesMustBeCalculated = supportData.getDateUntilThatEntriesMustBeCalculated();
+            log.info("dateUntilThatEntriesMustBeCalculated = {}", dateUntilThatEntriesMustBeCalculated);
 
-            this.percentPerDay = getPercentPerDay(LDYearPercent);
+            this.percentPerDay = supportData.getDepositDayRate();
 
-            if (this.getLDdurationDays() > numberDaysInYear) {
-                deposit_sum_discounted_on_firstEndDate =
-                        countDiscountedValueFromStartDateToNeededDate(this.firstEndDate,
-                                this.leasingDepositToCalculate.getStart_date());
+            if (isDepositDurationMoreThanOneYear()) {
+                discountNominalValue();
             } else {
-                deposit_sum_discounted_on_firstEndDate =
-                        this.leasingDepositToCalculate.getDeposit_sum_not_disc();
+                keepNominalValue();
             }
 
-            log.info("deposit_sum_discounted_on_firstEndDate = {}",
-                    deposit_sum_discounted_on_firstEndDate);
+            log.info("deposit_sum_discounted_on_firstEndDate = {}", depositSumDiscountedOnFirstEndDate);
 
             stornoExistingEntries();
 
@@ -131,6 +125,21 @@ public class EntryCalculator implements Callable<List<Entry>> {
         }
 
         return CalculatedStornoDeletedEntries;
+    }
+
+    private void keepNominalValue() {
+        depositSumDiscountedOnFirstEndDate =
+                this.leasingDepositToCalculate.getDeposit_sum_not_disc();
+    }
+
+    private void discountNominalValue() {
+        depositSumDiscountedOnFirstEndDate =
+                countDiscountedValueFromStartDateToNeededDate(this.firstEndDate,
+                        this.leasingDepositToCalculate.getStart_date());
+    }
+
+    private boolean isDepositDurationMoreThanOneYear() {
+        return this.getLDdurationDays() > numberDaysInYear;
     }
 
     private void copyEntries() {
@@ -161,16 +170,6 @@ public class EntryCalculator implements Callable<List<Entry>> {
         CalculatedStornoDeletedEntries =
                 changeStatusInLastEntries(EntriesExistingBeforeCalculating, this.scenarioTo,
                         EntryStatus.STORNO);
-    }
-
-    private BigDecimal getPercentPerDay(BigDecimal yearPercent) {
-        BigDecimal percentPerDay = BigDecimal.valueOf(StrictMath.pow(
-                yearPercent.divide(BigDecimal.valueOf(100))
-                        .add(BigDecimal.ONE)
-                        .doubleValue(), (double) 1 / (double) numberDaysInYear))
-                .setScale(32, RoundingMode.UP)
-                .subtract(BigDecimal.ONE);
-        return percentPerDay;
     }
 
     private ArrayList<Entry> changeStatusInLastEntries(List<Entry> EntriesExistingBeforeCalculating,
@@ -233,7 +232,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
         LocalDate firstPeriodWithoutTransaction =
                 this.FirstPeriodWithoutTransactionUTC.toLocalDate();
         LocalDate min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Month_InDays =
-                min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Day.toLocalDate();
+                dateUntilThatEntriesMustBeCalculated.toLocalDate();
 
         BigDecimal exRateAtStartDate = allExRates.stream()
                 .filter(er -> er.getExchangeRateID()
@@ -355,7 +354,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 t.setStatus(EntryStatus.ACTUAL);
                 t.setPercentRateForPeriodForLD(this.LDYearPercent.setScale(10, RoundingMode.HALF_UP));
                 t.setDISCONT_AT_START_DATE_cur_REG_LD_1_K(
-                        this.deposit_sum_discounted_on_firstEndDate.subtract(
+                        this.depositSumDiscountedOnFirstEndDate.subtract(
                                 this.leasingDepositToCalculate.getDeposit_sum_not_disc()).setScale(10, RoundingMode.HALF_UP));
                 t.setDISCONT_AT_START_DATE_RUB_REG_LD_1_L(
                         t.getDISCONT_AT_START_DATE_cur_REG_LD_1_K()
@@ -1021,7 +1020,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 if (t.getLDTERM_REG_LD_3_Z()
                         .equals(LeasingDepositDuration.ST)) {
                     t.setADVANCE_CURRENTPERIOD_REG_LD_3_AE(
-                            this.deposit_sum_discounted_on_firstEndDate.multiply(
+                            this.depositSumDiscountedOnFirstEndDate.multiply(
                                     exRateAtStartDate).setScale(10, RoundingMode.HALF_UP));
                 } else {
                     t.setADVANCE_CURRENTPERIOD_REG_LD_3_AE(BigDecimal.ZERO);
@@ -1184,24 +1183,6 @@ public class EntryCalculator implements Callable<List<Entry>> {
         return LastRevaluation;
     }
 
-    private ZonedDateTime countActualClosingDateForTheFirstOpenPeriod(
-            ZonedDateTime firstOpenPeriod) {
-        ZonedDateTime lastEndDateLDForFirstOpenPeriod =
-                this.mappingPeriodEndDate.floorEntry(firstOpenPeriod)
-                        .getValue();
-
-        ZonedDateTime min_betw_lastEndDateLD_and_firstOpenPeriod =
-                lastEndDateLDForFirstOpenPeriod.isAfter(firstOpenPeriod) ? firstOpenPeriod :
-                        lastEndDateLDForFirstOpenPeriod;
-        ZonedDateTime min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Day =
-                min_betw_lastEndDateLD_and_firstOpenPeriod.toLocalDate()
-                        .plusMonths(1)
-                        .withDayOfMonth(1)
-                        .atStartOfDay(ZoneId.of("UTC"));
-
-        return min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Day;
-    }
-
     private ZonedDateTime countFirstPeriodWithoutTransaction(Scenario Scenario_FROM,
                                                              Scenario Scenario_TO,
                                                              List<Entry> entries) {
@@ -1255,7 +1236,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         .minusMonths(1);
 
         for (LocalDate closingdate : this.depositLastDayOfFirstMonth.datesUntil(
-                min_betw_lastEndDateLD_and_firstOpenPeriod_Next_Day.toLocalDate(),
+                dateUntilThatEntriesMustBeCalculated.toLocalDate(),
                 java.time.Period.ofMonths(1))
                 .collect(Collectors.toList())) {
             closingdate = closingdate.withDayOfMonth(closingdate.lengthOfMonth());

@@ -7,6 +7,7 @@ import LD.model.LeasingDeposit.LeasingDepositDTO_out;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out_onPeriodFor2Scenarios;
 import LD.model.LeasingDeposit.LeasingDepositTransform;
 import LD.model.Scenario.Scenario;
+import LD.repository.DepositRatesRepository;
 import LD.repository.LeasingDepositRepository;
 import LD.repository.PeriodsClosedRepository;
 import LD.repository.ScenarioRepository;
@@ -41,6 +42,8 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
     PeriodsClosedRepository periodsClosedRepository;
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    DepositRatesRepository depositRatesRepository;
 
     @Override
     public List<LeasingDepositDTO_out> getAllLeasingDeposits() {
@@ -79,7 +82,8 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
 
         List<LeasingDepositDTO_out_onPeriodFor2Scenarios> leasingDepositFor2Scenarios = leasingDepositRepository.findAll().stream()
                 .map(ld -> {
-                    TreeMap<ZonedDateTime, ZonedDateTime> endDatesForLd = SupportEntryCalculator.calculateDateUntilThatEntriesMustBeCalculated(ld, scenario_to).getMappingPeriodEndDate();
+                    TreeMap<ZonedDateTime, ZonedDateTime> endDatesForLd =
+                            SupportEntryCalculator.calculateDateUntilThatEntriesMustBeCalculated(ld, scenario_to, depositRatesRepository, firstOpenPeriodForScenarioTo).getMappingPeriodEndDate();
 
                     log.info("Был сформирован treemap для дат окончания = {}", endDatesForLd);
 

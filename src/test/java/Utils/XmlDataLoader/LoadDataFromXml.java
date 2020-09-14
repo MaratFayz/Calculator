@@ -19,8 +19,8 @@ public class LoadDataFromXml implements BeforeEachCallback, AfterEachCallback {
     public void beforeEach(ExtensionContext context) throws Exception {
         parseTestClass(context);
         viewTestData();
-        parseTestEntityKeeperFromXmlFile();
-        pasteTestEntityKeeperIntoTestClassField();
+        getTestEntityKeeperFromXmlFile();
+        pasteTestEntityKeeperIntoTestClass();
     }
 
     @Override
@@ -29,13 +29,13 @@ public class LoadDataFromXml implements BeforeEachCallback, AfterEachCallback {
         System.out.println("<------------Test called '" + testClassParser.getTestMethodName() + "' finished------------>");
     }
 
-    private void pasteTestEntityKeeperIntoTestClassField() throws IllegalAccessException {
+    private void pasteTestEntityKeeperIntoTestClass() throws IllegalAccessException {
         Field testEntitiesKeeperField = testClassParser.getTestEntitiesKeeperField();
         ReflectionUtils.makeAccessible(testEntitiesKeeperField);
         testEntitiesKeeperField.set(testClassParser.getTestClassInstance(), testEntitiesKeeper);
     }
 
-    private void parseTestEntityKeeperFromXmlFile() throws java.io.IOException {
+    private void getTestEntityKeeperFromXmlFile() throws java.io.IOException {
         XmlMapper xmlMapper = new XmlMapper();
         FileInputStream fileInputStream = new FileInputStream(testClassParser.getFileNameWithTestData());
         TestDataKeeper data = xmlMapper.readValue(fileInputStream, TestDataKeeper.class);

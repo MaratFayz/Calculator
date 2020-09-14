@@ -1,6 +1,9 @@
 package LD.service.Calculators.LeasingDeposits;
 
 import LD.model.DepositRate.DepositRate;
+import LD.model.DepositRate.DepositRateID_;
+import LD.model.DepositRate.DepositRate_;
+import LD.model.Duration.Duration_;
 import LD.model.EndDate.EndDate;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Scenario.Scenario;
@@ -8,7 +11,12 @@ import LD.repository.DepositRatesRepository;
 import lombok.Getter;
 import org.springframework.data.jpa.domain.Specification;
 
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -32,6 +40,9 @@ public class SupportEntryCalculator {
     private int depositDurationMonths;
     private DepositRatesRepository depositRatesRepository;
     private BigDecimal depositYearRate;
+    private BigDecimal depositDayRate;
+    final int MONTHS_IN_YEAR = 12;
+    final int DAYS_IN_YEAR = 365;
 
     public static SupportEntryCalculator calculateDateUntilThatEntriesMustBeCalculated(LeasingDeposit leasingDepositToCalculate, Scenario scenarioTo,
                                                                                        DepositRatesRepository depositRatesRepository, ZonedDateTime firstOpenPeriod) {
@@ -54,6 +65,7 @@ public class SupportEntryCalculator {
         getDepositRateOrThrowExceptionWhenZeroOrMoreThanOneRate();
         calculateDateUntilThatEntriesMustBeCalculated();
         calculateFirstDayOfNextMonthForDateUntilThatEntriesMustBeCalculated();
+        transformYearPercentIntoDayPercent();
     }
 
     /*
@@ -131,9 +143,6 @@ public class SupportEntryCalculator {
     }
 
     private void calculateDepositDurationMonths() {
-        final int MONTHS_IN_YEAR = 12;
-        final int DAYS_IN_YEAR = 365;
-
         int LDdurationMonths = (int) Math.round(
                 depositDurationDays / ((double) DAYS_IN_YEAR / (double) MONTHS_IN_YEAR));
 
@@ -155,22 +164,24 @@ public class SupportEntryCalculator {
     }
 
     public static Specification<DepositRate> equalToDepositParameters(LeasingDeposit leasingDepositToCalculate, int durationOfLDInMonth) {
-        return (Specification<DepositRate>) (rootLDRates, query, cb) -> cb.and(cb.equal(rootLDRates.get("depositRateID")
-                        .get("company"), leasingDepositToCalculate.getCompany()),
-                cb.lessThanOrEqualTo(rootLDRates.get("depositRateID")
-                        .get("START_PERIOD"), leasingDepositToCalculate.getStart_date()),
-                cb.greaterThanOrEqualTo(rootLDRates.get("depositRateID")
-                        .get("END_PERIOD"), leasingDepositToCalculate.getStart_date()),
-                cb.equal(rootLDRates.get("depositRateID")
-                        .get("currency"), leasingDepositToCalculate.getCurrency()),
-                cb.lessThanOrEqualTo(rootLDRates.get("depositRateID")
-                        .get("duration")
-                        .get("MIN_MONTH"), durationOfLDInMonth), cb.greaterThanOrEqualTo(
-                        rootLDRates.get("depositRateID")
-                                .get("duration")
-                                .get("MAX_MONTH"), durationOfLDInMonth), cb.equal(
-                        rootLDRates.get("depositRateID")
-                                .get("scenario"), leasingDepositToCalculate.getScenario()));
+        return (Specification<DepositRate>) (depositRatesRoot, query, cb) -> {
+            return cb.and(cb.equal(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.COMPANY), leasingDepositToCalculate.getCompany()),
+                    cb.lessThanOrEqualTo(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.S_TA_RT__PE_RI_OD), leasingDepositToCalculate.getStart_date()),
+                    cb.greaterThanOrEqualTo(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.E_ND__PE_RI_OD), leasingDepositToCalculate.getStart_date()),
+                    cb.equal(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.CURRENCY), leasingDepositToCalculate.getCurrency()),
+                    cb.lessThanOrEqualTo(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.DURATION).get(Duration_.M_IN__MO_NT_H), durationOfLDInMonth),
+                    cb.greaterThanOrEqualTo(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.DURATION).get(Duration_.M_AX__MO_NT_H), durationOfLDInMonth),
+                    cb.equal(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.SCENARIO), leasingDepositToCalculate.getScenario()));
+        };
+    }
+
+    void k() {
+        EntityManager entityManager = null;
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<DepositRate> query = cb.createQuery(DepositRate.class);
+        Root<DepositRate> root = query.from(DepositRate.class);
+
+        query.select(root).where(cb.equal(root.get(DepositRate_.RATE), 10));
     }
 
     private boolean isDepositRatesSizeNotEqualToOne(List<DepositRate> depositRate) {
@@ -213,5 +224,21 @@ public class SupportEntryCalculator {
 
     private void calculateFirstDayOfNextMonthForDateUntilThatEntriesMustBeCalculated() {
         dateUntilThatEntriesMustBeCalculated = transformIntoUtcFirstDayOfNextMonth(dateUntilThatEntriesMustBeCalculated);
+    }
+
+    private void transformYearPercentIntoDayPercent() {
+        depositDayRate = calculateDayRateWithExtraOne().subtract(BigDecimal.ONE);
+    }
+
+    private BigDecimal calculateDayRateWithExtraOne() {
+        double base = divideBy100(depositYearRate).add(BigDecimal.ONE).doubleValue();
+        double power = (double) 1 / (double) DAYS_IN_YEAR;
+        double basePowered = StrictMath.pow(base, power);
+
+        return BigDecimal.valueOf(basePowered).setScale(32, RoundingMode.UP);
+    }
+
+    private BigDecimal divideBy100(BigDecimal number) {
+        return number.divide(BigDecimal.valueOf(100));
     }
 }

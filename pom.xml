@@ -30,6 +30,7 @@
         <h2.version>1.4.200</h2.version>
         <swagger.version>2.9.2</swagger.version>
         <log4j.version>2.13.1</log4j.version>
+        <hibernate-jpamodelgen.version>5.4.21.Final</hibernate-jpamodelgen.version>
     </properties>
 
     <parent>
@@ -130,6 +131,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -208,6 +210,12 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <version>${hibernate-jpamodelgen.version}</version>
+            <scope>compile</scope>
         </dependency>
 
     </dependencies>

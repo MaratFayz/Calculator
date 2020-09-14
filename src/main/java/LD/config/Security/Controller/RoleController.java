@@ -60,7 +60,7 @@ public class RoleController
 	@ApiOperation(value = "Сохранение новой роли", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новая роль была сохранена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ROLE_ADDER)")
 	public ResponseEntity saveNewRole(@RequestBody RoleDTO_in roleDTO_in)
@@ -74,7 +74,7 @@ public class RoleController
 	@ApiOperation(value = "Изменение значений роли", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Роль была изменена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ROLE_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody RoleDTO_in roleDTO_in)
