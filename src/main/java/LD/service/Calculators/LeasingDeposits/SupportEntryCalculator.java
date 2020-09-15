@@ -9,6 +9,7 @@ import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Scenario.Scenario;
 import LD.repository.DepositRatesRepository;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.EntityManager;
@@ -26,6 +27,7 @@ import java.util.TreeMap;
 import static java.util.Objects.isNull;
 
 @Getter
+@Log4j2
 public class SupportEntryCalculator {
 
     private TreeMap<ZonedDateTime, ZonedDateTime> mappingPeriodEndDate = new TreeMap<>();
@@ -76,7 +78,9 @@ public class SupportEntryCalculator {
     private void createMappingUtcPeriodEndDateForScenariosFromTo() {
         for (EndDate endDate : leasingDepositToCalculate.getEnd_dates()) {
             if (isRelateScenariosFromTo(endDate)) {
-                if (isMappingNotExists(endDate)) {
+                if
+
+                (isMappingNotExists(endDate)) {
                     addIntoMapping(endDate);
                 } else {
                     if (checkIfEndDateRelateScenarioTo(endDate)) {
@@ -157,6 +161,7 @@ public class SupportEntryCalculator {
         }
 
         depositYearRate = depositRate.get(0).getRATE();
+        log.info("Ставка депозита = {}", depositYearRate);
     }
 
     private List<DepositRate> findDepositRatesByParametersOfDeposit() {
@@ -173,15 +178,6 @@ public class SupportEntryCalculator {
                     cb.greaterThanOrEqualTo(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.DURATION).get(Duration_.M_AX__MO_NT_H), durationOfLDInMonth),
                     cb.equal(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.SCENARIO), leasingDepositToCalculate.getScenario()));
         };
-    }
-
-    void k() {
-        EntityManager entityManager = null;
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<DepositRate> query = cb.createQuery(DepositRate.class);
-        Root<DepositRate> root = query.from(DepositRate.class);
-
-        query.select(root).where(cb.equal(root.get(DepositRate_.RATE), 10));
     }
 
     private boolean isDepositRatesSizeNotEqualToOne(List<DepositRate> depositRate) {
@@ -240,5 +236,9 @@ public class SupportEntryCalculator {
 
     private BigDecimal divideBy100(BigDecimal number) {
         return number.divide(BigDecimal.valueOf(100));
+    }
+
+    public boolean isDurationMoreThanOneYear() {
+        return this.depositDurationDays > DAYS_IN_YEAR;
     }
 }

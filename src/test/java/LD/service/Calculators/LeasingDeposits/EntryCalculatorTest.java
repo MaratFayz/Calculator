@@ -1,6 +1,5 @@
 package LD.service.Calculators.LeasingDeposits;
 
-import LD.model.DepositRate.DepositRate;
 import LD.model.Entry.Entry;
 import LD.model.Enums.EntryStatus;
 import LD.model.Enums.ScenarioStornoStatus;
@@ -35,7 +34,8 @@ import java.util.stream.Collectors;
 
 import static Utils.Builders.getDate;
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ExtendWith(MockitoExtension.class)
 public class EntryCalculatorTest {
@@ -65,8 +65,7 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Entry expectedEntry = testEntitiesKeeper.getEntries_expected().get(0);
 
@@ -89,6 +88,7 @@ public class EntryCalculatorTest {
         Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(gdk.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+
         Mockito.when(gdk.getAllExRates()).thenReturn(testEntitiesKeeper.getExRates());
         Mockito.when(gdk.getAllPeriods()).thenReturn(testEntitiesKeeper.getPeriods());
 
@@ -96,8 +96,7 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -106,7 +105,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
         assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(30, 4, 2017), lec.getFirstPeriodWithoutTransactionUTC());
+        assertEquals(Builders.getDate(30, 4, 2017), lec.getFirstPeriodWithoutEntryUTC());
         assertEquals(32, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -121,14 +120,13 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
 
         threadExecutor.shutdown();
 
-        assertNull(lec.getFirstPeriodWithoutTransactionUTC());
+        assertNull(lec.getFirstPeriodWithoutEntryUTC());
         assertEquals(33, lec.getCalculatedStornoDeletedEntries().stream()
                 .filter(entry -> entry.getStatus() == EntryStatus.DELETED)
                 .count());
@@ -152,15 +150,14 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
 
         threadExecutor.shutdown();
 
-        assertEquals(Builders.getDate(31, 12, 2019), lec.getFirstPeriodWithoutTransactionUTC());
+        assertEquals(Builders.getDate(31, 12, 2019), lec.getFirstPeriodWithoutEntryUTC());
         assertEquals(0, lec.getCalculatedStornoDeletedEntries().size());
     }
 
@@ -178,15 +175,14 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
 
         threadExecutor.shutdown();
 
-        assertEquals(getDate(30, 11, 2019), lec.getFirstPeriodWithoutTransactionUTC());
+        assertEquals(getDate(30, 11, 2019), lec.getFirstPeriodWithoutEntryUTC());
         assertEquals(1, lec.getCalculatedStornoDeletedEntries().stream()
                 .filter(entry -> entry.getStatus() == EntryStatus.STORNO)
                 .count());
@@ -210,15 +206,14 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
 
         threadExecutor.shutdown();
 
-        assertEquals(getDate(31, 3, 2017), lec.getFirstPeriodWithoutTransactionUTC());
+        assertEquals(getDate(31, 3, 2017), lec.getFirstPeriodWithoutEntryUTC());
 
         assertEquals(33, lec.getCalculatedStornoDeletedEntries().stream()
                 .filter(entry -> entry.getStatus() == EntryStatus.STORNO)
@@ -235,7 +230,9 @@ public class EntryCalculatorTest {
     }
 
     @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnCorrectEntries_whenDepositEndDateIsLessFirstOpenPeriodAndNoEntries.xml")
+    @LoadXmlFileForLeasingDepositsTest(file =
+
+            "src/test/resources/testDataForCalculator/calculate_shouldReturnCorrectEntries_whenDepositEndDateIsLessFirstOpenPeriodAndNoEntries.xml")
     public void calculate_shouldReturnCorrectEntries_whenDepositEndDateIsLessFirstOpenPeriodAndNoEntries() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
@@ -247,8 +244,7 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -257,7 +253,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
         assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstPeriodWithoutTransactionUTC());
+        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstPeriodWithoutEntryUTC());
         assertEquals(33, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -275,8 +271,7 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -285,25 +280,27 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
         assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstPeriodWithoutTransactionUTC());
+        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstPeriodWithoutEntryUTC());
         assertEquals(30, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
 
     @Test
     @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnCorrectEntries_whenScenarioFromAdditionAndScenarioToFull.xml")
-    public void calculate_shouldReturnCorrectEntries_whenScenarioFromAdditionAndScenarioToFull() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        //расчет на сценарии-источнике
-        //копирование сентября и октября со сценария-источника
-        //расчет сценария-получателя на ноябре
-        //итого всего три транзакции на сценарии-получателе новые со стасом ACTUAL
-        //также добавить сюда все транзакции до ноября = 32, которые будут сторнированы
+    public void calculate_shouldReturnCorrectEntries_whenScenarioFromAdditionAndScenarioToFull() throws
+
+            ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+//расчет на сценарии-источнике
+//копирование сентября и октября со сценария-источника
+//расчет сценария-получателя на ноябре
+//итого всего три транзакции на сценарии-получателе новые со стасом ACTUAL
+//также добавить сюда все транзакции до ноября = 32, которые будут сторнированы
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
-        //расчёт на сценарий-получатель
+//расчёт на сценарий-получатель
         Mockito.when(gdk.getFrom()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.ADDITION).collect(Collectors.toList()).get(0));
         Mockito.when(gdk.getTo()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.FULL).collect(Collectors.toList()).get(0));
         Mockito.when(gdk.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(testEntitiesKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo());
@@ -345,8 +342,8 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -355,7 +352,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000).setScale(0, RoundingMode.HALF_UP), leasingDepositToCalculate.getDeposit_sum_not_disc().setScale(0, RoundingMode.HALF_UP));
         assertEquals(BigDecimal.valueOf(100000).setScale(0, RoundingMode.HALF_UP), lec.getDepositSumDiscountedOnFirstEndDate().setScale(0, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(31, 1, 2019), lec.getFirstPeriodWithoutTransactionUTC());
+        assertEquals(Builders.getDate(31, 1, 2019), lec.getFirstPeriodWithoutEntryUTC());
         assertEquals(2, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -373,8 +370,7 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Throwable e = Assertions.assertThrows(ExecutionException.class, () -> {
             Future<List<Entry>> entries = threadExecutor.submit(lec);
@@ -402,8 +398,7 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Assertions.assertDoesNotThrow(() -> {
             Future<List<Entry>> entries = threadExecutor.submit(lec);
@@ -428,8 +423,7 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         lec = new EntryCalculator(leasingDepositToCalculate, gdk, depositRatesRepository);
-        Specification<DepositRate> dr = SupportEntryCalculator.equalToDepositParameters(leasingDepositToCalculate, lec.getLDdurationMonths());
-        Mockito.when(depositRatesRepository.findAll(Mockito.any(dr.getClass()))).thenReturn(testEntitiesKeeper.getDepositRates());
+        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Assertions.assertDoesNotThrow(() -> {
             Future<List<Entry>> entries = threadExecutor.submit(lec);

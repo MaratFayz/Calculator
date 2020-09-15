@@ -17,41 +17,41 @@ public class ExchangeRateSupplier {
     EntityManager em;
     Root<ExchangeRate> root;
 
-    public BigDecimal findExchangeRateOrThrowExceptionFor(Scenario scenario, Currency currency, ZonedDateTime date) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<BigDecimal> criteriaQuery = cb.createQuery(BigDecimal.class);
+//    public BigDecimal findExchangeRateOrThrowExceptionFor(Scenario scenario, Currency currency, ZonedDateTime date) {
+//        CriteriaBuilder cb = em.getCriteriaBuilder();
+//        CriteriaQuery<BigDecimal> criteriaQuery = cb.createQuery(BigDecimal.class);
+//
+//        root = criteriaQuery.from(ExchangeRate.class);
+//        criteriaQuery.select(rateAtDate())
+//                .where(
+//                        cb.and(
+//                                currencyExchangeRateEqualsTo(currency),
+//                                scenarioExchangeRateEqualsTo(scenario),
+//                                dateExchangeRateEqualsTo(date)
+//                        )
+//                );
+//
+//        Query<BigDecimal> query = em.createQuery(criteriaQuery);
+//        BigDecimal rate = query.getResultList();
+//    }
 
-        root = criteriaQuery.from(ExchangeRate.class);
-        criteriaQuery.select(rateAtDate())
-                .where(
-                        cb.and(
-                                currencyExchangeRateEqualsTo(currency),
-                                scenarioExchangeRateEqualsTo(scenario),
-                                dateExchangeRateEqualsTo(date)
-                        )
-                );
-
-        Query<BigDecimal> query = em.createQuery(criteriaQuery);
-        BigDecimal rate = query.getResultList();
-    }
-
-    public BigDecimal findAverageExchangeRateOrThrowExceptionFor(Scenario scenario, Currency currency, ZonedDateTime date) {
-//...
-    }
-
-    rateAtDate() {
-        return root.get(ExchangeRate_.rate_at_date);
-    }
-
-    Predicate currencyExchangeRateEqualsTo(Currency currency) {
-        return cb.equal(root.get(ExchangeRate_.exchangeRateID.currency), currency)
-    }
-
-    Predicate scenarioExchangeRateEqualsTo(Scenario scenario) {
-        return cb.equal(root.get(ExchangeRate_.exchangeRateID.scenario), scenario)
-    }
-
-    Predicate dateExchangeRateEqualsTo(ZonedDateTime date) {
-        return cb.equal(root.get(ExchangeRate_.exchangeRateID.date), date)
-    }
+//    public BigDecimal findAverageExchangeRateOrThrowExceptionFor(Scenario scenario, Currency currency, ZonedDateTime date) {
+////...
+//    }
+//
+//    rateAtDate() {
+//        return root.get(ExchangeRate_.rate_at_date);
+//    }
+//
+//    Predicate currencyExchangeRateEqualsTo(Currency currency) {
+//        return cb.equal(root.get(ExchangeRate_.exchangeRateID.currency), currency)
+//    }
+//
+//    Predicate scenarioExchangeRateEqualsTo(Scenario scenario) {
+//        return cb.equal(root.get(ExchangeRate_.exchangeRateID.scenario), scenario)
+//    }
+//
+//    Predicate dateExchangeRateEqualsTo(ZonedDateTime date) {
+//        return cb.equal(root.get(ExchangeRate_.exchangeRateID.date), date)
+//    }
 }
