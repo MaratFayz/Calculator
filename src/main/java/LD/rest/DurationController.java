@@ -31,7 +31,7 @@ public class DurationController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).DURATION_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все длительности возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<DurationDTO_out> getAllDurations()
 	{
@@ -57,7 +57,7 @@ public class DurationController
 	@ApiOperation(value = "Сохранение новой длительности", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новая длительность была сохранена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).DURATION_ADDER)")
 	public ResponseEntity saveNewDuration(@RequestBody DurationDTO_in durationDTOIn)
@@ -71,7 +71,7 @@ public class DurationController
 	@ApiOperation(value = "Изменение значений длительности", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Длительность была изменена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).DURATION_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody DurationDTO_in durationDTOIn)

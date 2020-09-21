@@ -22,7 +22,7 @@ public class EntryComparator {
     public static void compare(@NonNull Entry expected, @NonNull Entry actual, int entryNumberScale) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         Class entryClass = Entry.class;
         Field[] declaredFields = entryClass.getDeclaredFields();
-        String period = expected.getEntryID().getPeriod().getDate().toLocalDate().toString();
+        String period = expected.getEntryID().getPeriod().getDate().toString();
 
         for (Field f : declaredFields) {
             String fieldName = f.getName();

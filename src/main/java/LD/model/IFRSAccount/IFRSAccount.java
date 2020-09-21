@@ -1,10 +1,12 @@
 package LD.model.IFRSAccount;
 
-import LD.config.Security.model.User.User;
-import lombok.*;
+import LD.model.AbstractModelClass;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "ifrs_account")
@@ -12,31 +14,24 @@ import java.time.ZonedDateTime;
 @Data
 @AllArgsConstructor
 @Builder
-public class IFRSAccount
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+public class IFRSAccount extends AbstractModelClass {
 
-	@Column(length = 40)
-	private String account_code;
-	private String account_name;
-	private String flow_code;
-	private String flow_name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	private String sh;
-	private String pa;
-	private String ct;
-	private String dr;
+    @Column(length = 40)
+    private String account_code;
+    private String account_name;
+    private String flow_code;
+    private String flow_name;
 
-	private boolean isInverseSum;
+    private String sh;
+    private String pa;
+    private String ct;
+    private String dr;
 
-	private String mappingFormAndColumn;
+    private boolean isInverseSum;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    private String mappingFormAndColumn;
 }

@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static LD.service.Calculators.LeasingDeposits.GeneralDataKeeper.specFirstClosedPeriod;
+import static LD.service.Calculators.LeasingDeposits.CalculationParametersSourceImpl.specFirstClosedPeriod;
 
 @Service
 @Log4j2

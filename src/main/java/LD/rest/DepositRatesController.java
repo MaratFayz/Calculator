@@ -31,7 +31,7 @@ public class DepositRatesController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).DEPOSIT_RATES_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все ставки депозитов возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<DepositRateDTO_out> getAllDepositRates()
 	{
@@ -63,7 +63,7 @@ public class DepositRatesController
 	@ApiOperation(value = "Сохранение новой ставки депозита", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новая ставка депозита была сохранена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).DEPOSIT_RATES_ADDER)")
 	public ResponseEntity saveNewDepositRate(@RequestBody DepositRateDTO_in depositRateDTO_in)
@@ -78,7 +78,7 @@ public class DepositRatesController
 	@ApiResponse(code = 200, message = "Ставка депозита была изменена.")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Ставка депозита была изменена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).DEPOSIT_RATES_EDITOR)")
 	public ResponseEntity update(@RequestBody DepositRateDTO_in depositRateDTO_in)

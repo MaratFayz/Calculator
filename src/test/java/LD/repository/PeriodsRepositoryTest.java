@@ -11,8 +11,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
@@ -56,9 +54,8 @@ public class PeriodsRepositoryTest {
 
         assertEquals(321, result.size());
 
-        ZonedDateTime testValue = result.get(0).getDate();
-        ZonedDateTime controlValue = ZonedDateTime.of(LocalDate.of(1993, 9, 30),
-                LocalTime.MIDNIGHT, ZoneId.of("UTC"));
+        LocalDate testValue = result.get(0).getDate();
+        LocalDate controlValue = LocalDate.of(1993, 9, 30);
 
         assertEquals(controlValue, testValue);
     }
@@ -77,7 +74,7 @@ public class PeriodsRepositoryTest {
     @Test
     public void test4_autoGeneratePeriods_allAlreadyGenerated() {
         //все периоды уже имеются - не должно ничего генерироваться
-        Period anyDate = Period.builder().date(ZonedDateTime.now()).build();
+        Period anyDate = Period.builder().date(LocalDate.now()).build();
         when(periodRepository.findByDate(Mockito.any())).thenReturn(anyDate);
 
         ArrayList<Period> result =

@@ -1,26 +1,16 @@
 package LD.service.Calculators.LeasingDeposits;
 
 import LD.model.DepositRate.DepositRate;
-import LD.model.DepositRate.DepositRateID_;
-import LD.model.DepositRate.DepositRate_;
-import LD.model.Duration.Duration_;
 import LD.model.EndDate.EndDate;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Scenario.Scenario;
 import LD.repository.DepositRatesRepository;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -30,14 +20,14 @@ import static java.util.Objects.isNull;
 @Log4j2
 public class SupportEntryCalculator {
 
-    private TreeMap<ZonedDateTime, ZonedDateTime> mappingPeriodEndDate = new TreeMap<>();
+    private TreeMap<LocalDate, LocalDate> mappingPeriodEndDate = new TreeMap<>();
     private LeasingDeposit leasingDepositToCalculate;
     private Scenario scenarioFrom;
     private Scenario scenarioTo;
-    private ZonedDateTime depositLastDayOfFirstMonth;
-    private ZonedDateTime firstEndDate;
-    private ZonedDateTime firstOpenPeriod;
-    private ZonedDateTime dateUntilThatEntriesMustBeCalculated;
+    private LocalDate depositLastDayOfFirstMonth;
+    private LocalDate firstEndDate;
+    private LocalDate firstOpenPeriod;
+    private LocalDate dateUntilThatEntriesMustBeCalculated;
     private int depositDurationDays;
     private int depositDurationMonths;
     private DepositRatesRepository depositRatesRepository;
@@ -46,13 +36,15 @@ public class SupportEntryCalculator {
     final int MONTHS_IN_YEAR = 12;
     final int DAYS_IN_YEAR = 365;
 
-    public static SupportEntryCalculator calculateDateUntilThatEntriesMustBeCalculated(LeasingDeposit leasingDepositToCalculate, Scenario scenarioTo,
-                                                                                       DepositRatesRepository depositRatesRepository, ZonedDateTime firstOpenPeriod) {
+    public static SupportEntryCalculator calculateDateUntilThatEntriesMustBeCalculated(LeasingDeposit leasingDepositToCalculate,
+                                                                                       Scenario scenarioTo,
+                                                                                       DepositRatesRepository depositRatesRepository,
+                                                                                       LocalDate firstOpenPeriod) {
         return new SupportEntryCalculator(leasingDepositToCalculate, scenarioTo, depositRatesRepository, firstOpenPeriod);
     }
 
     private SupportEntryCalculator(LeasingDeposit leasingDepositToCalculate, Scenario scenarioTo,
-                                   DepositRatesRepository depositRatesRepository, ZonedDateTime firstOpenPeriod) {
+                                   DepositRatesRepository depositRatesRepository, LocalDate firstOpenPeriod) {
         this.leasingDepositToCalculate = leasingDepositToCalculate;
         this.scenarioTo = scenarioTo;
         this.scenarioFrom = leasingDepositToCalculate.getScenario();
@@ -78,9 +70,7 @@ public class SupportEntryCalculator {
     private void createMappingUtcPeriodEndDateForScenariosFromTo() {
         for (EndDate endDate : leasingDepositToCalculate.getEnd_dates()) {
             if (isRelateScenariosFromTo(endDate)) {
-                if
-
-                (isMappingNotExists(endDate)) {
+                if (isMappingNotExists(endDate)) {
                     addIntoMapping(endDate);
                 } else {
                     if (checkIfEndDateRelateScenarioTo(endDate)) {
@@ -97,15 +87,11 @@ public class SupportEntryCalculator {
     }
 
     private boolean isMappingNotExists(EndDate endDate) {
-        ZonedDateTime findDateUtc = transformToUtc(endDate.getEndDateID()
+        LocalDate findDate = endDate.getEndDateID()
                 .getPeriod()
-                .getDate());
+                .getDate();
 
-        return !mappingPeriodEndDate.containsKey(findDateUtc);
-    }
-
-    private ZonedDateTime transformToUtc(ZonedDateTime date) {
-        return date.withZoneSameInstant(ZoneId.of("UTC"));
+        return !mappingPeriodEndDate.containsKey(findDate);
     }
 
     private boolean checkIfEndDateRelateScenarioTo(EndDate endDate) {
@@ -115,13 +101,13 @@ public class SupportEntryCalculator {
     }
 
     private void addIntoMapping(EndDate endDate) {
-        ZonedDateTime periodDateUtc = transformToUtc(endDate.getEndDateID()
+        LocalDate periodDate = endDate.getEndDateID()
                 .getPeriod()
-                .getDate());
+                .getDate();
 
-        ZonedDateTime endDateUtc = transformToUtc(endDate.getEndDate());
+        LocalDate endDateIntoMapping = endDate.getEndDate();
 
-        mappingPeriodEndDate.put(periodDateUtc, endDateUtc);
+        mappingPeriodEndDate.put(periodDate, endDateIntoMapping);
     }
 
     private void calculateDepositLastDayOfFirstMonth() {
@@ -142,43 +128,32 @@ public class SupportEntryCalculator {
     }
 
     private void calculateDepositDurationDays() {
-        ZonedDateTime start_date = this.leasingDepositToCalculate.getStart_date();
-        this.depositDurationDays = (int) Duration.between(start_date, this.firstEndDate).toDays();
+        LocalDate start_date = this.leasingDepositToCalculate.getStart_date();
+        this.depositDurationDays = calculateDurationInDaysBetween(start_date, firstEndDate);
+    }
+
+    public static int calculateDurationInDaysBetween(LocalDate dateFrom, LocalDate dateTo) {
+        return (int) (dateTo.toEpochDay() - dateFrom.toEpochDay());
     }
 
     private void calculateDepositDurationMonths() {
-        int LDdurationMonths = (int) Math.round(
-                depositDurationDays / ((double) DAYS_IN_YEAR / (double) MONTHS_IN_YEAR));
+        int LDdurationMonths = (int) Math.round(depositDurationDays / ((double) DAYS_IN_YEAR / (double) MONTHS_IN_YEAR));
 
         this.depositDurationMonths = LDdurationMonths;
     }
 
     private void getDepositRateOrThrowExceptionWhenZeroOrMoreThanOneRate() {
-        List<DepositRate> depositRate = findDepositRatesByParametersOfDeposit();
-
-        if (isDepositRatesSizeNotEqualToOne(depositRate)) {
-            throwException();
-        }
-
-        depositYearRate = depositRate.get(0).getRATE();
-        log.info("Ставка депозита = {}", depositYearRate);
+        depositYearRate = findDepositRatesByParametersOfDeposit();
+        log.info("Ставка годовая равна: {}", depositDayRate);
     }
 
-    private List<DepositRate> findDepositRatesByParametersOfDeposit() {
-        return depositRatesRepository.findAll(equalToDepositParameters(leasingDepositToCalculate, this.depositDurationMonths));
+    private BigDecimal findDepositRatesByParametersOfDeposit() {
+        return depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(leasingDepositToCalculate.getCompany(),
+                this.depositDurationMonths, leasingDepositToCalculate.getCurrency(),
+                leasingDepositToCalculate.getStart_date(),
+                leasingDepositToCalculate.getScenario());
     }
 
-    public static Specification<DepositRate> equalToDepositParameters(LeasingDeposit leasingDepositToCalculate, int durationOfLDInMonth) {
-        return (Specification<DepositRate>) (depositRatesRoot, query, cb) -> {
-            return cb.and(cb.equal(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.COMPANY), leasingDepositToCalculate.getCompany()),
-                    cb.lessThanOrEqualTo(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.S_TA_RT__PE_RI_OD), leasingDepositToCalculate.getStart_date()),
-                    cb.greaterThanOrEqualTo(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.E_ND__PE_RI_OD), leasingDepositToCalculate.getStart_date()),
-                    cb.equal(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.CURRENCY), leasingDepositToCalculate.getCurrency()),
-                    cb.lessThanOrEqualTo(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.DURATION).get(Duration_.M_IN__MO_NT_H), durationOfLDInMonth),
-                    cb.greaterThanOrEqualTo(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.DURATION).get(Duration_.M_AX__MO_NT_H), durationOfLDInMonth),
-                    cb.equal(depositRatesRoot.get(DepositRate_.depositRateID).get(DepositRateID_.SCENARIO), leasingDepositToCalculate.getScenario()));
-        };
-    }
 
     private boolean isDepositRatesSizeNotEqualToOne(List<DepositRate> depositRate) {
         int REQUIRED_SIZE_DEPOSIT_RATES_FOR_LEASING_DEPOSIT = 1;
@@ -194,7 +169,7 @@ public class SupportEntryCalculator {
     }
 
     private void calculateDateUntilThatEntriesMustBeCalculated() {
-        ZonedDateTime endDateForFirstOpenPeriod = getEndDateForFirstOpenPeriodFromMapping();
+        LocalDate endDateForFirstOpenPeriod = getEndDateForFirstOpenPeriodFromMapping();
 
         if (isEndDateForFirstOpenPeriodIsAfterFirstOpenPeriod(endDateForFirstOpenPeriod)) {
             dateUntilThatEntriesMustBeCalculated = firstOpenPeriod;
@@ -203,23 +178,22 @@ public class SupportEntryCalculator {
         }
     }
 
-    private ZonedDateTime getEndDateForFirstOpenPeriodFromMapping() {
+    private LocalDate getEndDateForFirstOpenPeriodFromMapping() {
         return this.mappingPeriodEndDate.floorEntry(firstOpenPeriod).getValue();
     }
 
-    private boolean isEndDateForFirstOpenPeriodIsAfterFirstOpenPeriod(ZonedDateTime endDateForFirstOpenPeriod) {
+    private boolean isEndDateForFirstOpenPeriodIsAfterFirstOpenPeriod(LocalDate endDateForFirstOpenPeriod) {
         return endDateForFirstOpenPeriod.isAfter(firstOpenPeriod);
     }
 
-    private ZonedDateTime transformIntoUtcFirstDayOfNextMonth(ZonedDateTime date) {
-        return date.toLocalDate()
+    private LocalDate transformIntoFirstDayOfNextMonth(LocalDate date) {
+        return date
                 .plusMonths(1)
-                .withDayOfMonth(1)
-                .atStartOfDay(ZoneId.of("UTC"));
+                .withDayOfMonth(1);
     }
 
     private void calculateFirstDayOfNextMonthForDateUntilThatEntriesMustBeCalculated() {
-        dateUntilThatEntriesMustBeCalculated = transformIntoUtcFirstDayOfNextMonth(dateUntilThatEntriesMustBeCalculated);
+        dateUntilThatEntriesMustBeCalculated = transformIntoFirstDayOfNextMonth(dateUntilThatEntriesMustBeCalculated);
     }
 
     private void transformYearPercentIntoDayPercent() {

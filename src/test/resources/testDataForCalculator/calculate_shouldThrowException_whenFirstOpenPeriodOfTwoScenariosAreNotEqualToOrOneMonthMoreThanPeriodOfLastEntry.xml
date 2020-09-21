@@ -47,6 +47,7 @@
     </counterpartner>
     <periods_start>01.01.2010</periods_start>
     <periods_end>31.12.2030</periods_end>
+    <firstOpenPeriodScenarioFrom>31.03.2020</firstOpenPeriodScenarioFrom>
     <firstOpenPeriodScenarioTo>31.03.2020</firstOpenPeriodScenarioTo>
     <durations>
         <duration>

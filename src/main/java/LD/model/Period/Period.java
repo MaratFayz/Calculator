@@ -1,10 +1,13 @@
 package LD.model.Period;
 
-import LD.config.Security.model.User.User;
-import lombok.*;
+import LD.model.AbstractModelClass;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "period")
@@ -12,20 +15,13 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor()
 @Builder(toBuilder = true)
 @AllArgsConstructor
-public class Period
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, unique = true)
-	private Long id;
+public class Period extends AbstractModelClass {
 
-	@Column(name = "date", nullable = false, unique = true)
-	private ZonedDateTime date;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true)
+    private Long id;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @Column(name = "date", nullable = false, unique = true)
+    private LocalDate date;
 }

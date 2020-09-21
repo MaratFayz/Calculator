@@ -19,14 +19,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneId;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import static LD.service.Calculators.LeasingDeposits.GeneralDataKeeper.specFirstClosedPeriod;
+import static LD.service.Calculators.LeasingDeposits.CalculationParametersSourceImpl.specFirstClosedPeriod;
 
 @Service
 @Log4j2
@@ -43,7 +43,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
     @Autowired
     UserRepository userRepository;
     @Autowired
-    DepositRatesRepository depositRatesRepository;
+    private DepositRatesRepository depositRatesRepository;
 
     @Override
     public List<LeasingDepositDTO_out> getAllLeasingDeposits() {
@@ -74,20 +74,20 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
 
         log.info("Был получен сценарий-получатель = {}", scenario_to);
 
-        final ZonedDateTime firstOpenPeriodForScenarioTo =
+        final LocalDate firstOpenPeriodForScenarioTo =
                 periodsClosedRepository.findAll(specFirstClosedPeriod(scenario_to)).get(0).getPeriodsClosedID()
-                        .getPeriod().getDate().withZoneSameInstant(ZoneId.of("UTC"));
+                        .getPeriod().getDate();
 
         log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
 
         List<LeasingDepositDTO_out_onPeriodFor2Scenarios> leasingDepositFor2Scenarios = leasingDepositRepository.findAll().stream()
                 .map(ld -> {
-                    TreeMap<ZonedDateTime, ZonedDateTime> endDatesForLd =
+                    TreeMap<LocalDate, LocalDate> endDatesForLd =
                             SupportEntryCalculator.calculateDateUntilThatEntriesMustBeCalculated(ld, scenario_to, depositRatesRepository, firstOpenPeriodForScenarioTo).getMappingPeriodEndDate();
 
                     log.info("Был сформирован treemap для дат окончания = {}", endDatesForLd);
 
-                    ZonedDateTime endDateForFirstOpenPeriodScenarioTo = endDatesForLd.floorEntry(firstOpenPeriodForScenarioTo).getValue();
+                    LocalDate endDateForFirstOpenPeriodScenarioTo = endDatesForLd.floorEntry(firstOpenPeriodForScenarioTo).getValue();
 
                     log.info("Была определена конечная дата для первого открытого периода сценария-получателя = {}", endDateForFirstOpenPeriodScenarioTo);
 
@@ -99,7 +99,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
                     return mappedld;
                 })
                 .filter(ld_mapped -> {
-                    ZonedDateTime parsedEndDate = DateFormat.parsingDate(ld_mapped.getEndDate());
+                    LocalDate parsedEndDate = DateFormat.parsingDate(ld_mapped.getEndDate());
 
                     log.info("Был получен parsedEndDate депозита = {}", parsedEndDate);
                     log.info("firstOpenPeriodForScenarioTo = {}", firstOpenPeriodForScenarioTo);

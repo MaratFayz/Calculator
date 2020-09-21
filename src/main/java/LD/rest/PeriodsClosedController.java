@@ -31,7 +31,7 @@ public class PeriodsClosedController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).PERIODS_CLOSED_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все периоды и их статусы закрытия возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<PeriodsClosedDTO_out> getAllPeriodsClosed()
 	{
@@ -74,7 +74,7 @@ public class PeriodsClosedController
 	@ApiOperation(value = "Сохранение периода со статусом закрытия", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новый период со статусом закрытия был сохранен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).PERIODS_CLOSED_ADDER)")
 	public ResponseEntity saveNewPeriodsClosed(@RequestBody PeriodsClosedDTO_in periodsClosedDTO_in)
@@ -88,7 +88,7 @@ public class PeriodsClosedController
 	@ApiOperation(value = "Изменение значений периода со статусом закрытия", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Период со статусом закрытия был изменен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).PERIODS_CLOSED_EDITOR)")
 	public ResponseEntity update(@RequestBody PeriodsClosedDTO_in periodsClosedDTO_in)
@@ -124,7 +124,7 @@ public class PeriodsClosedController
 	@ApiOperation(value = "Автоматическое массовое изменение значений периода со статусом закрытия", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Периоды со статусом закрытия былы изменены."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).AUTO_CLOSING_PERIODS)")
 	public ResponseEntity autoClosingPeriods(@RequestParam String dateBeforeToClose, @RequestParam long scenario_id)

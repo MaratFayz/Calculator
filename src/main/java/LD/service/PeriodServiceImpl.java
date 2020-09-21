@@ -14,152 +14,133 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @Log4j2
-public class PeriodServiceImpl implements PeriodService
-{
-	@Autowired
-	PeriodRepository periodRepository;
-	@Autowired
-	UserRepository userRepository;
+public class PeriodServiceImpl implements PeriodService {
 
-	@Override
-	public List<PeriodDTO_out> getAllPeriods()
-	{
-		List<Period> resultFormDB = periodRepository.findAll();
-		List<PeriodDTO_out> resultFormDB_out = new ArrayList<>();
+    @Autowired
+    PeriodRepository periodRepository;
+    @Autowired
+    UserRepository userRepository;
 
-		if(resultFormDB.size() == 0)
-		{
-			resultFormDB_out.add(new PeriodDTO_out());
-		}
-		else
-		{
-			resultFormDB_out = resultFormDB.stream()
-					.map(per -> PeriodDTO_out.Period_to_PeriodDTO_out(per))
-					.collect(Collectors.toList());
-		}
+    @Override
+    public List<PeriodDTO_out> getAllPeriods() {
+        List<Period> resultFormDB = periodRepository.findAll();
+        List<PeriodDTO_out> resultFormDB_out = new ArrayList<>();
 
-		return resultFormDB_out;
-	}
+        if (resultFormDB.size() == 0) {
+            resultFormDB_out.add(new PeriodDTO_out());
+        } else {
+            resultFormDB_out = resultFormDB.stream()
+                    .map(per -> PeriodDTO_out.Period_to_PeriodDTO_out(per))
+                    .collect(Collectors.toList());
+        }
 
-	@Override
-	public Period getPeriod(Long id)
-	{
-		return periodRepository.findById(id).orElseThrow(NotFoundException::new);
-	}
+        return resultFormDB_out;
+    }
 
-	@Override
-	public Period saveNewPeriod(Period period)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		period.setUser(userRepository.findByUsername(username));
+    @Override
+    public Period getPeriod(Long id) {
+        return periodRepository.findById(id).orElseThrow(NotFoundException::new);
+    }
 
-		period.setLastChange(ZonedDateTime.now());
+    @Override
+    public Period saveNewPeriod(Period period) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        period.setUser(userRepository.findByUsername(username));
 
-		log.info("Период для сохранения = {}", period);
+        period.setLastChange(ZonedDateTime.now());
 
-		return periodRepository.save(period);
-	}
+        log.info("Период для сохранения = {}", period);
 
-	@Override
-	public Period updatePeriod(Long id, Period period)
-	{
-		period.setId(id);
+        return periodRepository.save(period);
+    }
 
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		period.setUser(userRepository.findByUsername(username));
+    @Override
+    public Period updatePeriod(Long id, Period period) {
+        period.setId(id);
 
-		period.setLastChange(ZonedDateTime.now());
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        period.setUser(userRepository.findByUsername(username));
 
-		Period periodToUpdate = getPeriod(id);
+        period.setLastChange(ZonedDateTime.now());
 
-		BeanUtils.copyProperties(period, periodToUpdate);
+        Period periodToUpdate = getPeriod(id);
 
-		periodRepository.saveAndFlush(periodToUpdate);
+        BeanUtils.copyProperties(period, periodToUpdate);
 
-		return periodToUpdate;
-	}
+        periodRepository.saveAndFlush(periodToUpdate);
 
-	@Override
-	public boolean delete(Long id)
-	{
-		try
-		{
-			periodRepository.deleteById(id);
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
+        return periodToUpdate;
+    }
 
-		return true;
-	}
+    @Override
+    public boolean delete(Long id) {
+        try {
+            periodRepository.deleteById(id);
+        } catch (Exception e) {
+            return false;
+        }
 
-	@Override
-	public void autoCreatePeriods(String dateFrom, String dateTo)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		User userCreated = userRepository.findByUsername(username);
+        return true;
+    }
 
-		ArrayList<Period> generatedPeriods = generatePeriods(dateFrom, dateTo, userCreated, periodRepository);
+    @Override
+    public void autoCreatePeriods(String dateFrom, String dateTo) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User userCreated = userRepository.findByUsername(username);
 
-		periodRepository.saveAll(generatedPeriods);
-	}
+        ArrayList<Period> generatedPeriods = generatePeriods(dateFrom, dateTo, userCreated, periodRepository);
 
-	public static ArrayList<Period> generatePeriods(String dateFrom, String dateTo, User userCreated, PeriodRepository periodRepository)
-	{
-		ArrayList<Period> periods = new ArrayList<>();
+        periodRepository.saveAll(generatedPeriods);
+    }
 
-		LocalDate LDdateFrom = DateFormat.parsingDate(dateFrom).toLocalDate();
-		LocalDate LDdateTo = DateFormat.parsingDate(dateTo).toLocalDate();
+    public static ArrayList<Period> generatePeriods(String dateFrom, String dateTo, User userCreated, PeriodRepository periodRepository) {
+        ArrayList<Period> periods = new ArrayList<>();
 
-		if(LDdateFrom.isAfter(LDdateTo))
-		{
-			LocalDate now = LocalDate.now();
-			now = LDdateFrom;
-			LDdateFrom = LDdateTo;
-			LDdateTo = now;
-		}
+        LocalDate LDdateFrom = DateFormat.parsingDate(dateFrom);
+        LocalDate LDdateTo = DateFormat.parsingDate(dateTo);
 
-		LDdateFrom = LDdateFrom.plusMonths(1).withDayOfMonth(1).minusDays(1);
-		LDdateTo = LDdateTo.plusMonths(1).withDayOfMonth(1);
+        if (LDdateFrom.isAfter(LDdateTo)) {
+            LocalDate now = LocalDate.now();
+            now = LDdateFrom;
+            LDdateFrom = LDdateTo;
+            LDdateTo = now;
+        }
 
-		LDdateFrom.datesUntil(LDdateTo, java.time.Period.ofMonths(1)).forEach(date ->
-		{
-			//доводим до последнего дня месяца
-			date = date.withDayOfMonth(date.lengthOfMonth());
+        LDdateFrom = LDdateFrom.plusMonths(1).withDayOfMonth(1).minusDays(1);
+        LDdateTo = LDdateTo.plusMonths(1).withDayOfMonth(1);
 
-			ZonedDateTime zonedDateTime = ZonedDateTime.of(date, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
+        LDdateFrom.datesUntil(LDdateTo, java.time.Period.ofMonths(1)).forEach(date ->
+        {
+            //доводим до последнего дня месяца
+            date = date.withDayOfMonth(date.lengthOfMonth());
 
-			Period foundPeriod = periodRepository.findByDate(zonedDateTime);
+            Period foundPeriod = periodRepository.findByDate(date);
 
-			log.info("Для даты {} был обнаружен период {}", zonedDateTime, foundPeriod);
+            log.info("Для даты {} был обнаружен период {}", date, foundPeriod);
 
-			if(foundPeriod == null)
-			{
-				log.info("Для даты {} был НЕ обнаружен период. Значит будет создан и сохранён", zonedDateTime);
+            if (foundPeriod == null) {
+                log.info("Для даты {} был НЕ обнаружен период. Значит будет создан и сохранён", date);
 
-				Period newPeriod = Period.builder()
-						.date(zonedDateTime)
-						.lastChange(ZonedDateTime.now())
-						.user(userCreated)
-						.build();
+                Period newPeriod = Period.builder()
+                        .date(date)
+                        .build();
 
-				log.info("Для даты {} был создан период {}", zonedDateTime, newPeriod);
+                newPeriod.setLastChange(ZonedDateTime.now());
+                newPeriod.setUser(userCreated);
 
-				periods.add(newPeriod);
-			}
-		});
+                log.info("Для даты {} был создан период {}", date, newPeriod);
 
-		return periods;
-	}
+                periods.add(newPeriod);
+            }
+        });
+
+        return periods;
+    }
 }

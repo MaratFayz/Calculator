@@ -34,7 +34,7 @@ public class RoleController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ROLE_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все роли возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<RoleDTO_out> getRoles()
 	{

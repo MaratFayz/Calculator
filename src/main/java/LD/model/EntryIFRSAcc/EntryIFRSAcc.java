@@ -1,14 +1,16 @@
 package LD.model.EntryIFRSAcc;
 
-import LD.config.Security.model.User.User;
+import LD.model.AbstractModelClass;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "EntryIFRSAcc")
@@ -16,18 +18,11 @@ import java.time.ZonedDateTime;
 @Data
 @Builder
 @AllArgsConstructor
-public class EntryIFRSAcc
-{
-	@EmbeddedId
-	private EntryIFRSAccID entryIFRSAccID;
+public class EntryIFRSAcc extends AbstractModelClass {
 
-	@Column(columnDefinition = "DECIMAL(30,10)", scale = 10, precision = 30, nullable = false)
-	private BigDecimal sum;
+    @EmbeddedId
+    private EntryIFRSAccID entryIFRSAccID;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @Column(columnDefinition = "DECIMAL(30,10)", scale = 10, precision = 30, nullable = false)
+    private BigDecimal sum;
 }

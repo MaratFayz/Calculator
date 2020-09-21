@@ -34,7 +34,7 @@ public class CompanyController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COMPANY_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все компании возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<CompanyDTO_out> getAllCompanies()
 	{
@@ -61,7 +61,7 @@ public class CompanyController
 	@ApiOperation(value = "Сохранение новой компании", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новая компания была сохранена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COMPANY_ADDER)")
 	public ResponseEntity saveNewCompany(@RequestBody CompanyDTO_in companyDTO_in)
@@ -81,7 +81,7 @@ public class CompanyController
 	@ApiOperation(value = "Изменение значений компании", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Компания была изменена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COMPANY_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody CompanyDTO_in companyDTO_in)

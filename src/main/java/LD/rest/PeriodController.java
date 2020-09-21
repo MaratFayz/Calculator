@@ -36,7 +36,7 @@ public class PeriodController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).PERIOD_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все периоды возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<PeriodDTO_out> getAllPeriods()
 	{
@@ -62,7 +62,7 @@ public class PeriodController
 	@ApiOperation(value = "Сохранение нового периода", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новый период был сохранен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).PERIOD_ADDER)")
 	public ResponseEntity saveNewPeriod(@RequestBody PeriodDTO_in periodDTOIn)
@@ -76,7 +76,7 @@ public class PeriodController
 	@ApiOperation(value = "Изменение значений периода", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Период был изменен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).PERIOD_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody PeriodDTO_in periodDTOIn)
@@ -105,7 +105,7 @@ public class PeriodController
 	@ApiOperation(value = "Автоматическое добавление значений периодов в базу данных")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Периоды были успешно добавлены"),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).AUTO_ADDING_PERIODS)")
 	public ResponseEntity autoCreatePeriods(@RequestParam String dateFrom, @RequestParam String dateTo)

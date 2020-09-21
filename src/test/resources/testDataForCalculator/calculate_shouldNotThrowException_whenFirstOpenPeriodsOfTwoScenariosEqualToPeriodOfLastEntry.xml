@@ -47,7 +47,8 @@
     </counterpartner>
     <periods_start>01.01.2010</periods_start>
     <periods_end>31.12.2030</periods_end>
-    <firstOpenPeriodScenarioTo>31.03.2020</firstOpenPeriodScenarioTo>
+    <firstOpenPeriodScenarioFrom>31.03.2017</firstOpenPeriodScenarioFrom>
+    <firstOpenPeriodScenarioTo>31.03.2017</firstOpenPeriodScenarioTo>
     <durations>
         <duration>
             <id>1</id>
@@ -211,13 +212,6 @@
             <date>31.03.2017</date>
             <rate_at_date>56.3779</rate_at_date>
             <average_rate_for_month>58.1091</average_rate_for_month>
-        </exchangeRate>
-        <exchangeRate>
-            <currencyCode>1</currencyCode>
-            <scenarioCode>2</scenarioCode>
-            <date>30.04.2017</date>
-            <rate_at_date>56.9838082901554</rate_at_date>
-            <average_rate_for_month>56.4315074286036</average_rate_for_month>
         </exchangeRate>
         <exchangeRate>
             <currencyCode>1</currencyCode>

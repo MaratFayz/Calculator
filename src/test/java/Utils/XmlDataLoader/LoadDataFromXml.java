@@ -12,8 +12,19 @@ import java.io.FileInputStream;
 import java.lang.reflect.Field;
 
 public class LoadDataFromXml implements BeforeEachCallback, AfterEachCallback {
+
     private TestClassParser testClassParser;
     private TestEntitiesKeeper testEntitiesKeeper;
+
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
@@ -26,7 +37,8 @@ public class LoadDataFromXml implements BeforeEachCallback, AfterEachCallback {
     @Override
     public void afterEach(ExtensionContext context) {
         parseTestClass(context);
-        System.out.println("<------------Test called '" + testClassParser.getTestMethodName() + "' finished------------>");
+        System.out.println("[" + ANSI_CYAN + "END" + ANSI_RESET + "]<------------Test called " + ANSI_YELLOW + testClassParser.getTestMethodName() + ANSI_RESET + " finished------------>");
+        System.out.println("");
     }
 
     private void pasteTestEntityKeeperIntoTestClass() throws IllegalAccessException {
@@ -47,7 +59,8 @@ public class LoadDataFromXml implements BeforeEachCallback, AfterEachCallback {
     }
 
     private void viewTestData() {
-        System.out.println("<------------Test called '" + testClassParser.getTestMethodName() + "' running------------>");
+        System.out.println("");
+        System.out.println("[" + ANSI_CYAN + "START" + ANSI_RESET + "] <------------Test called " + ANSI_YELLOW + testClassParser.getTestMethodName() + ANSI_RESET + " running------------>");
         System.out.println("Getting test data from ----> " + testClassParser.getFileNameWithTestData());
         System.out.println("And paste into variable ----> '" + testClassParser.getTestEntitiesKeeperField().getName() + "'");
     }

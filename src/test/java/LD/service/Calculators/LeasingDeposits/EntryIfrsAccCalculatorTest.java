@@ -21,7 +21,7 @@ public class EntryIfrsAccCalculatorTest {
     TestEntitiesKeeper testEntitiesKeeper;
 
     @Mock
-    private GeneralDataKeeper gdk;
+    private CalculationParametersSourceImpl gdk;
 
     @Test
     @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForEntriesOnIfrsAcc/testData_IfrsAcc_1.xml")

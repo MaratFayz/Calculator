@@ -1,7 +1,7 @@
 package LD.config.Security.model.Role;
 
 import LD.config.Security.model.Authority.CustomAuthority;
-import LD.config.Security.model.User.User;
+import LD.model.AbstractModelClass;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
 import java.util.Set;
 
 @Entity
@@ -18,30 +17,23 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Role implements GrantedAuthority
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long id;
+public class Role extends AbstractModelClass implements GrantedAuthority {
 
-	@Column(nullable = false, unique = true)
-	private String name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
-	@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(name = "role_authorities",
-			   joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
-			   inverseJoinColumns = @JoinColumn(name = "authority_id", referencedColumnName = "id"))
-	private Set<CustomAuthority> authorities;
+    @Column(nullable = false, unique = true)
+    private String name;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private User user_changed;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "role_authorities",
+            joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "authority_id", referencedColumnName = "id"))
+    private Set<CustomAuthority> authorities;
 
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
-
-	@Override
-	public String getAuthority()
-	{
-		return name;
-	}
+    @Override
+    public String getAuthority() {
+        return name;
+    }
 }

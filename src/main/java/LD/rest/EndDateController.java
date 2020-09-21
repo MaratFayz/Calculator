@@ -31,7 +31,7 @@ public class EndDateController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все конечные даты возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<EndDateDTO_out> getAllEndDates()
 	{
@@ -58,7 +58,7 @@ public class EndDateController
 	@ApiOperation(value = "Сохранение новой конечной даты", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новая конечная дата была сохранена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_ADDER)")
 	public ResponseEntity saveNewEndDates(@RequestBody EndDateDTO_in endDateDTO_in)
@@ -75,7 +75,7 @@ public class EndDateController
 	@ApiOperation(value = "Изменение значений конечной даты", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Конечная дата была изменена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_EDITOR)")
 	public ResponseEntity update(@RequestBody EndDateDTO_in endDateDTO_in)
