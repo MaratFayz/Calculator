@@ -35,6 +35,7 @@
     * FULL - при выполнении расчетов по данному сценарию все имеющиеся проводки сторнируются;
 3. Не допускается рассчитывать депозиты со сценария на сценарий:  
     :white_check_mark: ADDITION -> ADDITION ***для одного сценария***;  
+    :white_check_mark: ADDITION -> FULL;  
     :negative_squared_cross_mark: ADDITION -> ADDITION ***для разных сценариев***;  
     :negative_squared_cross_mark: FULL -> ADDITION  
     :negative_squared_cross_mark: FULL -> FULL
