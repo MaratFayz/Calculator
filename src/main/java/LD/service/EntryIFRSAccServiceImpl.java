@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static LD.service.Calculators.LeasingDeposits.CalculationParametersSourceImpl.specFirstClosedPeriod;
-
 @Service
 @Log4j2
 public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
@@ -64,9 +62,7 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
 
         log.info("Был получен сценарий-получатель = {}", scenario_to);
 
-        final Period firstOpenPeriodForScenarioTo =
-                periodsClosedRepository.findAll(specFirstClosedPeriod(scenario_to)).get(0).getPeriodsClosedID()
-                        .getPeriod();
+        final Period firstOpenPeriodForScenarioTo = periodsClosedRepository.findFirstOpenPeriodByScenario(scenario_to);
 
         log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
 
@@ -94,7 +90,7 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
 
             for (EntryIFRSAcc entry : ifrsEntriesForAcc) {
                 aggregatedEntryForAcc.setSum(aggregatedEntryForAcc.getSum().add(entry.getSum()));
-            };
+            }
 
             aggregatedEntries.add(aggregatedEntryForAcc);
         });

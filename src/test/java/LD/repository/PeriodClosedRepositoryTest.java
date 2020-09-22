@@ -104,7 +104,7 @@ public class PeriodClosedRepositoryTest {
         testEntityManager.persist(periodsClosed2);
         testEntityManager.persist(periodsClosed3);
 
-        LocalDate factDate = periodsClosedRepository.findFirstOpenPeriodByScenario(fact);
+        LocalDate factDate = periodsClosedRepository.findFirstOpenPeriodDateByScenario(fact);
 
         log.info("factDate = {}", factDate);
         log.info("expectedDate = {}", expectedDate);

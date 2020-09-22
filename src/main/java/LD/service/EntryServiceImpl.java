@@ -31,8 +31,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static LD.service.Calculators.LeasingDeposits.CalculationParametersSourceImpl.specFirstClosedPeriod;
-
 @Service
 @Log4j2
 public class EntryServiceImpl implements EntryService {
@@ -184,9 +182,7 @@ public class EntryServiceImpl implements EntryService {
 
         log.info("Был получен сценарий-получатель = {}", scenario_to);
 
-        final Period firstOpenPeriodForScenarioTo =
-                periodsClosedRepository.findAll(specFirstClosedPeriod(scenario_to)).get(0).getPeriodsClosedID()
-                        .getPeriod();
+        final Period firstOpenPeriodForScenarioTo = periodsClosedRepository.findFirstOpenPeriodByScenario(scenario_to);
 
         log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
 

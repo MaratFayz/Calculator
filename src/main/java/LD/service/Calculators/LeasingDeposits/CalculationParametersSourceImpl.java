@@ -5,7 +5,6 @@ import LD.config.Security.model.User.User;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.IFRSAccount.IFRSAccount;
 import LD.model.LeasingDeposit.LeasingDeposit;
-import LD.model.PeriodsClosed.PeriodsClosed;
 import LD.model.Scenario.Scenario;
 import LD.repository.*;
 import lombok.Getter;
@@ -14,7 +13,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -68,11 +66,7 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
         getScenarioToById(scenarioTo_id);
 
         this.firstOpenPeriod_ScenarioTo =
-                periodsClosedRepository.findAll(specFirstClosedPeriod(this.scenarioTo))
-                        .get(0)
-                        .getPeriodsClosedID()
-                        .getPeriod()
-                        .getDate();
+                periodsClosedRepository.findFirstOpenPeriodDateByScenario(this.scenarioTo);
 
         log.info("Результат запроса первого открытого периода для сценария {} => {}",
                 this.scenarioTo.getName(), this.firstOpenPeriod_ScenarioTo);
@@ -105,12 +99,7 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
                 throw new IllegalArgumentException("Запрещённая операция переноса FULL -> FULL");
             }
 
-            this.firstOpenPeriod_ScenarioFrom =
-                    periodsClosedRepository.findAll(specFirstClosedPeriod(this.scenarioFrom))
-                            .get(0)
-                            .getPeriodsClosedID()
-                            .getPeriod()
-                            .getDate();
+            this.firstOpenPeriod_ScenarioFrom = periodsClosedRepository.findFirstOpenPeriodDateByScenario(this.scenarioFrom);
 
             log.info("Результат запроса первого открытого периода для сценария-источника {} => {}",
                     this.scenarioFrom.getName(), this.firstOpenPeriod_ScenarioFrom);
@@ -159,23 +148,5 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
         Authentication authentication = context.getAuthentication();
         String username = authentication.getName();
         this.user = userRepository.findByUsername(username);
-    }
-
-    public static Specification<PeriodsClosed> specFirstClosedPeriod(
-            Scenario scenarioWhereFindFirstOpenPeriod) {
-        Specification<PeriodsClosed> spPerCl = (rootPC, qPC, cbPC) -> {
-
-            qPC.orderBy(cbPC.asc(rootPC.get("periodsClosedID")
-                    .get("period")
-                    .get("date")));
-
-            return cbPC.and(
-                    cbPC.equal(rootPC.get("periodsClosedID")
-                            .get("scenario"), scenarioWhereFindFirstOpenPeriod),
-                    cbPC.isNull(rootPC.get("ISCLOSED"))
-            );
-        };
-
-        return spPerCl;
     }
 }

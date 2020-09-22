@@ -3,6 +3,7 @@ package LD.dao;
 import LD.model.Period.Period;
 import LD.model.Period.Period_;
 import LD.model.PeriodsClosed.PeriodsClosed;
+import LD.model.PeriodsClosed.PeriodsClosedID;
 import LD.model.PeriodsClosed.PeriodsClosedID_;
 import LD.model.PeriodsClosed.PeriodsClosed_;
 import LD.model.Scenario.Scenario;
@@ -24,7 +25,7 @@ public class PeriodClosedDaoImpl implements PeriodClosedDao {
     private CriteriaBuilder cb;
 
     @Override
-    public LocalDate findFirstOpenPeriodByScenario(Scenario scenario) {
+    public LocalDate findFirstOpenPeriodDateByScenario(Scenario scenario) {
         cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<LocalDate> criteriaQuery = cb.createQuery(LocalDate.class);
 
@@ -40,6 +41,26 @@ public class PeriodClosedDaoImpl implements PeriodClosedDao {
                 );
 
         TypedQuery<LocalDate> query = entityManager.createQuery(criteriaQuery);
+        return query.getSingleResult();
+    }
+
+    @Override
+    public Period findFirstOpenPeriodByScenario(Scenario scenario) {
+        cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Period> criteriaQuery = cb.createQuery(Period.class);
+
+        root = criteriaQuery.from(PeriodsClosed.class);
+        Join<PeriodsClosed, PeriodsClosedID> join = root.join(PeriodsClosed_.periodsClosedID);
+
+        criteriaQuery.select(join.get(PeriodsClosedID_.PERIOD))
+                .where(
+                        cb.and(
+                                cb.equal(root.get(PeriodsClosed_.periodsClosedID).get(PeriodsClosedID_.scenario), scenario),
+                                cb.isNull(root.get(PeriodsClosed_.ISCLOSED))
+                        )
+                );
+
+        TypedQuery<Period> query = entityManager.createQuery(criteriaQuery);
         return query.getSingleResult();
     }
 }

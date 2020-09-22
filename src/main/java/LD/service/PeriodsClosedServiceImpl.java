@@ -14,7 +14,6 @@ import LD.repository.PeriodRepository;
 import LD.repository.PeriodsClosedRepository;
 import LD.repository.ScenarioRepository;
 import LD.rest.exceptions.NotFoundException;
-import LD.service.Calculators.LeasingDeposits.CalculationParametersSourceImpl;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,11 +67,7 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
     @Override
     public String getDateFirstOpenPeriodForScenario(Long scenario_id) {
         Scenario neededScenario = scenarioRepository.findById(scenario_id).orElseThrow(() -> new NotFoundException("Не найден открытый период для сценария с id = " + scenario_id));
-        LocalDate notFormattedResult = periodsClosedRepository.findAll(CalculationParametersSourceImpl.specFirstClosedPeriod(neededScenario))
-                .get(0)
-                .getPeriodsClosedID()
-                .getPeriod()
-                .getDate();
+        LocalDate notFormattedResult = periodsClosedRepository.findFirstOpenPeriodDateByScenario(neededScenario);
 
         return DateFormat.formatDate(notFormattedResult);
     }

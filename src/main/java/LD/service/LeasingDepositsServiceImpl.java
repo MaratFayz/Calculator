@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import static LD.service.Calculators.LeasingDeposits.CalculationParametersSourceImpl.specFirstClosedPeriod;
-
 @Service
 @Log4j2
 public class LeasingDepositsServiceImpl implements LeasingDepositService {
@@ -74,9 +72,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
 
         log.info("Был получен сценарий-получатель = {}", scenario_to);
 
-        final LocalDate firstOpenPeriodForScenarioTo =
-                periodsClosedRepository.findAll(specFirstClosedPeriod(scenario_to)).get(0).getPeriodsClosedID()
-                        .getPeriod().getDate();
+        final LocalDate firstOpenPeriodForScenarioTo = periodsClosedRepository.findFirstOpenPeriodDateByScenario(scenario_to);
 
         log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
 
