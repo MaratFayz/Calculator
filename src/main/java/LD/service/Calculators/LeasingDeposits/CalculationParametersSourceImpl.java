@@ -65,35 +65,29 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
         getScenarioFromById(scenarioFrom_id);
         getScenarioToById(scenarioTo_id);
 
-        this.firstOpenPeriod_ScenarioTo =
-                periodsClosedRepository.findFirstOpenPeriodDateByScenario(this.scenarioTo);
+        this.firstOpenPeriod_ScenarioTo = periodsClosedRepository.findFirstOpenPeriodDateByScenario(this.scenarioTo);
 
         log.info("Результат запроса первого открытого периода для сценария {} => {}",
                 this.scenarioTo.getName(), this.firstOpenPeriod_ScenarioTo);
 
-        if (!(this.scenarioFrom.equals(this.scenarioTo) && this.scenarioFrom.getStatus().equals(ScenarioStornoStatus.ADDITION))) {
+        if (!(isScenariosEqual() && isScenarioFromAddition())) {
             log.info("Сценарий-источник {} не равен сценарию-получателю {}", this.scenarioTo.getName(),
                     this.scenarioFrom.getName());
 
-            if (this.scenarioFrom.getStatus().equals(ScenarioStornoStatus.ADDITION) &&
-                    (this.scenarioTo.getStatus().equals(ScenarioStornoStatus.ADDITION))) {
+            if (isScenarioFromAddition() && isScenarioToAddition()) {
                 log.info("Запрещённая операция переноса ADDITION -> ADDITION");
                 throw new IllegalArgumentException(
                         "Запрещённая операция переноса ADDITION -> ADDITION");
             }
 
-            if (this.scenarioFrom.getStatus()
-                    .equals(ScenarioStornoStatus.FULL) && (this.scenarioTo.getStatus()
-                    .equals(ScenarioStornoStatus.ADDITION))) {
+            if (isScenarioFromFull() && isScenarioToAddition()) {
                 log.info("Запрещённая операция переноса FULL -> ADDITION");
 
                 throw new IllegalArgumentException(
                         "Запрещённая операция переноса FULL -> ADDITION");
             }
 
-            if (this.scenarioFrom.getStatus().equals(ScenarioStornoStatus.FULL) &&
-                    this.scenarioTo.getStatus().equals(ScenarioStornoStatus.FULL) &&
-                    !this.scenarioFrom.equals(this.scenarioTo)) {
+            if (isScenarioFromFull() && isScenarioToFull() && isScenariosDiffer()) {
                 log.info("Запрещённая операция переноса FULL -> FULL");
 
                 throw new IllegalArgumentException("Запрещённая операция переноса FULL -> FULL");
@@ -123,6 +117,30 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
 
         this.AllIFRSAccounts = Collections.unmodifiableList(ifrsAccountRepository.findAll());
         log.info("Результат запроса (штук) всех счетов МСФО => {}", this.AllIFRSAccounts.size());
+    }
+
+    private boolean isScenariosEqual() {
+        return this.scenarioFrom.equals(this.scenarioTo);
+    }
+
+    private boolean isScenarioFromAddition() {
+        return this.scenarioFrom.getStatus().equals(ScenarioStornoStatus.ADDITION);
+    }
+
+    private boolean isScenarioToAddition() {
+        return this.scenarioTo.getStatus().equals(ScenarioStornoStatus.ADDITION);
+    }
+
+    private boolean isScenarioToFull() {
+        return this.scenarioTo.getStatus().equals(ScenarioStornoStatus.FULL);
+    }
+
+    private boolean isScenarioFromFull() {
+        return this.scenarioFrom.getStatus().equals(ScenarioStornoStatus.FULL);
+    }
+
+    private boolean isScenariosDiffer() {
+        return !isScenariosEqual();
     }
 
     private void getScenarioToById(Long scenarioTo_id) {
