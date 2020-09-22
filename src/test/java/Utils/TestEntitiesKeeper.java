@@ -182,7 +182,7 @@ public class TestEntitiesKeeper {
             periods_start = toLocalDate(testDataKeeper.getPeriods_start());
             periods_end = toLocalDate(testDataKeeper.getPeriods_end());
 
-            if (periods_start.plusMonths(1).isBefore(periods_end) || periods_start.plusMonths(1).isEqual(periods_end)) {
+            if (periods_start.plusDays(1).isBefore(periods_end) || periods_start.plusDays(1).isEqual(periods_end)) {
                 periods_start.datesUntil(periods_end, java.time.Period.ofMonths(1)).collect(Collectors.toList()).forEach(date -> {
                     LocalDate d = date.plusMonths(1).withDayOfMonth(1).minusDays(1);
 
