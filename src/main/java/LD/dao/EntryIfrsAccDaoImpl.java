@@ -51,37 +51,6 @@ public class EntryIfrsAccDaoImpl implements EntryIfrsAccDao {
 
         log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
 
- /*        ArrayList<EntryIFRSAcc> notAggregateEntries = new ArrayList<>(entryIFRSAccRepository.findAll()
-                .stream()
-                .filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().equals(firstOpenPeriodForScenarioTo))
-                .filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getEntryID().getScenario().equals(scenario_to))
-                .filter(eIFRS -> eIFRS.getEntryIFRSAccID().getEntry().getStatus().equals(EntryStatus.ACTUAL))
-                .collect(Collectors.toList()));
-
-        ArrayList<Long> ifrsAccs = new ArrayList<>(notAggregateEntries.stream()
-                .map(entryIFRSAcc -> entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId())
-                .collect(Collectors.toList()));
-
-        ArrayList<EntryIFRSAccDTO_out_form> aggregatedEntries = new ArrayList<>();
-
-        ifrsAccs.stream().forEach(acc -> {
-            List<EntryIFRSAcc> ifrsEntriesForAcc = notAggregateEntries.stream()
-                    .filter(entryIFRSAcc -> entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId() == acc)
-                    .collect(Collectors.toList());
-
-            EntryIFRSAccDTO_out_form aggregatedEntryForAcc =
-                    entryIFRSAccTransform.EntryIFRSAcc_to_EntryIFRSAcc_DTO_out_form(ifrsEntriesForAcc.get(0));
-            aggregatedEntryForAcc.setSum(BigDecimal.ZERO);
-
-            for (EntryIFRSAcc entry : ifrsEntriesForAcc) {
-                aggregatedEntryForAcc.setSum(aggregatedEntryForAcc.getSum().add(entry.getSum()));
-            }
-
-            aggregatedEntries.add(aggregatedEntryForAcc);
-        });
-
-        return aggregatedEntries;*/
-
         cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Object[]> criteriaQuery = cb.createQuery(Object[].class);
 
@@ -112,8 +81,8 @@ public class EntryIfrsAccDaoImpl implements EntryIfrsAccDao {
                 )
         );
 
-        criteriaQuery.groupBy(entryIFRSAccToIfrsAccountJoin.get(EntryIFRSAccID_.IFRS_ACCOUNT));
-        criteriaQuery.orderBy(cb.asc(entryIFRSAccToIfrsAccountJoin.get(EntryIFRSAccID_.IFRS_ACCOUNT)));
+        criteriaQuery.groupBy(entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.id));
+        criteriaQuery.orderBy(cb.asc(entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.id)));
 
         TypedQuery<Object[]> query = entityManager.createQuery(criteriaQuery);
         return query.getResultList();
