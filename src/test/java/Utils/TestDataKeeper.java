@@ -25,10 +25,14 @@ public class TestDataKeeper {
     List<DepositRateTestData> depositRates;
     List<LeasingDepositTestData> leasingDeposits;
     List<EndDateTestData> end_dates;
+
     List<EntryTestData> entries_into_leasingDeposit;
     List<EntryTestData> entries_expected;
+    List<EntryTestData> entriesForIfrsSumDaoTest;
+    EntryTestData entryForEntryIfrsCalculation;
+
     List<IfrsAccountTestData> ifrsAccounts;
     List<EntryIfrsAccTestData> entriesIfrsExcepted;
+    List<EntryIfrsAccTestData> entriesIfrsForIfrsSumDaoTests;
     List<ExchangeRateTestData> exchangeRates;
-    EntryTestData entryForEntryIfrsCalculation;
 }
