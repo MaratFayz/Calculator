@@ -59,17 +59,31 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
         getCalculatingUser();
 
         checkIfCopyDateNonNullOrThrowException(copyDate);
-
         this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo = copyDate;
 
         getScenarioFromById(scenarioFrom_id);
         getScenarioToById(scenarioTo_id);
 
+        getFirstOpenDateForScenarioTo();
+
+        checkIfCombinationOfScenariosAppropriateOrThrowException();
+
+        getIfrsAccountsFromDatabase();
+    }
+
+    private void getFirstOpenDateForScenarioTo() {
         this.firstOpenPeriod_ScenarioTo = periodsClosedRepository.findFirstOpenPeriodDateByScenario(this.scenarioTo);
 
         log.info("Результат запроса первого открытого периода для сценария {} => {}",
                 this.scenarioTo.getName(), this.firstOpenPeriod_ScenarioTo);
+    }
 
+    private void getIfrsAccountsFromDatabase() {
+        this.AllIFRSAccounts = Collections.unmodifiableList(ifrsAccountRepository.findAll());
+        log.info("Результат запроса (штук) всех счетов МСФО => {}", this.AllIFRSAccounts.size());
+    }
+
+    private void checkIfCombinationOfScenariosAppropriateOrThrowException() {
         if (!(isScenariosEqual() && isScenarioFromAddition())) {
             log.info("Сценарий-источник {} не равен сценарию-получателю {}", this.scenarioTo.getName(),
                     this.scenarioFrom.getName());
@@ -114,9 +128,6 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
                 }
             }
         }
-
-        this.AllIFRSAccounts = Collections.unmodifiableList(ifrsAccountRepository.findAll());
-        log.info("Результат запроса (штук) всех счетов МСФО => {}", this.AllIFRSAccounts.size());
     }
 
     private boolean isScenariosEqual() {
