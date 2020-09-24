@@ -30,7 +30,7 @@ public class Entry extends AbstractModelClass {
     @Column(name = "end_date_at_this_period", nullable = false)
     private LocalDate end_date_at_this_period;
 
-    @Column(name = "transaction_status")
+    @Column(name = "transaction_status", columnDefinition = "entryStatus")
     @Enumerated(value = EnumType.STRING)
     @Type(type = "pgsql_enum")
     private EntryStatus status;
@@ -38,7 +38,7 @@ public class Entry extends AbstractModelClass {
     @Column(name = "percentRateForPeriodForLD", nullable = false)
     private BigDecimal percentRateForPeriodForLD;
 
-    @Column(name = "Status_EntryMadeDuringOrAfterClosedPeriod", nullable = false)
+    @Column(name = "Status_EntryMadeDuringOrAfterClosedPeriod", nullable = false, columnDefinition = "entryPeriodCreation not null")
     @Enumerated(value = EnumType.STRING)
     @Type(type = "pgsql_enum")
     private EntryPeriodCreation Status_EntryMadeDuringOrAfterClosedPeriod;
@@ -139,7 +139,7 @@ public class Entry extends AbstractModelClass {
     @Column(name = "DISPOSAL_DISCONT_RUB_REG_LD_3_Y", nullable = false, columnDefinition = "DECIMAL(30,10)", scale = 10, precision = 30)
     private BigDecimal DISPOSAL_DISCONT_RUB_REG_LD_3_Y;
 
-    @Column(name = "LDTERM_REG_LD_3_Z", nullable = false)
+    @Column(name = "LDTERM_REG_LD_3_Z", nullable = false, columnDefinition = "leasingDepositDuration not null")
     @Enumerated(value = EnumType.STRING)
     @Type(type = "pgsql_enum")
     private LeasingDepositDuration LDTERM_REG_LD_3_Z;
