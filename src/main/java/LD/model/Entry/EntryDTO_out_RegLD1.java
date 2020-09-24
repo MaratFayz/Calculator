@@ -17,8 +17,8 @@ import java.math.BigDecimal;
 public class EntryDTO_out_RegLD1
 {
 	private Long leasingDeposit;
-	private Long scenario;
-	private Long period;
+	private String scenario;
+	private String period;
 	private String user;
 	private String lastChange;
 	private String CALCULATION_TIME;

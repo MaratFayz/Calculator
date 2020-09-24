@@ -3,10 +3,7 @@ package LD.dao;
 import LD.model.Entry.EntryID;
 import LD.model.Entry.EntryID_;
 import LD.model.Entry.Entry_;
-import LD.model.EntryIFRSAcc.EntryIFRSAcc;
-import LD.model.EntryIFRSAcc.EntryIFRSAccID;
-import LD.model.EntryIFRSAcc.EntryIFRSAccID_;
-import LD.model.EntryIFRSAcc.EntryIFRSAcc_;
+import LD.model.EntryIFRSAcc.*;
 import LD.model.Enums.EntryStatus;
 import LD.model.IFRSAccount.IFRSAccount;
 import LD.model.IFRSAccount.IFRSAccount_;
@@ -41,7 +38,7 @@ public class EntryIfrsAccDaoImpl implements EntryIfrsAccDao {
     private CriteriaBuilder cb;
 
     @Override
-    public List<Object[]> sumActualEntriesIfrs(long scenarioToId) {
+    public List<EntryIFRSAccDTO_out_form> sumActualEntriesIfrs(long scenarioToId) {
         final Scenario scenario_to = scenarioRepository.findById(scenarioToId)
                 .orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioToId + " отсутствует в базе данных"));
 
@@ -52,7 +49,7 @@ public class EntryIfrsAccDaoImpl implements EntryIfrsAccDao {
         log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
 
         cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Object[]> criteriaQuery = cb.createQuery(Object[].class);
+        CriteriaQuery<EntryIFRSAccDTO_out_form> criteriaQuery = cb.createQuery(EntryIFRSAccDTO_out_form.class);
 
         root = criteriaQuery.from(EntryIFRSAcc.class);
         Join<EntryIFRSAccID, IFRSAccount> entryIFRSAccToIfrsAccountJoin = root.join(EntryIFRSAcc_.entryIFRSAccID).join(EntryIFRSAccID_.ifrsAccount);
@@ -61,7 +58,7 @@ public class EntryIfrsAccDaoImpl implements EntryIfrsAccDao {
 
         criteriaQuery.multiselect(
                 entryIfrsToScenario.get(Scenario_.name).alias("scenario"),
-                entryIfrsToPeriod.get(Period_.date).alias("period"),
+                entryIfrsToPeriod.get(Period_.date).as(String.class).alias("period"),
                 entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.account_code).alias("account_code"),
                 entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.account_name).alias("account_name"),
                 entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.flow_code).alias("flow_code"),
@@ -84,7 +81,7 @@ public class EntryIfrsAccDaoImpl implements EntryIfrsAccDao {
         criteriaQuery.groupBy(entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.id));
         criteriaQuery.orderBy(cb.asc(entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.id)));
 
-        TypedQuery<Object[]> query = entityManager.createQuery(criteriaQuery);
+        TypedQuery<EntryIFRSAccDTO_out_form> query = entityManager.createQuery(criteriaQuery);
         return query.getResultList();
     }
 }
