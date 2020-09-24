@@ -54,12 +54,15 @@ public class TestEntitiesKeeper {
     List<LeasingDeposit> leasingDeposits = new ArrayList<>();
     List<EndDate> endDates = new ArrayList<>();
     List<ExchangeRate> exRates = new ArrayList<>();
+
     List<Entry> entries_into_leasingDeposit = new ArrayList<>();
     List<Entry> entries_expected = new ArrayList<>();
     List<Entry> entriesForIfrsSumDaoTest = new ArrayList<>();
     Entry entryForEntryIfrsCalculation;
+
     List<EntryIFRSAcc> entriesIfrsExcepted = new ArrayList<>();
     List<EntryIFRSAcc> entriesIfrsForIfrsSumDaoTests = new ArrayList<>();
+
     List<IFRSAccount> ifrsAccounts = new ArrayList<>();
 
     public static TestEntitiesKeeper transformDataKeeperIntoEntitiesKeeper(TestDataKeeper testDataKeeper) {
@@ -364,7 +367,7 @@ public class TestEntitiesKeeper {
 
         return Entry.builder()
                 .entryID(entryID)
-                .leasingDeposit(this.leasingDeposits.stream().filter(s -> s.getId().equals(testEntryToEntry.getLeasingDepositCode())).collect(Collectors.toList()).get(0))
+                .leasingDeposit(this.leasingDeposits.isEmpty() ? null : this.leasingDeposits.stream().filter(s -> s.getId() == testEntryToEntry.getLeasingDepositCode()).collect(Collectors.toList()).get(0))
                 .status(testEntryToEntry.getStatus())
                 .end_date_at_this_period(DateFormat.parsingDate(testEntryToEntry.getEnd_date_at_this_period()))
                 .Status_EntryMadeDuringOrAfterClosedPeriod(testEntryToEntry.getStatus_EntryMadeDuringOrAfterClosedPeriod())
