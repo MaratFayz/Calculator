@@ -3,6 +3,8 @@ package Utils.XmlDataLoader;
 import Utils.TestEntitiesKeeper;
 import lombok.Getter;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.platform.commons.util.ReflectionUtils;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -18,19 +20,21 @@ class TestClassParser {
     private String fileNameWithTestData;
     private Object testClassInstance;
     private Field testEntitiesKeeperField;
+    private TestEntityManager testEntityManager;
 
-    public static TestClassParser parse(ExtensionContext context) {
+    public static TestClassParser parse(ExtensionContext context) throws IllegalAccessException {
         return new TestClassParser(context);
     }
 
-    private TestClassParser(ExtensionContext context) {
+    private TestClassParser(ExtensionContext context) throws IllegalAccessException {
         this.context = context;
 
         parseMethod();
         parseMethodName();
         parseFileNameWithTestData();
         parseTestClass();
-        parseTestEntityField();
+        parseTestEntityKeeperField();
+        parseTestEntityManager();
     }
 
     private void parseMethod() {
@@ -62,7 +66,7 @@ class TestClassParser {
         testClassInstance = otestInstance.get();
     }
 
-    private void parseTestEntityField() {
+    private void parseTestEntityKeeperField() {
         Optional<Field> ofield = Arrays.stream(testClassInstance.getClass().getDeclaredFields())
                 .filter(f -> f.getType().equals(TestEntitiesKeeper.class)).findAny();
 
@@ -71,5 +75,17 @@ class TestClassParser {
         }
 
         testEntitiesKeeperField = ofield.get();
+    }
+
+    private void parseTestEntityManager() throws IllegalAccessException {
+        Optional<Field> testEntityManagerField = Arrays.stream(testClassInstance.getClass().getDeclaredFields())
+                .filter(f -> f.getType().equals(TestEntityManager.class)).findAny();
+
+        if (testEntityManagerField.isEmpty()) {
+            throw new IllegalStateException("There is no TestEntityManager field!");
+        }
+
+        ReflectionUtils.makeAccessible(testEntityManagerField.get());
+        testEntityManager = (TestEntityManager) testEntityManagerField.get().get(this.testClassInstance);
     }
 }
