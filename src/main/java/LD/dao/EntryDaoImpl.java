@@ -10,6 +10,7 @@ import LD.model.Scenario.Scenario;
 import LD.model.Scenario.Scenario_;
 import LD.repository.PeriodsClosedRepository;
 import LD.repository.ScenarioRepository;
+import LD.rest.exceptions.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
@@ -30,22 +31,25 @@ public class EntryDaoImpl implements EntryDao {
     private CriteriaBuilder cb;
 
     @Override
-    public List<EntryDTO_out_RegLD1> getActiveEntriesForScenarioAndFirstOpenPeriodRegLd1(Scenario scenario) {
-        return getActiveEntriesForScenarioAndFirstOpenPeriod(scenario, this::formRegLd1, EntryDTO_out_RegLD1.class);
+    public List<EntryDTO_out_RegLD1> getActiveEntriesForScenarioAndFirstOpenPeriodRegLd1(Long scenarioId) {
+        return getActiveEntriesForScenarioAndFirstOpenPeriod(scenarioId, this::formRegLd1, EntryDTO_out_RegLD1.class);
     }
 
     @Override
-    public List<EntryDTO_out_RegLD2> getActiveEntriesForScenarioAndFirstOpenPeriodRegLd2(Scenario scenario) {
-        return getActiveEntriesForScenarioAndFirstOpenPeriod(scenario, this::formRegLd2, EntryDTO_out_RegLD2.class);
+    public List<EntryDTO_out_RegLD2> getActiveEntriesForScenarioAndFirstOpenPeriodRegLd2(Long scenarioId) {
+        return getActiveEntriesForScenarioAndFirstOpenPeriod(scenarioId, this::formRegLd2, EntryDTO_out_RegLD2.class);
     }
 
     @Override
-    public List<EntryDTO_out_RegLD3> getActiveEntriesForScenarioAndFirstOpenPeriodRegLd3(Scenario scenario) {
-        return getActiveEntriesForScenarioAndFirstOpenPeriod(scenario, this::formRegLd3, EntryDTO_out_RegLD3.class);
+    public List<EntryDTO_out_RegLD3> getActiveEntriesForScenarioAndFirstOpenPeriodRegLd3(Long scenarioId) {
+        return getActiveEntriesForScenarioAndFirstOpenPeriod(scenarioId, this::formRegLd3, EntryDTO_out_RegLD3.class);
     }
 
-    public <R> List<R> getActiveEntriesForScenarioAndFirstOpenPeriod(Scenario scenario, Function<Root<Entry>, Selection<?>[]> fields,
+    public <R> List<R> getActiveEntriesForScenarioAndFirstOpenPeriod(Long scenarioId, Function<Root<Entry>, Selection<?>[]> fields,
                                                                      Class<R> resultClass) {
+        final Scenario scenario = scenarioRepository.findById(scenarioId)
+                .orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioId + " отсутствует в базе данных"));
+
         LocalDate firstOpenPeriod = periodClosedRepository.findFirstOpenPeriodDateByScenario(scenario);
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -75,9 +79,9 @@ public class EntryDaoImpl implements EntryDao {
                 joinEntryIdScenario.get(Scenario_.name).alias("scenario"),
                 joinEntryIdDate.get(Period_.date).as(String.class).alias("period"),
                 joinEntryUser.get(User_.username).alias("user"),
-                root.get(Entry_.lastChange),
-                root.get(Entry_.entryID).get(EntryID_.CALCULATION_TIME),
-                root.get(Entry_.end_date_at_this_period),
+                root.get(Entry_.lastChange).as(String.class),
+                root.get(Entry_.entryID).get(EntryID_.CALCULATION_TIME).as(String.class),
+                root.get(Entry_.end_date_at_this_period).as(String.class),
                 root.get(Entry_.percentRateForPeriodForLD),
                 root.get(Entry_.status),
                 root.get(Entry_.Status_EntryMadeDuringOrAfterClosedPeriod),
@@ -90,10 +94,10 @@ public class EntryDaoImpl implements EntryDao {
                 root.get(Entry_.DISC_DIFF_BETW_DISCONTS_RUB_REG_LD_1_R),
                 root.get(Entry_.REVAL_CORR_DISC_rub_REG_LD_1_S),
                 root.get(Entry_.CORR_ACC_AMORT_DISC_rub_REG_LD_1_T),
+                root.get(Entry_.CORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X),
                 root.get(Entry_.CORR_NEW_DATE_HIGHER_DISCONT_RUB_REG_LD_1_U),
                 root.get(Entry_.CORR_NEW_DATE_HIGHER_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_V),
                 root.get(Entry_.CORR_NEW_DATE_LESS_DISCONT_RUB_REG_LD_1_W),
-                root.get(Entry_.CORR_NEW_DATE_LESS_CORR_ACC_AMORT_DISC_RUB_REG_LD_1_X)
         };
     }
 
@@ -107,9 +111,9 @@ public class EntryDaoImpl implements EntryDao {
                 joinEntryIdScenario.get(Scenario_.name).alias("scenario"),
                 joinEntryIdDate.get(Period_.date).as(String.class).alias("period"),
                 joinEntryUser.get(User_.username).alias("user"),
-                root.get(Entry_.lastChange),
-                root.get(Entry_.entryID).get(EntryID_.CALCULATION_TIME),
-                root.get(Entry_.end_date_at_this_period),
+                root.get(Entry_.lastChange).as(String.class),
+                root.get(Entry_.entryID).get(EntryID_.CALCULATION_TIME).as(String.class),
+                root.get(Entry_.end_date_at_this_period).as(String.class),
                 root.get(Entry_.percentRateForPeriodForLD),
                 root.get(Entry_.status),
                 root.get(Entry_.Status_EntryMadeDuringOrAfterClosedPeriod),
@@ -132,9 +136,9 @@ public class EntryDaoImpl implements EntryDao {
                 joinEntryIdScenario.get(Scenario_.name).alias("scenario"),
                 joinEntryIdDate.get(Period_.date).as(String.class).alias("period"),
                 joinEntryUser.get(User_.username).alias("user"),
-                root.get(Entry_.lastChange),
-                root.get(Entry_.entryID).get(EntryID_.CALCULATION_TIME),
-                root.get(Entry_.end_date_at_this_period),
+                root.get(Entry_.lastChange).as(String.class),
+                root.get(Entry_.entryID).get(EntryID_.CALCULATION_TIME).as(String.class),
+                root.get(Entry_.end_date_at_this_period).as(String.class),
                 root.get(Entry_.percentRateForPeriodForLD),
                 root.get(Entry_.status),
                 root.get(Entry_.Status_EntryMadeDuringOrAfterClosedPeriod),

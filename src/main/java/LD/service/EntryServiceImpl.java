@@ -2,6 +2,7 @@ package LD.service;
 
 import LD.config.Security.Repository.UserRepository;
 import LD.dao.DaoKeeper;
+import LD.dao.EntryDao;
 import LD.model.Entry.*;
 import LD.model.EntryIFRSAcc.EntryIFRSAcc;
 import LD.model.Enums.EntryStatus;
@@ -56,6 +57,8 @@ public class EntryServiceImpl implements EntryService {
     ReentrantLock reentrantLock;
     @Autowired
     private DaoKeeper daoKeeper;
+    @Autowired
+    private EntryDao entryDao;
 
     public EntryServiceImpl(EntryRepository entryRepository,
                             DepositRatesRepository depositRatesRepository,
@@ -176,50 +179,19 @@ public class EntryServiceImpl implements EntryService {
         return resultFormDB_out;
     }
 
-    public <R> List<R> getAllLDEntries_RegLDX(Long scenarioToId, Function<Entry, R> transformer_To_DTO_RegLD) {
-        final Scenario scenario_to = scenarioRepository.findById(scenarioToId)
-                .orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioToId + " отсутствует в базе данных"));
-
-        log.info("Был получен сценарий-получатель = {}", scenario_to);
-
-        final Period firstOpenPeriodForScenarioTo = periodsClosedRepository.findFirstOpenPeriodByScenario(scenario_to);
-
-        log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
-
-        List<Entry> ActiveEntriesForAllDates = entryRepository.findBystatus(EntryStatus.ACTUAL);
-
-        log.info("Всего актуальных транзакций = {}", ActiveEntriesForAllDates.size());
-
-        List<Entry> activeOnFirstEndDateScenarioTo = ActiveEntriesForAllDates.stream()
-                .filter(ae -> ae.getEntryID().getPeriod().equals(firstOpenPeriodForScenarioTo))
-                .collect(Collectors.toList());
-
-        log.info("Всего актуальных транзакций на первую отчетную дату сценария-получателя = {}",
-                activeOnFirstEndDateScenarioTo.size());
-
-        List<R> activeOnFirstEndDateScenarioTo_regldX = activeOnFirstEndDateScenarioTo.stream()
-                .map(transformer_To_DTO_RegLD)
-                .collect(Collectors.toList());
-
-        log.info("Всего актуальных транзакций на первую отчетную дату сценария-получателя в формате формы = {}",
-                activeOnFirstEndDateScenarioTo_regldX.size());
-
-        return activeOnFirstEndDateScenarioTo_regldX;
-    }
-
     @Override
     public List<EntryDTO_out_RegLD1> getAllLDEntries_RegLD1(Long scenarioToId) {
-        return getAllLDEntries_RegLDX(scenarioToId, entryTransform::Entry_to_EntryDTO_RegLD1);
+        return entryDao.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd1(scenarioToId);
     }
 
     @Override
     public List<EntryDTO_out_RegLD2> getAllLDEntries_RegLD2(Long scenarioToId) {
-        return getAllLDEntries_RegLDX(scenarioToId, entryTransform::Entry_to_EntryDTO_RegLD2);
+        return entryDao.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd2(scenarioToId);
     }
 
     @Override
     public List<EntryDTO_out_RegLD3> getAllLDEntries_RegLD3(Long scenarioToId) {
-        return getAllLDEntries_RegLDX(scenarioToId, entryTransform::Entry_to_EntryDTO_RegLD3);
+        return entryDao.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd3(scenarioToId);
     }
 
     @Override
