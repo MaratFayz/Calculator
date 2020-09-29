@@ -11,6 +11,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
 
+import static java.util.Objects.nonNull;
+
 @Getter
 class TestClassParser {
 
@@ -21,6 +23,7 @@ class TestClassParser {
     private Object testClassInstance;
     private Field testEntitiesKeeperField;
     private TestEntityManager testEntityManager;
+    private TestEntitiesKeeper testEntitiesKeeper;
 
     public static TestClassParser parse(ExtensionContext context) throws IllegalAccessException {
         return new TestClassParser(context);
@@ -29,15 +32,16 @@ class TestClassParser {
     private TestClassParser(ExtensionContext context) throws IllegalAccessException {
         this.context = context;
 
-        parseMethod();
-        parseMethodName();
+        parseTestMethod();
+        parseTestMethodName();
         parseFileNameWithTestData();
         parseTestClass();
         parseTestEntityKeeperField();
+        parseTestEntityKeeper();
         parseTestEntityManager();
     }
 
-    private void parseMethod() {
+    private void parseTestMethod() {
         Optional<Method> otestMethod = this.context.getTestMethod();
 
         if (otestMethod.isEmpty()) {
@@ -47,7 +51,7 @@ class TestClassParser {
         testMethod = otestMethod.get();
     }
 
-    private void parseMethodName() {
+    private void parseTestMethodName() {
         testMethodName = this.testMethod.getName();
     }
 
@@ -77,15 +81,24 @@ class TestClassParser {
         testEntitiesKeeperField = ofield.get();
     }
 
+    private void parseTestEntityKeeper() throws IllegalAccessException {
+        ReflectionUtils.makeAccessible(testEntitiesKeeperField);
+        testEntitiesKeeper = (TestEntitiesKeeper) testEntitiesKeeperField.get(this.testClassInstance);
+    }
+
     private void parseTestEntityManager() throws IllegalAccessException {
-        Optional<Field> testEntityManagerField = Arrays.stream(testClassInstance.getClass().getDeclaredFields())
-                .filter(f -> f.getType().equals(TestEntityManager.class)).findAny();
+        SaveEntitiesIntoDatabase annotation = testMethod.getAnnotation(SaveEntitiesIntoDatabase.class);
 
-        if (testEntityManagerField.isEmpty()) {
-            throw new IllegalStateException("There is no TestEntityManager field!");
+        if (nonNull(annotation)) {
+            Optional<Field> testEntityManagerField = Arrays.stream(testClassInstance.getClass().getDeclaredFields())
+                    .filter(f -> f.getType().equals(TestEntityManager.class)).findAny();
+
+            if (testEntityManagerField.isEmpty()) {
+                throw new IllegalStateException("There is no TestEntityManager field!");
+            }
+
+            ReflectionUtils.makeAccessible(testEntityManagerField.get());
+            testEntityManager = (TestEntityManager) testEntityManagerField.get().get(this.testClassInstance);
         }
-
-        ReflectionUtils.makeAccessible(testEntityManagerField.get());
-        testEntityManager = (TestEntityManager) testEntityManagerField.get().get(this.testClassInstance);
     }
 }
