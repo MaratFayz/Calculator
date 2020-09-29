@@ -1,12 +1,14 @@
 package Utils.XmlDataLoader;
 
-import LD.config.Security.model.User.User;
 import Utils.TestEntitiesKeeper;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import static Utils.Color.*;
+import java.time.ZonedDateTime;
+
+import static Utils.Color.ANSI_CYAN;
+import static Utils.Color.ANSI_RESET;
 
 public class EntitiesIntoDatabaseSaver implements BeforeEachCallback {
 
@@ -17,51 +19,75 @@ public class EntitiesIntoDatabaseSaver implements BeforeEachCallback {
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         parseTestClass(context);
-        viewTestData();
+        viewMetaData();
         getTestEntityManager();
-        saveUserIntoDatabase();
+        getTestEntitiesKeeper();
+        saveDataIntoTestDatabase();
+        viewEndSaving();
     }
 
     private void parseTestClass(ExtensionContext context) throws IllegalAccessException {
         testClassParser = TestClassParser.parse(context);
     }
 
-    private void viewTestData() {
+    private void viewMetaData() {
         System.out.println("");
-        System.out.println("[" + ANSI_CYAN + "START" + ANSI_RESET + "] <------------Saving into database starts running------------>");
+        System.out.println("[" + ANSI_CYAN + "START" + ANSI_RESET + "] <------------Saving into database starting------------>");
     }
 
     private void getTestEntityManager() {
         this.testEntityManager = testClassParser.getTestEntityManager();
     }
 
-    private void saveUserIntoDatabase() {
-        User user = testEntitiesKeeper.getUser();
-        setNullIntoUserId(user);
-        testEntityManager.persistAndFlush(user);
+    private void getTestEntitiesKeeper() {
+        this.testEntitiesKeeper = testClassParser.getTestEntitiesKeeper();
     }
 
-    private void setNullIntoUserId(User user) {
-        user.setId(null);
-    }
-
-    private void saveDepositRatesIntoTestDatabase() {
+    private void saveDataIntoTestDatabase() {
+        setNullIntoUserId();
         setNullIntoCompanyId();
+        setNullIntoCounterpartnerId();
         setNullIntoCurrencyId();
         setNullIntoScenarioId();
         setNullIntoDurationId();
+        setNullIdPeriod();
+        setLastChangeDateIntoPeriod();
+        setNullIdIfrsAccount();
+        setLastChangeDateIntoIfrsAccount();
+        setNullIdIfrsAccount();
+        setLastChangeDateIntoLeasingDeposit();
+        setNullIdLeasingDeposit();
+        setLastChangeDateIntoEntriesForIfrsSumDaoTest();
+        setUserIntoEntries();
 
+        testEntityManager.persistAndFlush(testEntitiesKeeper.getUser());
         testEntityManager.persistAndFlush(testEntitiesKeeper.getCompany());
-        testEntitiesKeeper.getCurrencies().forEach(c -> testEntityManager.persistAndFlush(c));
-        testEntitiesKeeper.getScenarios().forEach(s -> testEntityManager.persistAndFlush(s));
-        testEntitiesKeeper.getDurations().forEach(d -> testEntityManager.persistAndFlush(d));
-        testEntitiesKeeper.getDepositRates().forEach(dr -> testEntityManager.persistAndFlush(dr));
+        testEntityManager.persistAndFlush(testEntitiesKeeper.getCounterpartner());
+        testEntitiesKeeper.getCurrencies().forEach(c -> c = testEntityManager.persistAndFlush(c));
+        testEntitiesKeeper.getScenarios().forEach(s -> s = testEntityManager.persistAndFlush(s));
+        testEntitiesKeeper.getDurations().forEach(d -> d = testEntityManager.persistAndFlush(d));
+        testEntitiesKeeper.getDepositRates().forEach(dr -> dr = testEntityManager.persistAndFlush(dr));
+        testEntitiesKeeper.getPeriods().forEach(p -> p = testEntityManager.persistAndFlush(p));
+        testEntitiesKeeper.getIfrsAccounts().forEach(p -> p = testEntityManager.persistAndFlush(p));
+        testEntitiesKeeper.getLeasingDeposits().forEach(p -> p = testEntityManager.persistAndFlush(p));
+        testEntitiesKeeper.getEntriesForIfrsSumDaoTest().forEach(p -> testEntityManager.persistAndFlush(p));
+        testEntitiesKeeper.getEntriesIfrsForIfrsSumDaoTests().forEach(e -> e = testEntityManager.persistAndFlush(e));
     }
 
+    private void setUserIntoEntries() {
+        testEntitiesKeeper.getEntriesForIfrsSumDaoTest().forEach(e -> e.setUser(testEntitiesKeeper.getUser()));
+    }
 
+    private void setNullIntoUserId() {
+        testEntitiesKeeper.getUser().setId(null);
+    }
 
     private void setNullIntoCompanyId() {
         testEntitiesKeeper.getCompany().setId(null);
+    }
+
+    private void setNullIntoCounterpartnerId() {
+        testEntitiesKeeper.getCounterpartner().setId(null);
     }
 
     private void setNullIntoCurrencyId() {
@@ -76,5 +102,36 @@ public class EntitiesIntoDatabaseSaver implements BeforeEachCallback {
         testEntitiesKeeper.getDurations().forEach(d -> d.setId(null));
     }
 
+    private void setNullIdPeriod() {
+        testEntitiesKeeper.getPeriods().forEach(p -> p.setId(null));
+    }
 
+    private void setLastChangeDateIntoPeriod() {
+        testEntitiesKeeper.getPeriods().forEach(p -> p.setLastChange(ZonedDateTime.now()));
+    }
+
+    private void setNullIdIfrsAccount() {
+        testEntitiesKeeper.getIfrsAccounts().forEach(p -> p.setId(null));
+    }
+
+    private void setLastChangeDateIntoIfrsAccount() {
+        testEntitiesKeeper.getIfrsAccounts().forEach(p -> p.setLastChange(ZonedDateTime.now()));
+    }
+
+    private void setNullIdLeasingDeposit() {
+        testEntitiesKeeper.getLeasingDeposits().forEach(p -> p.setId(null));
+    }
+
+    private void setLastChangeDateIntoLeasingDeposit() {
+        testEntitiesKeeper.getLeasingDeposits().forEach(p -> p.setLastChange(ZonedDateTime.now()));
+    }
+
+    private void setLastChangeDateIntoEntriesForIfrsSumDaoTest() {
+        testEntitiesKeeper.getEntriesForIfrsSumDaoTest().forEach(e -> e.setLastChange(ZonedDateTime.now()));
+    }
+
+    private void viewEndSaving() {
+        System.out.println("[" + ANSI_CYAN + "END" + ANSI_RESET + "]<------------Saving into database finished------------>");
+        System.out.println("");
+    }
 }
