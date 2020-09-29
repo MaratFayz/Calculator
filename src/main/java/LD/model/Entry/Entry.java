@@ -38,7 +38,7 @@ public class Entry extends AbstractModelClass {
     @Column(name = "percentRateForPeriodForLD", nullable = false)
     private BigDecimal percentRateForPeriodForLD;
 
-    @Column(name = "Status_EntryMadeDuringOrAfterClosedPeriod", nullable = false, columnDefinition = "entryPeriodCreation not null")
+    @Column(name = "Status_EntryMadeDuringOrAfterClosedPeriod", nullable = false, columnDefinition = "entryPeriodCreation")
     @Enumerated(value = EnumType.STRING)
     @Type(type = "pgsql_enum")
     private EntryPeriodCreation Status_EntryMadeDuringOrAfterClosedPeriod;
@@ -139,7 +139,7 @@ public class Entry extends AbstractModelClass {
     @Column(name = "DISPOSAL_DISCONT_RUB_REG_LD_3_Y", nullable = false, columnDefinition = "DECIMAL(30,10)", scale = 10, precision = 30)
     private BigDecimal DISPOSAL_DISCONT_RUB_REG_LD_3_Y;
 
-    @Column(name = "LDTERM_REG_LD_3_Z", nullable = false, columnDefinition = "leasingDepositDuration not null")
+    @Column(name = "LDTERM_REG_LD_3_Z", nullable = false, columnDefinition = "leasingDepositDuration")
     @Enumerated(value = EnumType.STRING)
     @Type(type = "pgsql_enum")
     private LeasingDepositDuration LDTERM_REG_LD_3_Z;
