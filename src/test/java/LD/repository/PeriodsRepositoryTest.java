@@ -11,7 +11,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +33,7 @@ public class PeriodsRepositoryTest {
     }
 
     @Test
-    public void test1_autoGeneratePeriods_noGenerated_dateFrom_less_dateTo() {
+    public void generatePeriods_shouldGeneratePeriods_whenNoPeriodsDateFromLessThanDateTo() {
         //нет вообще периодов
         ArrayList<Period> result =
                 PeriodServiceImpl.generatePeriods("08-09-1993", "20-05-2020", user, periodRepository);
@@ -45,7 +44,7 @@ public class PeriodsRepositoryTest {
     }
 
     @Test
-    public void test2_autoGeneratePeriods_noGenerated_dateFrom_bigger_dateTo() {
+    public void generatePeriods_shouldGeneratePeriods_whenNoPeriodsDateFromBiggerThanDateTo() {
         //нет вообще периодов
         ArrayList<Period> result =
                 PeriodServiceImpl.generatePeriods("20-05-2020", "08-09-1993", user, periodRepository);
@@ -61,7 +60,7 @@ public class PeriodsRepositoryTest {
     }
 
     @Test
-    public void test3_autoGeneratePeriods_noGenerated_dateFrom_equals_dateTo() {
+    public void generatePeriods_shouldGenerateOnePeriod_whenNoPeriodsDateFromEqualsDateTo() {
         //нет вообще периодов
         ArrayList<Period> result =
                 PeriodServiceImpl.generatePeriods("20-05-2020", "20-05-2020", user, periodRepository);
@@ -72,7 +71,7 @@ public class PeriodsRepositoryTest {
     }
 
     @Test
-    public void test4_autoGeneratePeriods_allAlreadyGenerated() {
+    public void generatePeriods_shouldNotGeneratePeriods_whenPeriodsAlreadyExist() {
         //все периоды уже имеются - не должно ничего генерироваться
         Period anyDate = Period.builder().date(LocalDate.now()).build();
         when(periodRepository.findByDate(Mockito.any())).thenReturn(anyDate);
