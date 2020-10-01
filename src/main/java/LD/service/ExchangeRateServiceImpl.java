@@ -45,8 +45,6 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     @Autowired
     PeriodRepository periodRepository;
     @Autowired
-    PeriodsClosedRepository periodsClosedRepository;
-    @Autowired
     ScenarioRepository scenarioRepository;
 
     @Override
@@ -194,10 +192,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         List<ExchangeRate> toDeleteExR = exchangeRateRepository.findAll((root, query, qb) -> qb.equal(root.get("exchangeRateID").get("currency"), currency));
         exchangeRateRepository.deleteAll(toDeleteExR);
 
-        LocalDate queryDateFrom = minPeriodDate;
-        LocalDate queryDateTo = maxPeriodDate;
-
-        getCurExRateFrmCBRAndSaveIntoDB(loadingUser, loadingScenario, currency, queryDateFrom, queryDateTo);
+        getCurExRateFrmCBRAndSaveIntoDB(loadingUser, loadingScenario, currency, minPeriodDate, maxPeriodDate);
     }
 
     private void getCurExRateFrmCBRAndSaveIntoDB(User loadingUser, Scenario loadingScenario, Currency currency,
