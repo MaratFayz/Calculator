@@ -86,9 +86,9 @@ public class TestEntitiesKeeper {
         createPeriodInScenarioFromForCopyingEntriesToScenarioTo();
         createDurations();
         createDepositRates();
-        createEndDates();
         createEntriesIntoLeasingDeposits();
         createLeasingDeposits();
+        createEndDates();
         addEntriesIntoLeasingDeposits();
         addEndDatesIntoLeasingDeposits();
         createExpectedEntries();
@@ -276,29 +276,6 @@ public class TestEntitiesKeeper {
         return dr;
     }
 
-    private void createEndDates() {
-        if (nonNull(testDataKeeper.getEnd_dates())) {
-            testDataKeeper.getEnd_dates().forEach(ed -> endDates.add(toEndDates(ed)));
-        }
-    }
-
-    private EndDate toEndDates(EndDateTestData testEndDateToEndDate) {
-        EndDateID endDateID = EndDateID.builder()
-                .leasingDeposit_id(testEndDateToEndDate.getLeasingDepositCode())
-                .period(this.periods.stream().filter(p -> p.getDate().isEqual(DateFormat.parsingDate(testEndDateToEndDate.getPeriod()))).collect(Collectors.toList()).get(0))
-                .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testEndDateToEndDate.getScenarioCode())).collect(Collectors.toList()).get(0))
-                .build();
-
-        EndDate endDate = EndDate.builder()
-                .endDate(DateFormat.parsingDate(testEndDateToEndDate.getEnd_Date()))
-                .endDateID(endDateID)
-                .build();
-
-        endDate.setLastChange(DateFormat.parsingZonedDateTime(testEndDateToEndDate.getLastChange()));
-        endDate.setUser(this.user.getId().equals(testEndDateToEndDate.getUserCode()) ? user : null);
-        return endDate;
-    }
-
     private void createEntriesIntoLeasingDeposits() {
         if (nonNull(testDataKeeper.getEntries_into_leasingDeposit())) {
             testDataKeeper.getEntries_into_leasingDeposit().forEach(e -> entries_into_leasingDeposit.add(toEntry(e)));
@@ -328,6 +305,30 @@ public class TestEntitiesKeeper {
         ld.setLastChange(DateFormat.parsingZonedDateTime(testLeasingDepositToLeasingDeposit.getLastChange()));
         ld.setUser(this.user.getId().equals(testLeasingDepositToLeasingDeposit.getUserCode()) ? user : null);
         return ld;
+    }
+
+    private void createEndDates() {
+        if (nonNull(testDataKeeper.getEnd_dates())) {
+            testDataKeeper.getEnd_dates().forEach(ed -> endDates.add(toEndDates(ed)));
+        }
+    }
+
+    private EndDate toEndDates(EndDateTestData testEndDateToEndDate) {
+        EndDateID endDateID = EndDateID.builder()
+                .leasingDeposit_id(testEndDateToEndDate.getLeasingDepositCode())
+                .period(this.periods.stream().filter(p -> p.getDate().isEqual(DateFormat.parsingDate(testEndDateToEndDate.getPeriod()))).collect(Collectors.toList()).get(0))
+                .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testEndDateToEndDate.getScenarioCode())).collect(Collectors.toList()).get(0))
+                .build();
+
+        EndDate endDate = EndDate.builder()
+                .endDate(DateFormat.parsingDate(testEndDateToEndDate.getEnd_Date()))
+                .endDateID(endDateID)
+                .leasingDeposit(this.leasingDeposits.stream().filter(s -> s.getId().equals(testEndDateToEndDate.getLeasingDepositCode())).collect(Collectors.toList()).get(0))
+                .build();
+
+        endDate.setLastChange(DateFormat.parsingZonedDateTime(testEndDateToEndDate.getLastChange()));
+        endDate.setUser(this.user.getId().equals(testEndDateToEndDate.getUserCode()) ? user : null);
+        return endDate;
     }
 
     private void addEntriesIntoLeasingDeposits() {
