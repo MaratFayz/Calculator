@@ -39,4 +39,30 @@ public class PeriodDaoImpl implements PeriodDao {
     private Predicate periodDateEqualsTo(LocalDate date) {
         return cb.equal(root.get(Period_.DATE), date);
     }
+
+    public LocalDate findMinPeriodDateInDatabase() {
+        cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<LocalDate> criteriaQuery = cb.createQuery(LocalDate.class);
+
+        root = criteriaQuery.from(Period.class);
+        criteriaQuery.select(
+                cb.least(root.get(Period_.date))
+        );
+
+        TypedQuery<LocalDate> query = entityManager.createQuery(criteriaQuery);
+        return query.getSingleResult();
+    }
+
+    public LocalDate findMaxPeriodDateInDatabase() {
+        cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<LocalDate> criteriaQuery = cb.createQuery(LocalDate.class);
+
+        root = criteriaQuery.from(Period.class);
+        criteriaQuery.select(
+                cb.greatest(root.get(Period_.date))
+        );
+
+        TypedQuery<LocalDate> query = entityManager.createQuery(criteriaQuery);
+        return query.getSingleResult();
+    }
 }
