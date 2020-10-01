@@ -56,10 +56,12 @@ public class LeasingDeposit extends AbstractModelClass {
 
     @Enumerated(value = EnumType.STRING)
     @Type(type = "pgsql_enum")
+    @Column(columnDefinition = "statusX")
     private STATUS_X is_created;
 
     @Enumerated(value = EnumType.STRING)
     @Type(type = "pgsql_enum")
+    @Column(columnDefinition = "statusX")
     private STATUS_X is_deleted;
 
     @OneToMany(mappedBy = "leasingDeposit", fetch = FetchType.EAGER)
