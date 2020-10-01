@@ -238,7 +238,6 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
-//        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -305,8 +304,6 @@ public class EntryCalculatorTest {
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
-        //Mockito.when(calculationParametersSource.getAllExRates()).thenReturn(testEntitiesKeeper.getExRates());
-        //Mockito.when(calculationParametersSource.getAllPeriods()).thenReturn(testEntitiesKeeper.getPeriods());
 
         Scenario fact = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("FACT")).findFirst().get();
         Currency usd = testEntitiesKeeper.getLeasingDeposits().get(0).getCurrency();
@@ -329,7 +326,6 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
         lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
-//        Mockito.when(depositRatesRepository.findAll(Mockito.any(Specification.class))).thenReturn(testEntitiesKeeper.getDepositRates());
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
