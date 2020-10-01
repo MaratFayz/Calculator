@@ -70,6 +70,7 @@ public class EntitiesIntoDatabaseSaver implements BeforeEachCallback {
         testEntitiesKeeper.getPeriods().forEach(p -> p = testEntityManager.persistAndFlush(p));
         testEntitiesKeeper.getIfrsAccounts().forEach(p -> p = testEntityManager.persistAndFlush(p));
         testEntitiesKeeper.getLeasingDeposits().forEach(p -> p = testEntityManager.persistAndFlush(p));
+        testEntitiesKeeper.getEndDates().forEach(p -> p = testEntityManager.persistAndFlush(p));
         testEntitiesKeeper.getEntriesForIfrsSumDaoTest().forEach(p -> testEntityManager.persistAndFlush(p));
         testEntitiesKeeper.getEntriesIfrsForIfrsSumDaoTests().forEach(e -> e = testEntityManager.persistAndFlush(e));
     }
