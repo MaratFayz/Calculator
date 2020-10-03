@@ -102,7 +102,9 @@ public class TestEntitiesKeeper {
     }
 
     private void createUser() {
-        user = toUser(testDataKeeper.getUser());
+        if (nonNull(testDataKeeper.getUser())) {
+            user = toUser(testDataKeeper.getUser());
+        }
     }
 
     private User toUser(UserTestData testUserToUser) {
