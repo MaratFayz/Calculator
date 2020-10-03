@@ -9,6 +9,7 @@ import java.time.ZonedDateTime;
 
 import static Utils.Color.ANSI_CYAN;
 import static Utils.Color.ANSI_RESET;
+import static java.util.Objects.nonNull;
 
 public class EntitiesIntoDatabaseSaver implements BeforeEachCallback {
 
@@ -60,14 +61,22 @@ public class EntitiesIntoDatabaseSaver implements BeforeEachCallback {
         setLastChangeDateIntoEntriesForIfrsSumDaoTest();
         setUserIntoEntries();
 
-        testEntityManager.persistAndFlush(testEntitiesKeeper.getUser());
-        testEntityManager.persistAndFlush(testEntitiesKeeper.getCompany());
-        testEntityManager.persistAndFlush(testEntitiesKeeper.getCounterpartner());
+        if (nonNull(testEntitiesKeeper.getUser())) {
+            testEntityManager.persistAndFlush(testEntitiesKeeper.getUser());
+        }
+        if (nonNull(testEntitiesKeeper.getCompany())) {
+            testEntityManager.persistAndFlush(testEntitiesKeeper.getCompany());
+        }
+        if (nonNull(testEntitiesKeeper.getCounterpartner())) {
+            testEntityManager.persistAndFlush(testEntitiesKeeper.getCounterpartner());
+        }
+
         testEntitiesKeeper.getCurrencies().forEach(c -> c = testEntityManager.persistAndFlush(c));
         testEntitiesKeeper.getScenarios().forEach(s -> s = testEntityManager.persistAndFlush(s));
         testEntitiesKeeper.getDurations().forEach(d -> d = testEntityManager.persistAndFlush(d));
         testEntitiesKeeper.getDepositRates().forEach(dr -> dr = testEntityManager.persistAndFlush(dr));
         testEntitiesKeeper.getPeriods().forEach(p -> p = testEntityManager.persistAndFlush(p));
+        testEntitiesKeeper.getExRates().forEach(p -> p = testEntityManager.persistAndFlush(p));
         testEntitiesKeeper.getIfrsAccounts().forEach(p -> p = testEntityManager.persistAndFlush(p));
         testEntitiesKeeper.getLeasingDeposits().forEach(p -> p = testEntityManager.persistAndFlush(p));
         testEntitiesKeeper.getEndDates().forEach(p -> p = testEntityManager.persistAndFlush(p));
@@ -80,15 +89,21 @@ public class EntitiesIntoDatabaseSaver implements BeforeEachCallback {
     }
 
     private void setNullIntoUserId() {
-        testEntitiesKeeper.getUser().setId(null);
+        if (nonNull(testEntitiesKeeper.getUser())) {
+            testEntitiesKeeper.getUser().setId(null);
+        }
     }
 
     private void setNullIntoCompanyId() {
-        testEntitiesKeeper.getCompany().setId(null);
+        if (nonNull(testEntitiesKeeper.getCompany())) {
+            testEntitiesKeeper.getCompany().setId(null);
+        }
     }
 
     private void setNullIntoCounterpartnerId() {
-        testEntitiesKeeper.getCounterpartner().setId(null);
+        if (nonNull(testEntitiesKeeper.getCounterpartner())) {
+            testEntitiesKeeper.getCounterpartner().setId(null);
+        }
     }
 
     private void setNullIntoCurrencyId() {
