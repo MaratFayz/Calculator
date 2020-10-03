@@ -32,17 +32,35 @@ public class EntryDaoImpl implements EntryDao {
 
     @Override
     public List<EntryDTO_out_RegLD1> getActiveEntriesForScenarioAndFirstOpenPeriodRegLd1(Long scenarioId) {
-        return getActiveEntriesForScenarioAndFirstOpenPeriod(scenarioId, this::formRegLd1, EntryDTO_out_RegLD1.class);
+        List<EntryDTO_out_RegLD1> entries = getActiveEntriesForScenarioAndFirstOpenPeriod(scenarioId, this::formRegLd1, EntryDTO_out_RegLD1.class);
+
+        if (entries.isEmpty()) {
+            entries.add(new EntryDTO_out_RegLD1());
+        }
+
+        return entries;
     }
 
     @Override
     public List<EntryDTO_out_RegLD2> getActiveEntriesForScenarioAndFirstOpenPeriodRegLd2(Long scenarioId) {
-        return getActiveEntriesForScenarioAndFirstOpenPeriod(scenarioId, this::formRegLd2, EntryDTO_out_RegLD2.class);
+        List<EntryDTO_out_RegLD2> entries = getActiveEntriesForScenarioAndFirstOpenPeriod(scenarioId, this::formRegLd2, EntryDTO_out_RegLD2.class);
+
+        if (entries.isEmpty()) {
+            entries.add(new EntryDTO_out_RegLD2());
+        }
+
+        return entries;
     }
 
     @Override
     public List<EntryDTO_out_RegLD3> getActiveEntriesForScenarioAndFirstOpenPeriodRegLd3(Long scenarioId) {
-        return getActiveEntriesForScenarioAndFirstOpenPeriod(scenarioId, this::formRegLd3, EntryDTO_out_RegLD3.class);
+        List<EntryDTO_out_RegLD3> entries = getActiveEntriesForScenarioAndFirstOpenPeriod(scenarioId, this::formRegLd3, EntryDTO_out_RegLD3.class);
+
+        if (entries.isEmpty()) {
+            entries.add(new EntryDTO_out_RegLD3());
+        }
+
+        return entries;
     }
 
     public <R> List<R> getActiveEntriesForScenarioAndFirstOpenPeriod(Long scenarioId, Function<Root<Entry>, Selection<?>[]> fields,

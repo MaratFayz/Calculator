@@ -169,7 +169,7 @@ public class EntryDaoImplTest {
                 .ACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(BigDecimal.valueOf(13442).setScale(10))
                 .ACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K(BigDecimal.valueOf(840506).setScale(10))
                 .AMORT_DISCONT_CURRENT_PERIOD_RUB_REG_LD_2_M(BigDecimal.valueOf(55234).setScale(10))
-                .ACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.valueOf(8957412).setScale(10))
+                .ACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.valueOf(895741).setScale(10))
                 .user("User-1")
                 .period("2020-09-30")
                 .scenario("FACT")
@@ -186,7 +186,7 @@ public class EntryDaoImplTest {
                 .ACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(BigDecimal.valueOf(13442).setScale(10))
                 .ACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K(BigDecimal.valueOf(840506).setScale(10))
                 .AMORT_DISCONT_CURRENT_PERIOD_RUB_REG_LD_2_M(BigDecimal.valueOf(55234).setScale(10))
-                .ACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.valueOf(8957412).setScale(10))
+                .ACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.valueOf(895741).setScale(10))
                 .user("User-1")
                 .period("2020-09-30")
                 .scenario("FACT")
@@ -203,7 +203,7 @@ public class EntryDaoImplTest {
                 .ACCUM_AMORT_DISCONT_END_PERIOD_cur_REG_LD_2_J(BigDecimal.valueOf(13442).setScale(10))
                 .ACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_2_K(BigDecimal.valueOf(840506).setScale(10))
                 .AMORT_DISCONT_CURRENT_PERIOD_RUB_REG_LD_2_M(BigDecimal.valueOf(55234).setScale(10))
-                .ACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.valueOf(8957412).setScale(10))
+                .ACCUM_AMORT_DISCONT_END_PERIOD_RUB_REG_LD_2_N(BigDecimal.valueOf(895741).setScale(10))
                 .user("User-1")
                 .period("2020-09-30")
                 .scenario("FACT")
@@ -351,5 +351,50 @@ public class EntryDaoImplTest {
         assertTrue(entriesRegLd3.contains(entry_RegLd3_1));
         assertTrue(entriesRegLd3.contains(entry_RegLd3_2));
         assertTrue(entriesRegLd3.contains(entry_RegLd3_3));
+    }
+
+    @Test
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/EntryDaoImplTest/entryDaoImplTest.xml")
+    @SaveEntitiesIntoDatabase
+    void getActiveEntriesForScenarioAndFirstOpenPeriodRegLd1_shouldReturnListWith1Item_whenNoQueryResults() {
+        Scenario scenario = testEntitiesKeeper.getScenarios().get(0);
+        System.out.println("Scenario = " + scenario);
+
+        when(periodClosedRepository.findFirstOpenPeriodDateByScenario(any())).thenReturn(null);
+
+        List<EntryDTO_out_RegLD1> entriesRegLd1 = entryRepository.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd1(scenario.getId());
+
+        assertEquals(1, entriesRegLd1.size());
+        assertEquals(new EntryDTO_out_RegLD1(), entriesRegLd1.get(0));
+    }
+
+    @Test
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/EntryDaoImplTest/entryDaoImplTest.xml")
+    @SaveEntitiesIntoDatabase
+    void getActiveEntriesForScenarioAndFirstOpenPeriodRegLd2_shouldReturnListWith1Item_whenNoQueryResults() {
+        Scenario scenario = testEntitiesKeeper.getScenarios().get(0);
+        System.out.println("Scenario = " + scenario);
+
+        when(periodClosedRepository.findFirstOpenPeriodDateByScenario(any())).thenReturn(null);
+
+        List<EntryDTO_out_RegLD2> entriesRegLd2 = entryRepository.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd2(scenario.getId());
+
+        assertEquals(1, entriesRegLd2.size());
+        assertEquals(new EntryDTO_out_RegLD2(), entriesRegLd2.get(0));
+    }
+
+    @Test
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/EntryDaoImplTest/entryDaoImplTest.xml")
+    @SaveEntitiesIntoDatabase
+    void getActiveEntriesForScenarioAndFirstOpenPeriodRegLd3_shouldReturnListWith1Item_whenNoQueryResults() {
+        Scenario scenario = testEntitiesKeeper.getScenarios().get(0);
+        System.out.println("Scenario = " + scenario);
+
+        when(periodClosedRepository.findFirstOpenPeriodDateByScenario(any())).thenReturn(null);
+
+        List<EntryDTO_out_RegLD3> entriesRegLd3 = entryRepository.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd3(scenario.getId());
+
+        assertEquals(1, entriesRegLd3.size());
+        assertEquals(new EntryDTO_out_RegLD3(), entriesRegLd3.get(0));
     }
 }
