@@ -4,9 +4,10 @@ import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.User.User;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.IFRSAccount.IFRSAccount;
-import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Scenario.Scenario;
-import LD.repository.*;
+import LD.repository.IFRSAccountRepository;
+import LD.repository.PeriodsClosedRepository;
+import LD.repository.ScenarioRepository;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +22,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 @Getter
 @Setter
@@ -31,25 +33,18 @@ import java.util.Objects;
 @ToString
 public class CalculationParametersSourceImpl implements CalculationParametersSource {
 
-    private LocalDate firstOpenPeriod_ScenarioTo;
-    private LocalDate firstOpenPeriod_ScenarioFrom;
-    private List<IFRSAccount> AllIFRSAccounts;
-    private List<LeasingDeposit> LeasingDeposits;
+    private LocalDate firstOpenPeriodOfScenarioTo;
+    private LocalDate firstOpenPeriodOfScenarioFrom;
+    private List<IFRSAccount> allIfrsAccounts;
     private Scenario scenarioFrom;
     private Scenario scenarioTo;
-    private LocalDate period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo;
+    private LocalDate entriesCopyDateFromScenarioFromToScenarioTo;
     private User user;
 
-    @Autowired
-    private LeasingDepositRepository leasingDepositRepository;
     @Autowired
     private ScenarioRepository scenarioRepository;
     @Autowired
     private IFRSAccountRepository ifrsAccountRepository;
-    @Autowired
-    private ExchangeRateRepository exchangeRateRepository;
-    @Autowired
-    private PeriodRepository periodRepository;
     @Autowired
     private PeriodsClosedRepository periodsClosedRepository;
     @Autowired
@@ -59,74 +54,87 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
         getCalculatingUser();
 
         checkIfCopyDateNonNullOrThrowException(copyDate);
-        this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo = copyDate;
+        this.entriesCopyDateFromScenarioFromToScenarioTo = copyDate;
 
         getScenarioFromById(scenarioFrom_id);
         getScenarioToById(scenarioTo_id);
 
+        getFirstOpenDateForScenarioFrom();
         getFirstOpenDateForScenarioTo();
 
         checkIfCombinationOfScenariosAppropriateOrThrowException();
+        throwExceptionWhenFirstOpenPeriodOfScenarioFromIsAfterThanFirstOpenPeriodScenarioTo();
+        throwExceptionIfCopyDateIsEqualOrGreaterThanFirstOpenPeriodOfScenarioFrom();
 
         getIfrsAccountsFromDatabase();
     }
 
-    private void getFirstOpenDateForScenarioTo() {
-        this.firstOpenPeriod_ScenarioTo = periodsClosedRepository.findFirstOpenPeriodDateByScenario(this.scenarioTo);
-
-        log.info("Результат запроса первого открытого периода для сценария {} => {}",
-                this.scenarioTo.getName(), this.firstOpenPeriod_ScenarioTo);
+    private void getCalculatingUser() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Authentication authentication = context.getAuthentication();
+        String username = authentication.getName();
+        this.user = userRepository.findByUsername(username);
     }
 
-    private void getIfrsAccountsFromDatabase() {
-        this.AllIFRSAccounts = Collections.unmodifiableList(ifrsAccountRepository.findAll());
-        log.info("Результат запроса (штук) всех счетов МСФО => {}", this.AllIFRSAccounts.size());
+    private void checkIfCopyDateNonNullOrThrowException(LocalDate copyDate) {
+        requireNonNull(copyDate, () -> {
+            throw new IllegalArgumentException("Wrong! copyDate equals null!");
+        });
+    }
+
+    private void getScenarioFromById(Long scenarioFrom_id) {
+        this.scenarioFrom = scenarioRepository.findById(scenarioFrom_id).orElseThrow();
+        log.info("Результат запроса сценария-источника по значению {} => {}", scenarioFrom_id,
+                this.scenarioFrom);
+    }
+
+    private void getScenarioToById(Long scenarioTo_id) {
+        this.scenarioTo = scenarioRepository.findById(scenarioTo_id).orElseThrow();
+        log.info("Результат запроса сценария-получателя по значению {} => {}", scenarioTo_id,
+                this.scenarioTo);
+    }
+
+    private void getFirstOpenDateForScenarioFrom() {
+        this.firstOpenPeriodOfScenarioFrom = periodsClosedRepository.findFirstOpenPeriodDateByScenario(this.scenarioFrom);
+
+        log.info("Результат запроса первого открытого периода для сценария {} => {}",
+                this.scenarioFrom.getName(), this.firstOpenPeriodOfScenarioFrom);
+    }
+
+    private void getFirstOpenDateForScenarioTo() {
+        this.firstOpenPeriodOfScenarioTo = periodsClosedRepository.findFirstOpenPeriodDateByScenario(this.scenarioTo);
+
+        log.info("Результат запроса первого открытого периода для сценария {} => {}",
+                this.scenarioTo.getName(), this.firstOpenPeriodOfScenarioTo);
     }
 
     private void checkIfCombinationOfScenariosAppropriateOrThrowException() {
-        if (!(isScenariosEqual() && isScenarioFromAddition())) {
-            log.info("Сценарий-источник {} не равен сценарию-получателю {}", this.scenarioTo.getName(),
-                    this.scenarioFrom.getName());
+        if (isScenariosEqual()) {
+            if (isScenarioFromAddition() & isScenarioToAddition()) {
+                log.info("Сценарий-источник {} равен сценарию-получателю {} со статусом {}", this.scenarioTo.getName(),
+                        this.scenarioFrom.getName(), this.scenarioFrom.getStatus());
+            } else if (isScenarioFromFull() & isScenarioToFull()) {
+                throw new IllegalArgumentException(
+                        "Запрещённая операция расчёта между одним сценарием со статусом: FULL -> FULL");
+            }
+        } else if (isScenariosDiffer()) {
+            log.info("Сценарий-источник {} не равен сценарию-получателю {}", this.scenarioFrom.getName(),
+                    this.scenarioTo.getName());
 
             if (isScenarioFromAddition() && isScenarioToAddition()) {
-                log.info("Запрещённая операция переноса ADDITION -> ADDITION");
                 throw new IllegalArgumentException(
-                        "Запрещённая операция переноса ADDITION -> ADDITION");
-            }
-
-            if (isScenarioFromFull() && isScenarioToAddition()) {
-                log.info("Запрещённая операция переноса FULL -> ADDITION");
-
+                        "Запрещённая операция расчёта между разными сценариями со статусами: ADDITION -> ADDITION");
+            } else if (isScenarioFromAddition() && isScenarioToFull()) {
+                log.info("Разрешённая операция расчёта сценария ADDITION -> FULL");
+            } else if (isScenarioFromFull() && isScenarioToAddition()) {
                 throw new IllegalArgumentException(
-                        "Запрещённая операция переноса FULL -> ADDITION");
-            }
-
-            if (isScenarioFromFull() && isScenarioToFull() && isScenariosDiffer()) {
-                log.info("Запрещённая операция переноса FULL -> FULL");
-
-                throw new IllegalArgumentException("Запрещённая операция переноса FULL -> FULL");
-            }
-
-            this.firstOpenPeriod_ScenarioFrom = periodsClosedRepository.findFirstOpenPeriodDateByScenario(this.scenarioFrom);
-
-            log.info("Результат запроса первого открытого периода для сценария-источника {} => {}",
-                    this.scenarioFrom.getName(), this.firstOpenPeriod_ScenarioFrom);
-
-            if (!(this.firstOpenPeriod_ScenarioFrom.isBefore(this.firstOpenPeriod_ScenarioTo) ||
-                    this.firstOpenPeriod_ScenarioFrom.isEqual(this.firstOpenPeriod_ScenarioTo))) {
+                        "Запрещённая операция расчёта между разными сценариями со статусами: FULL -> ADDITION");
+            } else if (isScenarioFromFull() && isScenarioToFull()) {
                 throw new IllegalArgumentException(
-                        "Дата первого открытого периода сценария-источника всегда должна быть меньше ИЛИ равно первому открытому периоду сценария-получателя");
+                        "Запрещённая операция расчёта между разными сценариями со статусами: FULL -> FULL");
             }
-
-            if (this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo != null) {
-                if (!this.period_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo.isBefore(this.firstOpenPeriod_ScenarioFrom)) {
-                    log.info("Дата начала копирования со сценария-источника всегда должна быть меньше любого первого " +
-                            "открытого периода каждого из двух сценариев, либо равна null");
-
-                    throw new IllegalArgumentException(
-                            "Дата начала копирования со сценария-источника всегда должна быть меньше любого первого открытого периода каждого из двух сценариев, либо равна null");
-                }
-            }
+        } else {
+            throw new IllegalStateException("Сценарии и не равны и не различаются!");
         }
     }
 
@@ -154,28 +162,25 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
         return !isScenariosEqual();
     }
 
-    private void getScenarioToById(Long scenarioTo_id) {
-        this.scenarioTo = scenarioRepository.findById(scenarioTo_id).orElseThrow();
-        log.info("Результат запроса сценария-получателя по значению {} => {}", scenarioTo_id,
-                this.scenarioTo);
+    private void throwExceptionWhenFirstOpenPeriodOfScenarioFromIsAfterThanFirstOpenPeriodScenarioTo() {
+        if (this.firstOpenPeriodOfScenarioFrom.isAfter(this.firstOpenPeriodOfScenarioTo)) {
+            throw new IllegalArgumentException(
+                    "Дата первого открытого периода сценария-источника всегда должна быть меньше ИЛИ " +
+                            "равно первому открытому периоду сценария-получателя");
+        }
     }
 
-    private void getScenarioFromById(Long scenarioFrom_id) {
-        this.scenarioFrom = scenarioRepository.findById(scenarioFrom_id).orElseThrow();
-        log.info("Результат запроса сценария-источника по значению {} => {}", scenarioFrom_id,
-                this.scenarioFrom);
+    private void throwExceptionIfCopyDateIsEqualOrGreaterThanFirstOpenPeriodOfScenarioFrom() {
+        if (!this.entriesCopyDateFromScenarioFromToScenarioTo.isBefore(this.firstOpenPeriodOfScenarioFrom)) {
+            throw new IllegalArgumentException(
+                    "Дата начала копирования со сценария-источника всегда " +
+                            "должна быть меньше любого первого открытого периода " +
+                            "каждого из двух сценариев, либо равна LocalDate.MIN");
+        }
     }
 
-    private void checkIfCopyDateNonNullOrThrowException(LocalDate copyDate) {
-        Objects.requireNonNull(copyDate, () -> {
-            throw new IllegalArgumentException("Wrong! copyDate equals null!");
-        });
-    }
-
-    private void getCalculatingUser() {
-        SecurityContext context = SecurityContextHolder.getContext();
-        Authentication authentication = context.getAuthentication();
-        String username = authentication.getName();
-        this.user = userRepository.findByUsername(username);
+    private void getIfrsAccountsFromDatabase() {
+        this.allIfrsAccounts = Collections.unmodifiableList(ifrsAccountRepository.findAll());
+        log.info("Результат запроса (штук) всех счетов МСФО => {}", this.allIfrsAccounts.size());
     }
 }

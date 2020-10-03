@@ -15,13 +15,13 @@ public interface CalculationParametersSource {
 
     Scenario getScenarioTo();
 
-    LocalDate getFirstOpenPeriod_ScenarioTo();
+    LocalDate getFirstOpenPeriodOfScenarioTo();
 
-    LocalDate getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo();
+    LocalDate getEntriesCopyDateFromScenarioFromToScenarioTo();
 
-    LocalDate getFirstOpenPeriod_ScenarioFrom();
+    LocalDate getFirstOpenPeriodOfScenarioFrom();
 
     User getUser();
 
-    List<IFRSAccount> getAllIFRSAccounts();
+    List<IFRSAccount> getAllIfrsAccounts();
 }
