@@ -276,6 +276,11 @@
             <version>${hibernate-jpamodelgen.version}</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>4.1.2</version>
+        </dependency>
 
     </dependencies>
 </project>
