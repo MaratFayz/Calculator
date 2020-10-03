@@ -40,7 +40,7 @@ public class EntryIfrsAccCalculator extends RecursiveTask<List<EntryIFRSAcc>> {
                             (al1, al2) -> al1.addAll(al2));
         }
         else {
-            countLDENTRY_IN_IFRS_ACC(this.allEntries, calculationParametersSource.getAllIFRSAccounts());
+            countLDENTRY_IN_IFRS_ACC(this.allEntries, calculationParametersSource.getAllIfrsAccounts());
             return this.mappedResult;
         }
     }

@@ -27,9 +27,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -71,7 +68,7 @@ public class EntryCalculatorTest {
         Scenario fact = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("FACT")).findFirst().get();
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(fact);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(fact);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -108,7 +105,7 @@ public class EntryCalculatorTest {
         Scenario fact = testEntitiesKeeper.getScenarios().get(0);
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(fact);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(fact);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -144,7 +141,7 @@ public class EntryCalculatorTest {
         Scenario fact = testEntitiesKeeper.getScenarios().get(0);
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(fact);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(fact);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
             Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
@@ -181,7 +178,7 @@ public class EntryCalculatorTest {
         Scenario fact = testEntitiesKeeper.getScenarios().get(0);
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(fact);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(fact);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -214,7 +211,7 @@ public class EntryCalculatorTest {
 
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         //Mockito.when(calculationParametersSource.getAllExRates()).thenReturn(testEntitiesKeeper.getExRates());
         //Mockito.when(calculationParametersSource.getAllPeriods()).thenReturn(testEntitiesKeeper.getPeriods());
 
@@ -222,7 +219,7 @@ public class EntryCalculatorTest {
         Currency usd = testEntitiesKeeper.getLeasingDeposits().get(0).getCurrency();
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(fact);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(fact);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -260,7 +257,7 @@ public class EntryCalculatorTest {
         Scenario scenarioFull = testEntitiesKeeper.getScenarios().get(0);
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(scenarioFull);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(scenarioFull);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -303,13 +300,13 @@ public class EntryCalculatorTest {
     public void calculate_shouldReturnCorrectEntries_whenDepositEndDateIsLessFirstOpenPeriodAndNoEntries() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
 
         Scenario fact = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("FACT")).findFirst().get();
         Currency usd = testEntitiesKeeper.getLeasingDeposits().get(0).getCurrency();
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(fact);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(fact);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -344,13 +341,13 @@ public class EntryCalculatorTest {
     public void calculate_shouldReturnCorrectEntries_whenDepositEndDateIsHigherFirstOpenPeriodAndNoEntries() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
 
         Scenario fact = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("FACT")).findFirst().get();
         Currency usd = testEntitiesKeeper.getLeasingDeposits().get(0).getCurrency();
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(fact);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(fact);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -385,9 +382,9 @@ public class EntryCalculatorTest {
     public void calculate_shouldReturnCorrectEntries_whenScenarioFromAdditionAndScenarioToFull() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.ADDITION).collect(Collectors.toList()).get(0));
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.FULL).collect(Collectors.toList()).get(0));
-        Mockito.when(calculationParametersSource.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(testEntitiesKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo());
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioFrom()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo()).thenReturn(testEntitiesKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -429,7 +426,7 @@ public class EntryCalculatorTest {
         Scenario scenario = testEntitiesKeeper.getScenarios().get(0);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(scenario);
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(scenario);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -465,9 +462,9 @@ public class EntryCalculatorTest {
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(scenarioAddition);
         Scenario scenarioFull = testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.FULL).collect(Collectors.toList()).get(0);
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(scenarioFull);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioFrom()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
-        Mockito.when(calculationParametersSource.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(LocalDate.MIN);
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo()).thenReturn(LocalDate.MIN);
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
@@ -503,9 +500,9 @@ public class EntryCalculatorTest {
         Scenario scenarioFull = testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.FULL).collect(Collectors.toList()).get(0);
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(scenarioFull);
 
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioFrom()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
-        Mockito.when(calculationParametersSource.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(LocalDate.MIN);
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo()).thenReturn(LocalDate.MIN);
 
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
@@ -538,9 +535,9 @@ public class EntryCalculatorTest {
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(scenarioFrom);
         Scenario scenarioTo = testEntitiesKeeper.getScenarios().stream().filter(sc -> sc.getStatus() == ScenarioStornoStatus.FULL).collect(Collectors.toList()).get(0);
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(scenarioTo);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioFrom()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
-        Mockito.when(calculationParametersSource.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()).thenReturn(LocalDate.MIN);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
+        Mockito.when(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo()).thenReturn(LocalDate.MIN);
+        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {

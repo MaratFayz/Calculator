@@ -65,7 +65,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
         List<Entry> result = new ArrayList<>();
 
         log.info("Начинается расчет транзакций в калькуляторе");
-        result = this.calculate(calculationParametersSource.getFirstOpenPeriod_ScenarioTo());
+        result = this.calculate(calculationParametersSource.getFirstOpenPeriodOfScenarioTo());
 
         log.info("Расчет калькулятора завершен. Количество записей = {}", result.size());
         return result;
@@ -126,9 +126,9 @@ public class EntryCalculator implements Callable<List<Entry>> {
         if (isCalculationScenariosDiffer()) {
             if (!(firstNotCalculatedPeriodOfScenarioFrom.withDayOfMonth(1)
                     .minusDays(1)
-                    .isEqual(this.calculationParametersSource.getFirstOpenPeriod_ScenarioFrom()) ||
+                    .isEqual(this.calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()) ||
                     firstNotCalculatedPeriodOfScenarioFrom.isEqual(
-                            this.calculationParametersSource.getFirstOpenPeriod_ScenarioFrom()))) {
+                            this.calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()))) {
                 throw new IllegalArgumentException(
                         "Транзакции лизингового депозита не соответствуют закрытому периоду: " +
                                 "период последней рассчитанной транзакции должен быть или равен первому открытому периоду или должен быть меньше строго на один период");
@@ -215,7 +215,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         .filter(entry -> entry.getEntryID()
                                 .getPeriod()
                                 .getDate()
-                                .equals(calculationParametersSource.getFirstOpenPeriod_ScenarioTo()
+                                .equals(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()
                                 ))
                         .collect(Collectors.toList());
             }
@@ -267,9 +267,9 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 // и эту проверку (здесь идет проверка на not null)
                 if (isCalculationScenariosDiffer()) {
                     if (isDateCopyFromInitialized()) {
-                        if ((closingdate.isEqual(calculationParametersSource.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo()) ||
-                                closingdate.isAfter(calculationParametersSource.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo())) &&
-                                closingdate.isBefore(calculationParametersSource.getFirstOpenPeriod_ScenarioFrom())) {
+                        if ((closingdate.isEqual(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo()) ||
+                                closingdate.isAfter(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo())) &&
+                                closingdate.isBefore(calculationParametersSource.getFirstOpenPeriodOfScenarioFrom())) {
                             log.info("Осуществляется копирование со сценария {} на сценарий {}",
                                     calculationParametersSource.getScenarioFrom()
                                             .getName(), calculationParametersSource.getScenarioTo()
@@ -322,7 +322,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 Entry t = new Entry();
                 t.setLastChange(entryID.getCALCULATION_TIME());
 
-                if (finalClosingdate.isBefore(calculationParametersSource.getFirstOpenPeriod_ScenarioTo())) {
+                if (finalClosingdate.isBefore(calculationParametersSource.getFirstOpenPeriodOfScenarioTo())) {
                     t.setStatus_EntryMadeDuringOrAfterClosedPeriod(
                             EntryPeriodCreation.AFTER_CLOSING_PERIOD);
                 } else {
@@ -390,14 +390,14 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
                         if (isCalculationScenariosDiffer()) {
                             if (PrevClosingDate.isBefore(
-                                    calculationParametersSource.getFirstOpenPeriod_ScenarioFrom())) {
+                                    calculationParametersSource.getFirstOpenPeriodOfScenarioFrom())) {
                                 lastRevaluationOfDiscount =
                                         findLastRevaluationOfDiscount(calculationParametersSource.getScenarioFrom(),
                                                 finalClosingdate,
                                                 CalculatedAndExistingBeforeCalculationEntries);
                             } else {
                                 LocalDate prevDateBeforeFirstOpenPeriodForScenarioFrom =
-                                        calculationParametersSource.getFirstOpenPeriod_ScenarioFrom()
+                                        calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()
                                                 .withDayOfMonth(1)
                                                 .minusDays(1);
                                 BigDecimal
@@ -442,7 +442,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
                     if (isCalculationScenariosDiffer()) {
                         if (PrevClosingDate.isBefore(
-                                calculationParametersSource.getFirstOpenPeriod_ScenarioFrom())) {
+                                calculationParametersSource.getFirstOpenPeriodOfScenarioFrom())) {
                             curExOnPrevClosingDate = this.exchangeRateRepository.getRateAtDate(PrevClosingDate,
                                     calculationParametersSource.getScenarioFrom(),
                                     this.leasingDepositToCalculate.getCurrency());
@@ -463,14 +463,14 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
                     if (isCalculationScenariosDiffer()) {
                         if (PrevClosingDate.isBefore(
-                                calculationParametersSource.getFirstOpenPeriod_ScenarioFrom())) {
+                                calculationParametersSource.getFirstOpenPeriodOfScenarioFrom())) {
                             lastCalculatedDiscount =
                                     findLastCalculatedDiscount(calculationParametersSource.getScenarioFrom(),
                                             finalClosingdate,
                                             CalculatedAndExistingBeforeCalculationEntries);
                         } else {
                             LocalDate prevDateBeforeFirstOpenPeriodForScenarioFrom =
-                                    calculationParametersSource.getFirstOpenPeriod_ScenarioFrom()
+                                    calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()
                                             .withDayOfMonth(1)
                                             .minusDays(1);
                             BigDecimal
@@ -613,7 +613,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
                         if (isCalculationScenariosDiffer()) {
                             if (finalClosingdate.isEqual(
-                                    calculationParametersSource.getFirstOpenPeriod_ScenarioFrom())) {
+                                    calculationParametersSource.getFirstOpenPeriodOfScenarioFrom())) {
                                 lastEntryIn2Scenarios =
                                         findLastEntry(calculationParametersSource.getScenarioFrom(),
                                                 calculationParametersSource.getScenarioFrom(), PrevClosingDate,
@@ -643,12 +643,12 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                         .equals(calculationParametersSource.getScenarioTo())) {
                                     accumulatedDiscountRUB = calculateAccumDiscountRUB_RegLD2(
                                             this.depositLastDayOfFirstMonth,
-                                            calculationParametersSource.getFirstOpenPeriod_ScenarioFrom(), calculationParametersSource.getScenarioFrom(), t);
+                                            calculationParametersSource.getFirstOpenPeriodOfScenarioFrom(), calculationParametersSource.getScenarioFrom(), t);
 
-                                    if (!calculationParametersSource.getFirstOpenPeriod_ScenarioFrom().isEqual(finalClosingdate)) {
+                                    if (!calculationParametersSource.getFirstOpenPeriodOfScenarioFrom().isEqual(finalClosingdate)) {
                                         accumulatedDiscountRUB = accumulatedDiscountRUB.add(
                                                 calculateAccumDiscountRUB_RegLD2(
-                                                        calculationParametersSource.getFirstOpenPeriod_ScenarioFrom()
+                                                        calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()
                                                         , finalClosingdate, scenarioTo, t));
                                     }
                                 } else {
@@ -695,7 +695,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
                     if (isCalculationScenariosDiffer()) {
                         if (finalClosingdate.isEqual(
-                                calculationParametersSource.getFirstOpenPeriod_ScenarioFrom())) {
+                                calculationParametersSource.getFirstOpenPeriodOfScenarioFrom())) {
                             lastCalculatedDiscount =
 
                                     findLastCalculatedDiscount(calculationParametersSource.getScenarioFrom(),
@@ -704,7 +704,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                         } else {
                             lastCalculatedDiscount =
                                     findLastCalculatedDiscount(calculationParametersSource.getScenarioFrom(),
-                                            calculationParametersSource.getFirstOpenPeriod_ScenarioFrom(),
+                                            calculationParametersSource.getFirstOpenPeriodOfScenarioFrom(),
                                             CalculatedAndExistingBeforeCalculationEntries);
                             lastCalculatedDiscount =
                                     lastCalculatedDiscount.compareTo(BigDecimal.ZERO) != 0 ?
@@ -744,7 +744,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
                     if (isCalculationScenariosDiffer()) {
                         if (PrevClosingDate.isBefore(
-                                calculationParametersSource.getFirstOpenPeriod_ScenarioFrom())) {
+                                calculationParametersSource.getFirstOpenPeriodOfScenarioFrom())) {
                             ExRateOnPrevClosingdate = this.exchangeRateRepository.getRateAtDate(PrevClosingDate,
                                     calculationParametersSource.getScenarioFrom(),
                                     this.leasingDepositToCalculate.getCurrency());
@@ -1046,9 +1046,9 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
         if (isCalculationScenariosDiffer()) {
             if (isDateCopyFromInitialized()) {
-                firstNotCalculatedPeriodOfScenarioTO = calculationParametersSource.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo();
+                firstNotCalculatedPeriodOfScenarioTO = calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo();
             } else {
-                firstNotCalculatedPeriodOfScenarioTO = calculationParametersSource.getFirstOpenPeriod_ScenarioFrom();
+                firstNotCalculatedPeriodOfScenarioTO = calculationParametersSource.getFirstOpenPeriodOfScenarioFrom();
             }
         }
 
@@ -1060,7 +1060,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
     }
 
     private boolean isDateCopyFromInitialized() {
-        return !this.calculationParametersSource.getPeriod_in_ScenarioFrom_ForCopyingEntries_to_ScenarioTo().isEqual(UNINITIALIZED);
+        return !this.calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo().isEqual(UNINITIALIZED);
     }
 
     private boolean isScenarioFromAdditional() {
