@@ -1,29 +1,21 @@
 package LD.service;
 
-import LD.config.DateFormat;
 import LD.config.Security.Repository.UserRepository;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out_onPeriodFor2Scenarios;
 import LD.model.LeasingDeposit.LeasingDepositTransform;
-import LD.model.Scenario.Scenario;
-import LD.repository.DepositRatesRepository;
 import LD.repository.LeasingDepositRepository;
-import LD.repository.PeriodsClosedRepository;
-import LD.repository.ScenarioRepository;
 import LD.rest.exceptions.NotFoundException;
-import LD.service.Calculators.LeasingDeposits.SupportEntryCalculator;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,13 +27,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
     @Autowired
     LeasingDepositTransform leasingDepositTransform;
     @Autowired
-    ScenarioRepository scenarioRepository;
-    @Autowired
-    PeriodsClosedRepository periodsClosedRepository;
-    @Autowired
     UserRepository userRepository;
-    @Autowired
-    private DepositRatesRepository depositRatesRepository;
 
     @Override
     public List<LeasingDepositDTO_out> getAllLeasingDeposits() {
@@ -62,58 +48,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
     @Override
     public List<LeasingDepositDTO_out_onPeriodFor2Scenarios> getAllLeasingDepositsOnPeriodFor2Scenarios(Long scenarioFromId,
                                                                                                         Long scenarioToId) {
-        final Scenario scenario_from = scenarioRepository.findById(scenarioFromId)
-                .orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioFromId + " отсутствует в базе данных"));
-
-        log.info("Был получен сценарий-источник = {}", scenario_from);
-
-        final Scenario scenario_to = scenarioRepository.findById(scenarioToId)
-                .orElseThrow(() -> new NotFoundException("Значение сценария " + scenarioToId + " отсутствует в базе данных"));
-
-        log.info("Был получен сценарий-получатель = {}", scenario_to);
-
-        final LocalDate firstOpenPeriodForScenarioTo = periodsClosedRepository.findFirstOpenPeriodDateByScenario(scenario_to);
-
-        log.info("Был получен первый открытый период для сценария-получателя = {}", firstOpenPeriodForScenarioTo);
-
-        List<LeasingDepositDTO_out_onPeriodFor2Scenarios> leasingDepositFor2Scenarios = leasingDepositRepository.findAll().stream()
-                .map(ld -> {
-                    TreeMap<LocalDate, LocalDate> endDatesForLd =
-                            SupportEntryCalculator.calculateDateUntilThatEntriesMustBeCalculated(ld, scenario_to, depositRatesRepository, firstOpenPeriodForScenarioTo).getMappingPeriodEndDate();
-
-                    log.info("Был сформирован treemap для дат окончания = {}", endDatesForLd);
-
-                    LocalDate endDateForFirstOpenPeriodScenarioTo = endDatesForLd.floorEntry(firstOpenPeriodForScenarioTo).getValue();
-
-                    log.info("Была определена конечная дата для первого открытого периода сценария-получателя = {}", endDateForFirstOpenPeriodScenarioTo);
-
-                    LeasingDepositDTO_out_onPeriodFor2Scenarios mappedld = leasingDepositTransform
-                            .LeasingDeposit_to_LeasingDepositDTO_out_onPeriodFor2Scenarios(ld, endDateForFirstOpenPeriodScenarioTo);
-
-                    log.info("Был получен out экземпляр депозита = {}", mappedld);
-
-                    return mappedld;
-                })
-                .filter(ld_mapped -> {
-                    LocalDate parsedEndDate = DateFormat.parsingDate(ld_mapped.getEndDate());
-
-                    log.info("Был получен parsedEndDate депозита = {}", parsedEndDate);
-                    log.info("firstOpenPeriodForScenarioTo = {}", firstOpenPeriodForScenarioTo);
-
-                    boolean isShow = parsedEndDate.isAfter(firstOpenPeriodForScenarioTo)
-                            || parsedEndDate.withDayOfMonth(1).isEqual(firstOpenPeriodForScenarioTo.withDayOfMonth(1)) ? true : false;
-
-                    log.info("parsedEndDate.isAfter(firstOpenPeriodForScenarioTo) = {}", parsedEndDate.isAfter(firstOpenPeriodForScenarioTo));
-                    log.info("parsedEndDate.withDayOfMonth(1).isEqual(firstOpenPeriodForScenarioTo.withDayOfMonth(1)) = {}", parsedEndDate.withDayOfMonth(1).isEqual(firstOpenPeriodForScenarioTo.withDayOfMonth(1)));
-                    log.info("isShow = {}", isShow);
-
-                    return isShow;
-                })
-                .collect(Collectors.toList());
-
-        log.info("Выводимые депозиты = {}", leasingDepositFor2Scenarios);
-
-        return leasingDepositFor2Scenarios;
+        return leasingDepositRepository.getActualDepositsWithEndDatesForScenarios(scenarioFromId, scenarioToId);
     }
 
     @Override

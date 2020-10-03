@@ -61,12 +61,13 @@ public class LeasingDepositDaoImplTest {
     @Test
     @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/LeasingDepositDaoImplTest/leasingDepositDaoImplTest1.xml")
     @SaveEntitiesIntoDatabase
-    public void getActualDepositsWithEndDatesForScenarios_shouldReturn() {
+    public void getActualDepositsWithEndDatesForScenarios_shouldReturn5ItemsDepositEndDatesFor2ScenariosGreaterFirstOpenDatesOfScenarios_whenExistsData() {
         Scenario scenarioFrom = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getId() == 1L).collect(Collectors.toList()).get(0);
         Scenario scenarioTo = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getId() == 2L).collect(Collectors.toList()).get(0);
 
         when(scenarioRepository.findById(eq(scenarioFrom.getId()))).thenReturn(java.util.Optional.of(scenarioFrom));
         when(scenarioRepository.findById(eq(scenarioTo.getId()))).thenReturn(java.util.Optional.of(scenarioTo));
+        when(periodClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioFrom))).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
         when(periodClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioTo))).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
         when(leasingDepositRepository.findAll()).thenReturn(testEntitiesKeeper.getLeasingDeposits());
 
@@ -153,7 +154,7 @@ public class LeasingDepositDaoImplTest {
         List<LeasingDepositDTO_out_onPeriodFor2Scenarios> queryResult = leasingDepositDaoImpl.getActualDepositsWithEndDatesForScenarios(1L, 2L);
         queryResult.forEach(e -> {
             e.setLastChange(null);
-            System.out.println("Подзапрос EndDatesScTo: " + e);
+            System.out.println("Запрос EndDatesScTo: " + e);
         });
 
         assertEquals(5, queryResult.size());
@@ -162,5 +163,28 @@ public class LeasingDepositDaoImplTest {
         assertTrue(queryResult.contains(ld3));
         assertTrue(queryResult.contains(ld4));
         assertTrue(queryResult.contains(ld5));
+    }
+
+    @Test
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/LeasingDepositDaoImplTest/leasingDepositDaoImplTest1.xml")
+    @SaveEntitiesIntoDatabase
+    void getActualDepositsWithEndDatesForScenarios_shouldReturnListWith1Item_whenNoQueryResults() {
+        Scenario scenarioFrom = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getId() == 1L).collect(Collectors.toList()).get(0);
+        Scenario scenarioTo = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getId() == 2L).collect(Collectors.toList()).get(0);
+
+        when(scenarioRepository.findById(eq(scenarioFrom.getId()))).thenReturn(java.util.Optional.of(scenarioFrom));
+        when(scenarioRepository.findById(eq(scenarioTo.getId()))).thenReturn(java.util.Optional.of(scenarioTo));
+        when(periodClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioFrom))).thenReturn(null);
+        when(periodClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioTo))).thenReturn(null);
+        when(leasingDepositRepository.findAll()).thenReturn(testEntitiesKeeper.getLeasingDeposits());
+
+        List<LeasingDepositDTO_out_onPeriodFor2Scenarios> queryResult = leasingDepositDaoImpl.getActualDepositsWithEndDatesForScenarios(1L, 2L);
+        queryResult.forEach(e -> {
+            e.setLastChange(null);
+            System.out.println("Запрос EndDatesScTo: " + e);
+        });
+
+        assertEquals(1, queryResult.size());
+        assertEquals(new LeasingDepositDTO_out_onPeriodFor2Scenarios(), queryResult.get(0));
     }
 }

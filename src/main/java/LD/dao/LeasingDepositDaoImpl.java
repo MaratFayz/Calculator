@@ -14,7 +14,10 @@ import LD.model.LeasingDeposit.LeasingDepositDTO_out_onPeriodFor2Scenarios;
 import LD.model.LeasingDeposit.LeasingDeposit_;
 import LD.model.Period.Period;
 import LD.model.Period.Period_;
+import LD.model.Scenario.Scenario;
 import LD.model.Scenario.Scenario_;
+import LD.repository.PeriodsClosedRepository;
+import LD.repository.ScenarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +34,10 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
     private EntityManager entityManager;
     private Root<LeasingDeposit> root;
     private CriteriaBuilder cb;
+    @Autowired
+    private ScenarioRepository scenarioRepository;
+    @Autowired
+    private PeriodsClosedRepository periodsClosedRepository;
 
     @Override
     public List<LeasingDeposit> getDepositsByScenario(long scenarioId) {
@@ -52,6 +59,11 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
 
     @Override
     public List<LeasingDepositDTO_out_onPeriodFor2Scenarios> getActualDepositsWithEndDatesForScenarios(Long scenarioIdFrom, Long scenarioIdTo) {
+        Scenario scenarioFrom = scenarioRepository.findById(scenarioIdFrom).get();
+        Scenario scenarioTo = scenarioRepository.findById(scenarioIdTo).get();
+        LocalDate firstOpenPeriodDateByScenarioFrom = periodsClosedRepository.findFirstOpenPeriodDateByScenario(scenarioFrom);
+        LocalDate firstOpenPeriodDateByScenarioTo = periodsClosedRepository.findFirstOpenPeriodDateByScenario(scenarioTo);
+
         cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<LeasingDepositDTO_out_onPeriodFor2Scenarios> criteriaQuery = cb.createQuery(LeasingDepositDTO_out_onPeriodFor2Scenarios.class);
 
@@ -91,10 +103,11 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
                                                 cb.equal(rootEndDate.get(EndDate_.endDateID).get(EndDateID_.scenario).get(Scenario_.id), scenarioIdFrom),
                                                 cb.equal(rootEndDate.get(EndDate_.endDateID).get(EndDateID_.period).get(Period_.date), subQMaxDateWithEndDate)
                                         )
-                                )
+                                ),
+                                cb.greaterThan(rootEndDate.get(EndDate_.endDate), firstOpenPeriodDateByScenarioFrom),
+                                cb.greaterThan(rootEndDate.get(EndDate_.endDate), firstOpenPeriodDateByScenarioTo)
                         )
                 );
-
 
         criteriaQuery.groupBy(
                 rootEndDate.get(EndDate_.leasingDeposit).get(LeasingDeposit_.id),
@@ -102,7 +115,13 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
                 rootEndDate.get(EndDate_.endDateID).get(EndDateID_.period).get(Period_.date));
 
         TypedQuery<LeasingDepositDTO_out_onPeriodFor2Scenarios> query = entityManager.createQuery(criteriaQuery);
-        return query.getResultList();
+        List<LeasingDepositDTO_out_onPeriodFor2Scenarios> resultList = query.getResultList();
+
+        if (resultList.isEmpty()) {
+            return List.of(new LeasingDepositDTO_out_onPeriodFor2Scenarios());
+        } else {
+            return resultList;
+        }
     }
 
     private Subquery<LocalDate> getMaxDateWithEndDateForScenarioFrom(Long scenarioFromId, CriteriaQuery<LeasingDepositDTO_out_onPeriodFor2Scenarios> criteriaQuery, Root<EndDate> root) {
