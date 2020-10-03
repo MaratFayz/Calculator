@@ -14,4 +14,6 @@ public interface ExchangeRateDao {
     BigDecimal getRateAtDate(LocalDate date, Scenario scenario, Currency currency);
 
     BigDecimal getAverageRateAtDate(LocalDate date, Scenario scenario, Currency currency);
+
+    LocalDate findMaxDateWithExchangeRateByCurrencyIdAndScenarioId(Long currencyId, Long scenarioId);
 }

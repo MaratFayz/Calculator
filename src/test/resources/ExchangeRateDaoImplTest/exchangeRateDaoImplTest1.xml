@@ -63,7 +63,7 @@
         <exchangeRate>
             <currencyCode>2</currencyCode>
             <scenarioCode>1</scenarioCode>
-            <date>01.02.9999</date>
+            <date>01.02.6666</date>
             <rate_at_date>-5000</rate_at_date>
             <average_rate_for_month>-6000</average_rate_for_month>
         </exchangeRate>
@@ -84,17 +84,16 @@
         <exchangeRate>
             <currencyCode>1</currencyCode>
             <scenarioCode>2</scenarioCode>
-            <date>01.02.9999</date>
+            <date>01.02.7777</date>
             <rate_at_date>-11000</rate_at_date>
             <average_rate_for_month>-12000</average_rate_for_month>
         </exchangeRate>
         <exchangeRate>
             <currencyCode>2</currencyCode>
             <scenarioCode>2</scenarioCode>
-            <date>01.02.9999</date>
+            <date>01.02.8888</date>
             <rate_at_date>-13000</rate_at_date>
             <average_rate_for_month>-14000</average_rate_for_month>
         </exchangeRate>
     </exchangeRates>
-
 </testData>

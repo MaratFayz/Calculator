@@ -7,9 +7,11 @@ import LD.model.ExchangeRate.ExchangeRate;
 import LD.model.ExchangeRate.ExchangeRateDTO_out;
 import LD.model.ExchangeRate.ExchangeRateID;
 import LD.model.ExchangeRate.ExchangeRateTransform;
-import LD.model.Period.Period;
 import LD.model.Scenario.Scenario;
-import LD.repository.*;
+import LD.repository.CurrencyRepository;
+import LD.repository.ExchangeRateRepository;
+import LD.repository.PeriodRepository;
+import LD.repository.ScenarioRepository;
 import LD.rest.exceptions.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
@@ -19,15 +21,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -115,67 +118,40 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         log.info("Перечень валют, которые имеют код ЦБ => {}", currenciesWithCBRCode);
 
         //самая ранняя дата периодов в базе данных (с неё будет загружаться информация с ЦБ)
-        Optional<Period> minPeriod = periodRepository.findAll().stream().min(Comparator.comparing(Period::getDate));
-        LocalDate minPeriodDate;
-
-        if (minPeriod.isPresent())
-            minPeriodDate = minPeriod.get().getDate().withDayOfMonth(1);
-        else {
-            log.info("Наименьшая дата периода не представлена в справочнике периодов => завершение программы");
-            return;
-        }
-
+        LocalDate minPeriodDate = periodRepository.findMinPeriodDateInDatabase();
         log.info("Наименьшая дата (1е число) в справочнике периодов => {}", minPeriodDate);
 
         //самая поздняя дата периодов в базе данных (по неё будет загружаться информация с ЦБ)
-        Optional<Period> maxPeriod = periodRepository.findAll().stream().max(Comparator.comparing(Period::getDate));
-        LocalDate maxPeriodDate;
-
-        if (maxPeriod.isPresent())
-            maxPeriodDate = maxPeriod.get().getDate().plusDays(1);
-        else {
-            log.info("Наибольшая дата периода не представлена в справочнике периодов => завершение программы");
-            return;
-        }
-
+        LocalDate maxPeriodDate = periodRepository.findMaxPeriodDateInDatabase();
         log.info("Наибольшая дата в справочнике периодов => {}", maxPeriodDate);
-
-        //определим, за какие даты в базе данных есть курсы
-        HashMap<Currency, List<ExchangeRate>> CurExRates = new HashMap<>();
-
-        currenciesWithCBRCode.stream().forEach(currency -> {
-            List<ExchangeRate> exchangeRates = exchangeRateRepository.findAll().stream()
-                    .filter(er -> er.getExchangeRateID().getScenario().getId().equals(scenario_id))
-                    .filter(er -> er.getExchangeRateID().getCurrency().equals(currency))
-                    .collect(Collectors.toList());
-
-            CurExRates.put(currency, exchangeRates);
-        });
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User loadingUser = userRepository.findByUsername(username);
         Scenario loadingScenario = scenarioRepository.findById(scenario_id).get();
 
-        CurExRates.keySet().stream().forEach(currency ->
+        currenciesWithCBRCode.stream().forEach(currency ->
         {
             if (isAddOnlyNewestRates) {
-                Optional<ExchangeRate> maxCurEx = CurExRates.get(currency).stream()
-                        .max(Comparator.comparing(er -> er.getExchangeRateID().getDate()));
+                LocalDate maxCurExDate = LocalDate.MIN;
+
+                try {
+                    maxCurExDate = exchangeRateRepository.findMaxDateWithExchangeRateByCurrencyIdAndScenarioId(currency.getId(), scenario_id);
+                } catch (NoResultException e) {
+                    log.info("Курсов валют в базе не представлено, начинается загрузка с нуля");
+                }
 
                 LocalDate prevDayBeforeNow = LocalDate.now();
 
-                if (maxCurEx.isPresent()) {
-                    LocalDate maxCurExDate = maxCurEx.get().getExchangeRateID().getDate();
-
+                if (!maxCurExDate.isEqual(LocalDate.MIN)) {
                     if (maxPeriodDate.isAfter(maxCurExDate) && prevDayBeforeNow.isAfter(maxCurExDate)) {
-                        LocalDate saveFromDate = maxCurEx.get().getExchangeRateID().getDate().plusDays(1);
+                        LocalDate saveFromDate = maxCurExDate.plusDays(1);
 
                         getCurExRateFrmCBRAndSaveIntoDB(loadingUser, loadingScenario, currency,
                                 saveFromDate, maxPeriodDate);
                     } else {
                         log.info("Даты равны: Максимальная дата курсов валют есть = {}, " +
                                         "дата макс периода = {}, дата на момент расчета = {}; расчет проводиться не будет",
-                                maxCurEx, maxPeriodDate, prevDayBeforeNow);
+                                maxCurExDate, maxPeriodDate, prevDayBeforeNow);
                     }
                 } else {
                     log.info("Курсов валют в базе не представлено, начинается загрузка с нуля");
@@ -246,8 +222,8 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     }
 
     private TreeMap<LocalDate, BigDecimal> getExRatesFromCBR(LocalDate queryDateFrom,
-                                                                 LocalDate queryDateTo,
-                                                                 Currency currency) {
+                                                             LocalDate queryDateTo,
+                                                             Currency currency) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String dateFrom = queryDateFrom.format(dtf); //"01/01/2020";
         String dateTo = queryDateTo.format(dtf); //"10/01/2020";

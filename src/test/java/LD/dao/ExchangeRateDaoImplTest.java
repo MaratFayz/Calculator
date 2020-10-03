@@ -6,6 +6,7 @@ import LD.model.Scenario.Scenario;
 import LD.repository.ExchangeRateRepository;
 import Utils.TestEntitiesKeeper;
 import Utils.XmlDataLoader.LoadXmlFileForLeasingDepositsTest;
+import Utils.XmlDataLoader.SaveEntitiesIntoDatabase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,8 +37,8 @@ public class ExchangeRateDaoImplTest {
 
     @Test
     @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/ExchangeRateDaoImplTest/exchangeRateDaoImplTest1.xml")
+    @SaveEntitiesIntoDatabase
     void getRateAtDate_shouldReturnRate_whenParametersAreCorrect() {
-        saveExchangeRatesIntoTestDatabase();
         LocalDate date = LocalDate.of(2020, 2, 28);
 
         Scenario requiredScenario = testEntitiesKeeper.getScenarios().get(0);
@@ -48,8 +49,8 @@ public class ExchangeRateDaoImplTest {
 
     @Test
     @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/ExchangeRateDaoImplTest/exchangeRateDaoImplTest1.xml")
+    @SaveEntitiesIntoDatabase
     void getAverageRateAtDate_shouldReturnRate_whenParametersAreCorrect() {
-        saveExchangeRatesIntoTestDatabase();
         LocalDate date = LocalDate.of(2020, 2, 28);
 
         Scenario requiredScenario = testEntitiesKeeper.getScenarios().get(0);
@@ -58,25 +59,28 @@ public class ExchangeRateDaoImplTest {
         assertEquals(BigDecimal.valueOf(2), actualExchangeRate.setScale(0));
     }
 
-    private void saveExchangeRatesIntoTestDatabase() {
-        setNullIntoUserId();
-        setNullIntoCurrencyId();
-        setNullIntoScenarioId();
-        testEntityManager.persistAndFlush(testEntitiesKeeper.getUser());
-        testEntitiesKeeper.getCurrencies().forEach(c -> testEntityManager.persistAndFlush(c));
-        testEntitiesKeeper.getScenarios().forEach(s -> testEntityManager.persistAndFlush(s));
-        testEntitiesKeeper.getExRates().forEach(er -> testEntityManager.persistAndFlush(er));
-    }
+    @Test
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/ExchangeRateDaoImplTest/exchangeRateDaoImplTest1.xml")
+    @SaveEntitiesIntoDatabase
+    void findMaxDateWithExchangeRateByCurrencyIdAndScenarioId_shouldReturnMaxDateWithExRate_whenValuesInDatabase() {
+        LocalDate maxDateScenarioId1CurrencyId1 = exchangeRateRepository.findMaxDateWithExchangeRateByCurrencyIdAndScenarioId(
+                1L, 1L);
+        System.out.println("maxDateScenarioId1CurrencyId1 => " + maxDateScenarioId1CurrencyId1);
+        assertEquals(LocalDate.of(9999,2,1), maxDateScenarioId1CurrencyId1);
 
-    private void setNullIntoUserId() {
-        testEntitiesKeeper.getUser().setId(null);
-    }
+        LocalDate maxDateScenarioId1CurrencyId2 = exchangeRateRepository.findMaxDateWithExchangeRateByCurrencyIdAndScenarioId(
+                2L, 2L);
+        System.out.println("maxDateScenarioId1CurrencyId1 => " + maxDateScenarioId1CurrencyId2);
+        assertEquals(LocalDate.of(8888,2,1), maxDateScenarioId1CurrencyId2);
 
-    private void setNullIntoCurrencyId() {
-        testEntitiesKeeper.getCurrencies().forEach(cu -> cu.setId(null));
-    }
+        LocalDate maxDateScenarioId1CurrencyId3 = exchangeRateRepository.findMaxDateWithExchangeRateByCurrencyIdAndScenarioId(
+                1L, 2L);
+        System.out.println("maxDateScenarioId1CurrencyId3 => " + maxDateScenarioId1CurrencyId3);
+        assertEquals(LocalDate.of(7777,2,1), maxDateScenarioId1CurrencyId3);
 
-    private void setNullIntoScenarioId() {
-        testEntitiesKeeper.getScenarios().forEach(s -> s.setId(null));
+        LocalDate maxDateScenarioId1CurrencyId4 = exchangeRateRepository.findMaxDateWithExchangeRateByCurrencyIdAndScenarioId(
+                2L, 1L);
+        System.out.println("maxDateScenarioId1CurrencyId4 => " + maxDateScenarioId1CurrencyId4);
+        assertEquals(LocalDate.of(6666,2,1), maxDateScenarioId1CurrencyId4);
     }
 }
