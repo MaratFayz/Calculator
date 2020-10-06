@@ -117,7 +117,6 @@ public class EntryCalculatorTest {
             Mockito.lenient().when(periodRepository.findPeriodByDate(eq(period.getDate()))).thenReturn(period);
         });
 
-
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
@@ -130,7 +129,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
         assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(30, 4, 2017), lec.getFirstPeriodWithoutEntryUtc());
+        assertEquals(Builders.getDate(30, 4, 2017), lec.getFirstNotCalculatedPeriod());
         assertEquals(32, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -141,7 +140,6 @@ public class EntryCalculatorTest {
         Scenario fact = testEntitiesKeeper.getScenarios().get(0);
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(fact);
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(fact);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
             Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
@@ -162,7 +160,7 @@ public class EntryCalculatorTest {
 
         threadExecutor.shutdown();
 
-        assertNull(lec.getFirstPeriodWithoutEntryUtc());
+        assertNull(lec.getFirstNotCalculatedPeriod());
         assertEquals(33, lec.getCalculatedStornoDeletedEntries().stream()
                 .filter(entry -> entry.getStatus() == EntryStatus.DELETED)
                 .count());
@@ -200,7 +198,7 @@ public class EntryCalculatorTest {
 
         threadExecutor.shutdown();
 
-        assertEquals(Builders.getDate(31, 12, 2019), lec.getFirstPeriodWithoutEntryUtc());
+        assertEquals(Builders.getDate(31, 12, 2019), lec.getFirstNotCalculatedPeriod());
         assertEquals(0, lec.getCalculatedStornoDeletedEntries().size());
     }
 
@@ -212,8 +210,6 @@ public class EntryCalculatorTest {
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
         Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
-        //Mockito.when(calculationParametersSource.getAllExRates()).thenReturn(testEntitiesKeeper.getExRates());
-        //Mockito.when(calculationParametersSource.getAllPeriods()).thenReturn(testEntitiesKeeper.getPeriods());
 
         Scenario fact = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("FACT")).findFirst().get();
         Currency usd = testEntitiesKeeper.getLeasingDeposits().get(0).getCurrency();
@@ -241,7 +237,7 @@ public class EntryCalculatorTest {
 
         threadExecutor.shutdown();
 
-        assertEquals(getDate(30, 11, 2019), lec.getFirstPeriodWithoutEntryUtc());
+        assertEquals(getDate(30, 11, 2019), lec.getFirstNotCalculatedPeriod());
         assertEquals(1, lec.getCalculatedStornoDeletedEntries().stream()
                 .filter(entry -> entry.getStatus() == EntryStatus.STORNO)
                 .count());
@@ -249,50 +245,6 @@ public class EntryCalculatorTest {
         assertEquals(1, lec.getCalculatedStornoDeletedEntries().stream()
                 .filter(entry -> entry.getStatus() == EntryStatus.ACTUAL)
                 .count());
-    }
-
-    @Test
-    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnAllNewEntriesAndAllStornoEntries_whenScenarioIsFull.xml")
-    public void calculate_shouldReturnAllNewEntriesAndAllStornoEntries_whenScenarioIsFull() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        Scenario scenarioFull = testEntitiesKeeper.getScenarios().get(0);
-        Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(scenarioFull);
-        Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(scenarioFull);
-        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
-        Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
-
-        testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
-        });
-
-        testEntitiesKeeper.getPeriods().forEach(period -> {
-            Mockito.lenient().when(periodRepository.findPeriodByDate(eq(period.getDate()))).thenReturn(period);
-        });
-
-        threadExecutor = Executors.newFixedThreadPool(10);
-
-        leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
-
-        Future<List<Entry>> entries = threadExecutor.submit(lec);
-        calculatedEntries.addAll(entries.get());
-
-        threadExecutor.shutdown();
-
-        assertEquals(getDate(31, 3, 2017), lec.getFirstPeriodWithoutEntryUtc());
-
-        assertEquals(33, lec.getCalculatedStornoDeletedEntries().stream()
-                .filter(entry -> entry.getStatus() == EntryStatus.STORNO)
-                .count());
-
-        assertEquals(66, lec.getCalculatedStornoDeletedEntries().size());
-
-        assertEquals(33, lec.getCalculatedStornoDeletedEntries().stream()
-                .filter(entry -> entry.getStatus() == EntryStatus.ACTUAL)
-                .count());
-
-        EntryComparator.compare(testEntitiesKeeper.getEntries_expected(),
-                calculatedEntries.stream().filter(e -> e.getStatus() == EntryStatus.ACTUAL).collect(Collectors.toList()), 0);
     }
 
     @Test
@@ -331,7 +283,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
         assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstPeriodWithoutEntryUtc());
+        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstNotCalculatedPeriod());
         assertEquals(33, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -339,10 +291,6 @@ public class EntryCalculatorTest {
     @Test
     @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForCalculator/calculate_shouldReturnCorrectEntries_whenDepositEndDateIsHigherFirstOpenPeriodAndNoEntries.xml")
     public void calculate_shouldReturnCorrectEntries_whenDepositEndDateIsHigherFirstOpenPeriodAndNoEntries() throws ExecutionException, InterruptedException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
-        Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(testEntitiesKeeper.getScenarios().get(0));
-        Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
-
         Scenario fact = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("FACT")).findFirst().get();
         Currency usd = testEntitiesKeeper.getLeasingDeposits().get(0).getCurrency();
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(fact);
@@ -372,7 +320,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
         assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstPeriodWithoutEntryUtc());
+        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstNotCalculatedPeriod());
         assertEquals(30, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -450,7 +398,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000).setScale(0, RoundingMode.HALF_UP), leasingDepositToCalculate.getDeposit_sum_not_disc().setScale(0, RoundingMode.HALF_UP));
         assertEquals(BigDecimal.valueOf(100000).setScale(0, RoundingMode.HALF_UP), lec.getDepositSumDiscountedOnFirstEndDate().setScale(0, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(31, 1, 2019), lec.getFirstPeriodWithoutEntryUtc());
+        assertEquals(Builders.getDate(31, 1, 2019), lec.getFirstNotCalculatedPeriod());
         assertEquals(2, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -464,7 +412,6 @@ public class EntryCalculatorTest {
         Mockito.when(calculationParametersSource.getScenarioTo()).thenReturn(scenarioFull);
         Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioFrom()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioFrom());
         Mockito.when(calculationParametersSource.getFirstOpenPeriodOfScenarioTo()).thenReturn(testEntitiesKeeper.getFirstOpenPeriodScenarioTo());
-        Mockito.when(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo()).thenReturn(LocalDate.MIN);
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {

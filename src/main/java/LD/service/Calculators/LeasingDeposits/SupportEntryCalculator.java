@@ -137,9 +137,7 @@ public class SupportEntryCalculator {
     }
 
     private void calculateDepositDurationMonths() {
-        int LDdurationMonths = (int) Math.round(depositDurationDays / ((double) DAYS_IN_YEAR / (double) MONTHS_IN_YEAR));
-
-        this.depositDurationMonths = LDdurationMonths;
+        this.depositDurationMonths = (int) Math.round(depositDurationDays / ((double) DAYS_IN_YEAR / (double) MONTHS_IN_YEAR));
     }
 
     private void getDepositRateOrThrowExceptionWhenZeroOrMoreThanOneRate() {
