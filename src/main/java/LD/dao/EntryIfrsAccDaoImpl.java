@@ -18,6 +18,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -32,7 +33,7 @@ public class EntryIfrsAccDaoImpl implements EntryIfrsAccDao {
     private PeriodsClosedRepository periodClosedRepository;
     @Autowired
     private ScenarioRepository scenarioRepository;
-    @Autowired
+    @PersistenceContext
     private EntityManager entityManager;
     private Root<EntryIFRSAcc> root;
     private CriteriaBuilder cb;

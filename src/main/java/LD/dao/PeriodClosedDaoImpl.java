@@ -10,6 +10,7 @@ import LD.model.Scenario.Scenario;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -19,7 +20,7 @@ import java.time.LocalDate;
 
 public class PeriodClosedDaoImpl implements PeriodClosedDao {
 
-    @Autowired
+    @PersistenceContext
     private EntityManager entityManager;
     private Root<PeriodsClosed> root;
     private CriteriaBuilder cb;

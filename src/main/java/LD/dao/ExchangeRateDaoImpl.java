@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -26,7 +27,7 @@ import java.util.List;
 @Component
 public class ExchangeRateDaoImpl implements ExchangeRateDao {
 
-    @Autowired
+    @PersistenceContext
     private EntityManager entityManager;
     private Root<ExchangeRate> root;
     private CriteriaBuilder cb;

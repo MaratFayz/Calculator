@@ -14,6 +14,7 @@ import LD.rest.exceptions.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,7 +26,7 @@ public class EntryDaoImpl implements EntryDao {
     private PeriodsClosedRepository periodClosedRepository;
     @Autowired
     private ScenarioRepository scenarioRepository;
-    @Autowired
+    @PersistenceContext
     private EntityManager entityManager;
     private Root<Entry> root;
     private CriteriaBuilder cb;

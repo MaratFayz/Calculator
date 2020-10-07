@@ -17,6 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
 import javax.persistence.metamodel.EntityType;
@@ -28,7 +29,7 @@ import java.time.LocalDate;
 @Log4j2
 public class DepositRateDaoImpl implements DepositRateDao {
 
-    @Autowired
+    @PersistenceContext
     private EntityManager entityManager;
     private Root<DepositRate> root;
     private CriteriaBuilder cb;

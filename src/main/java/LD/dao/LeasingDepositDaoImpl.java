@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
 import java.time.LocalDate;
@@ -30,7 +31,7 @@ import java.util.List;
 @Component
 public class LeasingDepositDaoImpl implements LeasingDepositDao {
 
-    @Autowired
+    @PersistenceContext
     private EntityManager entityManager;
     private Root<LeasingDeposit> root;
     private CriteriaBuilder cb;
