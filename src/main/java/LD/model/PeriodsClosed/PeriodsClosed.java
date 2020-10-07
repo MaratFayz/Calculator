@@ -1,12 +1,14 @@
 package LD.model.PeriodsClosed;
 
-import LD.config.Security.model.User.User;
+import LD.model.AbstractModelClass;
 import LD.model.Enums.STATUS_X;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "PeriodsClosed")
@@ -14,19 +16,12 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor()
 @Builder
 @AllArgsConstructor
-public class PeriodsClosed
-{
-	@EmbeddedId
-	private PeriodsClosedID periodsClosedID;
+public class PeriodsClosed extends AbstractModelClass {
 
-	@Enumerated(value = EnumType.STRING)
-	@Type(type = "pgsql_enum")
-	private STATUS_X ISCLOSED;
+    @EmbeddedId
+    private PeriodsClosedID periodsClosedID;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @Enumerated(value = EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    private STATUS_X ISCLOSED;
 }

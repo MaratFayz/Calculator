@@ -1,6 +1,6 @@
 package LD.model.LeasingDeposit;
 
-import LD.config.Security.model.User.User;
+import LD.model.AbstractModelClass;
 import LD.model.Company.Company;
 import LD.model.Counterpartner.Counterpartner;
 import LD.model.Currency.Currency;
@@ -14,8 +14,8 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.time.*;
-import java.util.*;
+import java.time.LocalDate;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -25,54 +25,49 @@ import java.util.*;
 @NoArgsConstructor()
 @Builder
 @AllArgsConstructor
-public class LeasingDeposit
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, unique = true)
-	private Long id;
+public class LeasingDeposit extends AbstractModelClass {
 
-	@ManyToOne
-	@JoinColumn(name = "company_id", nullable = false)
-	private Company company;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true)
+    private Long id;
 
-	@ManyToOne
-	@JoinColumn(name = "counterpartner_id", nullable = false)
-	private Counterpartner counterpartner;
+    @ManyToOne
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
-	@ManyToOne
-	@JoinColumn(name = "currency_id", nullable = false)
-	private Currency currency;
+    @ManyToOne
+    @JoinColumn(name = "counterpartner_id", nullable = false)
+    private Counterpartner counterpartner;
 
-	@Column(name = "start_date", nullable = false, columnDefinition = "DATE")
-	private ZonedDateTime start_date;
+    @ManyToOne
+    @JoinColumn(name = "currency_id", nullable = false)
+    private Currency currency;
 
-	@Column(name = "deposit_sum_not_disc", nullable = false)
-	private BigDecimal deposit_sum_not_disc;
+    @Column(name = "start_date", nullable = false, columnDefinition = "DATE")
+    private LocalDate start_date;
 
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "scenario_id", nullable = false)
-	private Scenario scenario;
+    @Column(name = "deposit_sum_not_disc", nullable = false)
+    private BigDecimal deposit_sum_not_disc;
 
-	@Enumerated(value = EnumType.STRING)
-	@Type(type = "pgsql_enum")
-	private STATUS_X is_created;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "scenario_id", nullable = false)
+    private Scenario scenario;
 
-	@Enumerated(value = EnumType.STRING)
-	@Type(type = "pgsql_enum")
-	private STATUS_X is_deleted;
+    @Enumerated(value = EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    @Column(columnDefinition = "statusX")
+    private STATUS_X is_created;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
+    @Enumerated(value = EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    @Column(columnDefinition = "statusX")
+    private STATUS_X is_deleted;
 
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @OneToMany(mappedBy = "leasingDeposit", fetch = FetchType.EAGER)
+    @JsonIgnore
+    private Set<Entry> entries;
 
-	@OneToMany(mappedBy = "leasingDeposit", fetch = FetchType.EAGER)
-	@JsonIgnore
-	private Set<Entry> entries;
-
-	@OneToMany(mappedBy = "leasingDeposit", fetch = FetchType.EAGER)
-	private Set<EndDate> end_dates;
+    @OneToMany(mappedBy = "leasingDeposit", fetch = FetchType.EAGER)
+    private Set<EndDate> end_dates;
 }

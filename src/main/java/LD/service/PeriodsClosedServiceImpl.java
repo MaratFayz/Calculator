@@ -14,13 +14,13 @@ import LD.repository.PeriodRepository;
 import LD.repository.PeriodsClosedRepository;
 import LD.repository.ScenarioRepository;
 import LD.rest.exceptions.NotFoundException;
-import LD.service.Calculators.LeasingDeposits.GeneralDataKeeper;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,170 +30,150 @@ import java.util.stream.Collectors;
 
 @Service
 @Log4j2
-public class PeriodsClosedServiceImpl implements PeriodsClosedService
-{
-	@Autowired
-	PeriodsClosedRepository periodsClosedRepository;
-	@Autowired
-	ScenarioRepository scenarioRepository;
-	@Autowired
-	PeriodsClosedTransform periodsClosedTransform;
-	@Autowired
-	UserRepository userRepository;
-	@Autowired
-	PeriodRepository periodRepository;
+public class PeriodsClosedServiceImpl implements PeriodsClosedService {
 
-	@Override
-	public List<PeriodsClosedDTO_out> getAllPeriodsClosed()
-	{
-		List<PeriodsClosed> resultFormDB = periodsClosedRepository.findAll();
-		List<PeriodsClosedDTO_out> resultFormDB_out = new ArrayList<>();
+    @Autowired
+    PeriodsClosedRepository periodsClosedRepository;
+    @Autowired
+    ScenarioRepository scenarioRepository;
+    @Autowired
+    PeriodsClosedTransform periodsClosedTransform;
+    @Autowired
+    UserRepository userRepository;
+    @Autowired
+    PeriodRepository periodRepository;
 
-		if(resultFormDB.size() == 0)
-		{
-			resultFormDB_out.add(new PeriodsClosedDTO_out());
-		}
-		else
-		{
-			resultFormDB_out = resultFormDB.stream()
-					.map(pc -> periodsClosedTransform.PeriodsClosed_to_PeriodsClosedDTO_out(pc))
-					.collect(Collectors.toList());
-		}
+    @Override
+    public List<PeriodsClosedDTO_out> getAllPeriodsClosed() {
+        List<PeriodsClosed> resultFormDB = periodsClosedRepository.findAll();
+        List<PeriodsClosedDTO_out> resultFormDB_out = new ArrayList<>();
 
-		return resultFormDB_out;
-	}
+        if (resultFormDB.size() == 0) {
+            resultFormDB_out.add(new PeriodsClosedDTO_out());
+        } else {
+            resultFormDB_out = resultFormDB.stream()
+                    .map(pc -> periodsClosedTransform.PeriodsClosed_to_PeriodsClosedDTO_out(pc))
+                    .collect(Collectors.toList());
+        }
 
-	@Override
-	public PeriodsClosed getPeriodsClosed(PeriodsClosedID id)
-	{
-		return periodsClosedRepository.findById(id).orElseThrow(NotFoundException::new);
-	}
+        return resultFormDB_out;
+    }
 
-	@Override
-	public String getDateFirstOpenPeriodForScenario(Long scenario_id)
-	{
-		Scenario neededScenario = scenarioRepository.findById(scenario_id).orElseThrow(() -> new NotFoundException("Не найден открытый период для сценария с id = " + scenario_id));
-		ZonedDateTime notFormattedResult = periodsClosedRepository.findAll(GeneralDataKeeper.specFirstClosedPeriod(neededScenario))
-				.get(0)
-				.getPeriodsClosedID()
-				.getPeriod()
-				.getDate();
+    @Override
+    public PeriodsClosed getPeriodsClosed(PeriodsClosedID id) {
+        return periodsClosedRepository.findById(id).orElseThrow(NotFoundException::new);
+    }
 
-		return DateFormat.formatDate(notFormattedResult);
-	}
+    @Override
+    public String getDateFirstOpenPeriodForScenario(Long scenario_id) {
+        Scenario neededScenario = scenarioRepository.findById(scenario_id).orElseThrow(() -> new NotFoundException("Не найден открытый период для сценария с id = " + scenario_id));
+        LocalDate notFormattedResult = periodsClosedRepository.findFirstOpenPeriodDateByScenario(neededScenario);
 
-	@Override
-	public PeriodsClosed saveNewPeriodsClosed(PeriodsClosed periodClosed)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		periodClosed.setUser(userRepository.findByUsername(username));
+        return DateFormat.formatDate(notFormattedResult);
+    }
 
-		periodClosed.setLastChange(ZonedDateTime.now());
+    @Override
+    public PeriodsClosed saveNewPeriodsClosed(PeriodsClosed periodClosed) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        periodClosed.setUser(userRepository.findByUsername(username));
 
-		log.info("Закрытый период для сохранения = {}", periodClosed);
+        periodClosed.setLastChange(ZonedDateTime.now());
 
-		return periodsClosedRepository.saveAndFlush(periodClosed);
-	}
+        log.info("Закрытый период для сохранения = {}", periodClosed);
 
-	@Override
-	public PeriodsClosed updatePeriodsClosed(PeriodsClosedID id, PeriodsClosed periodClosed)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		periodClosed.setUser(userRepository.findByUsername(username));
+        return periodsClosedRepository.saveAndFlush(periodClosed);
+    }
 
-		periodClosed.setLastChange(ZonedDateTime.now());
+    @Override
+    public PeriodsClosed updatePeriodsClosed(PeriodsClosedID id, PeriodsClosed periodClosed) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        periodClosed.setUser(userRepository.findByUsername(username));
 
-		PeriodsClosed periodsClosedToUpdate = getPeriodsClosed(id);
-		BeanUtils.copyProperties(periodClosed, periodsClosedToUpdate);
-		periodsClosedRepository.saveAndFlush(periodsClosedToUpdate);
+        periodClosed.setLastChange(ZonedDateTime.now());
 
-		return periodsClosedToUpdate;
-	}
+        PeriodsClosed periodsClosedToUpdate = getPeriodsClosed(id);
+        BeanUtils.copyProperties(periodClosed, periodsClosedToUpdate);
+        periodsClosedRepository.saveAndFlush(periodsClosedToUpdate);
 
-	@Override
-	public boolean delete(PeriodsClosedID id)
-	{
-		try
-		{
-			periodsClosedRepository.deleteById(id);
-		}
-		catch(Exception e)
-		{
-			return false;
-		}
+        return periodsClosedToUpdate;
+    }
 
-		return true;
-	}
+    @Override
+    public boolean delete(PeriodsClosedID id) {
+        try {
+            periodsClosedRepository.deleteById(id);
+        } catch (Exception e) {
+            return false;
+        }
 
-	@Override
-	public void autoClosePeriods(String dateBeforeToClose, long scenario_id)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		User userChanging = userRepository.findByUsername(username);
+        return true;
+    }
 
-		ZonedDateTime endDateToClose = DateFormat.parsingDate(dateBeforeToClose).withDayOfMonth(1).plusMonths(1).minusDays(1);
-		Scenario scenarioWhereClose = scenarioRepository.findById(scenario_id).get();
+    @Override
+    public void autoClosePeriods(String dateBeforeToClose, long scenario_id) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User userChanging = userRepository.findByUsername(username);
 
-		//периоды до даты включительно будем закрывать
-		TreeSet<Period> periods = new TreeSet(Comparator.comparing(Period::getDate));
-		periods.addAll(periodRepository.findByDateLessThanEqual(endDateToClose));
+        LocalDate endDateToClose = DateFormat.parsingDate(dateBeforeToClose).withDayOfMonth(1).plusMonths(1).minusDays(1);
+        Scenario scenarioWhereClose = scenarioRepository.findById(scenario_id).get();
 
-		periods.stream().forEach(p -> {
-			List<PeriodsClosed> periodsClosedForPeriod = periodsClosedRepository.findAll().stream()
-					.filter(pc -> pc.getPeriodsClosedID().getPeriod().equals(p))
-					.filter(pc -> pc.getPeriodsClosedID().getScenario().equals(scenarioWhereClose))
-					.collect(Collectors.toList());
+        //периоды до даты включительно будем закрывать
+        TreeSet<Period> periods = new TreeSet(Comparator.comparing(Period::getDate));
+        periods.addAll(periodRepository.findByDateLessThanEqual(endDateToClose));
 
-			if(periodsClosedForPeriod.size() > 0)
-			{
-				//уже существуют периоды -> надо их закрыть
-				PeriodsClosed pcToUpdate = periodsClosedForPeriod.get(0);
-				pcToUpdate.setISCLOSED(STATUS_X.X);
-				pcToUpdate.setLastChange(ZonedDateTime.now());
-				pcToUpdate.setUser(userChanging);
+        periods.stream().forEach(p -> {
+            List<PeriodsClosed> periodsClosedForPeriod = periodsClosedRepository.findAll().stream()
+                    .filter(pc -> pc.getPeriodsClosedID().getPeriod().equals(p))
+                    .filter(pc -> pc.getPeriodsClosedID().getScenario().equals(scenarioWhereClose))
+                    .collect(Collectors.toList());
 
-				periodsClosedRepository.saveAndFlush(pcToUpdate);
-			}
-			else
-			{
-				//периоды ещё не существую -> надо их создать и закрыть
-				PeriodsClosedID periodsClosedID = PeriodsClosedID.builder()
-						.scenario(scenarioWhereClose)
-						.period(p)
-						.build();
+            if (periodsClosedForPeriod.size() > 0) {
+                //уже существуют периоды -> надо их закрыть
+                PeriodsClosed pcToUpdate = periodsClosedForPeriod.get(0);
+                pcToUpdate.setISCLOSED(STATUS_X.X);
+                pcToUpdate.setLastChange(ZonedDateTime.now());
+                pcToUpdate.setUser(userChanging);
 
-				PeriodsClosed pcToUpdate = PeriodsClosed.builder()
-						.ISCLOSED(STATUS_X.X)
-						.lastChange(ZonedDateTime.now())
-						.periodsClosedID(periodsClosedID)
-						.user(userChanging)
-						.build();
+                periodsClosedRepository.saveAndFlush(pcToUpdate);
+            } else {
+                //периоды ещё не существую -> надо их создать и закрыть
+                PeriodsClosedID periodsClosedID = PeriodsClosedID.builder()
+                        .scenario(scenarioWhereClose)
+                        .period(p)
+                        .build();
 
-				periodsClosedRepository.saveAndFlush(pcToUpdate);
-			}
+                PeriodsClosed pcToUpdate = PeriodsClosed.builder()
+                        .ISCLOSED(STATUS_X.X)
+                        .periodsClosedID(periodsClosedID)
+                        .build();
 
-		});
+                pcToUpdate.setLastChange(ZonedDateTime.now());
+                pcToUpdate.setUser(userChanging);
 
-		//периоды после даты будем открывать
-		periods = new TreeSet(Comparator.comparing(Period::getDate));
-		periods.addAll(periodRepository.findByDateGreaterThan(endDateToClose));
+                periodsClosedRepository.saveAndFlush(pcToUpdate);
+            }
 
-		periods.stream().forEach(p -> {
-			List<PeriodsClosed> periodsClosedForPeriod = periodsClosedRepository.findAll().stream()
-					.filter(pc -> pc.getPeriodsClosedID().getPeriod().equals(p))
-					.filter(pc -> pc.getPeriodsClosedID().getScenario().equals(scenarioWhereClose))
-					.collect(Collectors.toList());
+        });
 
-			if(periodsClosedForPeriod.size() > 0)
-			{
-				//уже существуют периоды -> надо их открыть
-				PeriodsClosed pcToUpdate = periodsClosedForPeriod.get(0);
-				pcToUpdate.setISCLOSED(null);
-				pcToUpdate.setLastChange(ZonedDateTime.now());
-				pcToUpdate.setUser(userChanging);
+        //периоды после даты будем открывать
+        periods = new TreeSet(Comparator.comparing(Period::getDate));
+        periods.addAll(periodRepository.findByDateGreaterThan(endDateToClose));
 
-				periodsClosedRepository.saveAndFlush(pcToUpdate);
-			}
-		});
-	}
+        periods.stream().forEach(p -> {
+            List<PeriodsClosed> periodsClosedForPeriod = periodsClosedRepository.findAll().stream()
+                    .filter(pc -> pc.getPeriodsClosedID().getPeriod().equals(p))
+                    .filter(pc -> pc.getPeriodsClosedID().getScenario().equals(scenarioWhereClose))
+                    .collect(Collectors.toList());
+
+            if (periodsClosedForPeriod.size() > 0) {
+                //уже существуют периоды -> надо их открыть
+                PeriodsClosed pcToUpdate = periodsClosedForPeriod.get(0);
+                pcToUpdate.setISCLOSED(null);
+                pcToUpdate.setLastChange(ZonedDateTime.now());
+                pcToUpdate.setUser(userChanging);
+
+                periodsClosedRepository.saveAndFlush(pcToUpdate);
+            }
+        });
+    }
 }

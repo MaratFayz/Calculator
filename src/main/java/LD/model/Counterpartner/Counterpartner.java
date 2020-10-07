@@ -1,10 +1,9 @@
 package LD.model.Counterpartner;
 
-import LD.config.Security.model.User.User;
+import LD.model.AbstractModelClass;
 import lombok.*;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "Counterpartner")
@@ -14,20 +13,13 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor()
 @Builder
 @AllArgsConstructor
-public class Counterpartner
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, unique = true)
-	private Long id;
+public class Counterpartner extends AbstractModelClass {
 
-	@Column(name = "name", nullable = false)
-	private String name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true)
+    private Long id;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @Column(name = "name", nullable = false)
+    private String name;
 }

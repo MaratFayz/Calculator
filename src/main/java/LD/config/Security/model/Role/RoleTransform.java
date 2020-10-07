@@ -54,7 +54,7 @@ public class RoleTransform
 				.id(role.getId())
 				.name(role.getName())
 				.authorities(RoleAuthorities)
-				.user_changed(role.getUser_changed() == null ? null : role.getUser_changed().getUsername())
+				.user_changed(role.getUser() == null ? null : role.getUser().getUsername())
 				.lastChange(DateFormat.formatDate(role.getLastChange()))
 				.build();
 	}

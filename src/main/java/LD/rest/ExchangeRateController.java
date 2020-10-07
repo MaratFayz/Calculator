@@ -31,7 +31,7 @@ public class ExchangeRateController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все курсы возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<ExchangeRateDTO_out> getAllExchangeRates()
 	{
@@ -58,7 +58,7 @@ public class ExchangeRateController
 	@ApiOperation(value = "Сохранение нового курса валют", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новый курс валют был сохранен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_ADDER)")
 	public ResponseEntity saveNewExchangeRate(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in)
@@ -73,7 +73,7 @@ public class ExchangeRateController
 					response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Курсы валют были импортированы и сохранены."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LOAD_EXCHANGE_RATE_FROM_CBR)")
 	public ResponseEntity importExchangeRatesFormCBR(@RequestParam long scenario_id,
@@ -87,7 +87,7 @@ public class ExchangeRateController
 	@ApiOperation(value = "Изменение значений курса валют", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Курс валют был изменен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_EDITOR)")
 	public ResponseEntity update(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in)

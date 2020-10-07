@@ -1,14 +1,16 @@
 package LD.model.DepositRate;
 
-import LD.config.Security.model.User.User;
+import LD.model.AbstractModelClass;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "DepositRate")
@@ -16,18 +18,11 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor()
 @Builder
 @AllArgsConstructor
-public class DepositRate
-{
-	@EmbeddedId
-	DepositRateID depositRateID;
+public class DepositRate extends AbstractModelClass {
 
-	@Column(name = "RATE", nullable = false)
-	private BigDecimal RATE;
+    @EmbeddedId
+    DepositRateID depositRateID;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @Column(name = "RATE", nullable = false)
+    private BigDecimal RATE;
 }

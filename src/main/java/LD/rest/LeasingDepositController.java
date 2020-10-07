@@ -32,7 +32,7 @@ public class LeasingDepositController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LEASING_DEPOSIT_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все лизинговые депозиты возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<LeasingDepositDTO_out> getAllLeasingDeposits()
 	{
@@ -44,7 +44,7 @@ public class LeasingDepositController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LEASING_DEPOSIT_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все лизинговые депозиты для определённого периода возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<LeasingDepositDTO_out_onPeriodFor2Scenarios> getAllLeasingDepositsOnPeriodFor2Scenarios(@RequestParam @NonNull Long scenarioFromId,
 																										@RequestParam @NonNull Long scenarioToId)
@@ -57,7 +57,7 @@ public class LeasingDepositController
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Лизинговый депозит существует, возвращается в ответе."),
 			@ApiResponse(code = 404, message = "Такой лизинговый депозит отсутствует"),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LEASING_DEPOSIT_ADDER)")
 	public ResponseEntity getLeasingDeposit(@PathVariable Long id)
@@ -71,7 +71,7 @@ public class LeasingDepositController
 	@ApiOperation(value = "Сохранение нового лизингового депозита", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новый лизинговый депозит был сохранен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LEASING_DEPOSIT_ADDER)")
 	public ResponseEntity saveNewLeasingDeposit(@RequestBody LeasingDepositDTO_in leasingDepositDTO_in)
@@ -85,7 +85,7 @@ public class LeasingDepositController
 	@ApiOperation(value = "Изменение значений лизингового депозита", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Лизинговый депозит был изменен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LEASING_DEPOSIT_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody LeasingDepositDTO_in leasingDepositDTO_in)

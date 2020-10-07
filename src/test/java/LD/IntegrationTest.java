@@ -24,12 +24,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -64,11 +65,9 @@ public class IntegrationTest {
     @Test
     @WithMockUser(username = "superadmin", authorities = {"DEPOSIT_RATES_ADDER",
             "END_DATE_ADDER", "LEASING_DEPOSIT_ADDER", "AUTO_ADDING_PERIODS",
-            "AUTO_CLOSING_PERIODS", "CALCULATE", "LOAD_EXCHANGE_RATE_FROM_CBR", "PERIODS_CLOSED_ADDER"})
-    public void test1_for_several_LDs() throws Exception {
+            "AUTO_CLOSING_PERIODS", "CALCULATE", "LOAD_EXCHANGE_RATE_FROM_CBR", "PERIODS_CLOSED_ADDER", "ENTRY_READER"})
+    public void application_shouldNotThrowExceptionAndCountOfEntriesEquals19_whenCalculating() {
         assertDoesNotThrow(() -> {
-//            template.
-//            authorize();
             generatePeriods();
             closePeriods();
             addFirstOpenPeriod();
@@ -77,66 +76,8 @@ public class IntegrationTest {
             addLdEndDate();
             addDepositRate();
             calculate();
+            checkIfCountOfCalculatedEntriesEquals19();
         });
-    }
-
-    private void authorize() throws Exception {
-        MvcResult ldResponse = this.mockMvc.perform(post("/login")
-                .queryParam("login", "superadmin")
-                .queryParam("password", "a"))
-                .andDo(print()).andExpect(status().isOk())
-                .andReturn();
-    }
-
-    private void addDepositRate() throws Exception {
-        DepositRateDTO_in depositRateDTO_in = DepositRateDTO_in.builder()
-                .company(1L)
-                .currency(2L)
-                .duration(2L)
-                .START_PERIOD("01.01.2019")
-                .END_PERIOD("31.12.2020")
-                .RATE(BigDecimal.valueOf(10))
-                .scenario(1L)
-                .build();
-
-        JsonMapper jsonMapper = new JsonMapper();
-        String dr = jsonMapper.writeValueAsString(depositRateDTO_in);
-
-        MvcResult drResponse = this.mockMvc.perform(post("/depositRates")
-                .content(dr)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print()).andExpect(status().isOk())
-                .andReturn();
-    }
-
-    private void calculate() throws Exception {
-        MvcResult entryResponse = this.mockMvc.perform(post("/entries/calculator")
-                .queryParam("scenario_from", "1")
-                .queryParam("scenario_to", "1"))
-                .andDo(print()).andExpect(status().isOk())
-                .andReturn();
-    }
-
-    private void addLd() throws Exception {
-        LeasingDepositDTO_in leasingDepositDTO_in = LeasingDepositDTO_in.builder()
-                .company(1L)
-                .counterpartner(1L)
-                .currency(2L)
-                .deposit_sum_not_disc(BigDecimal.valueOf(100000))
-                .is_created(STATUS_X.X)
-                .scenario(1L)
-                .start_date("01.01.2019")
-                .build();
-
-        JsonMapper jsonMapper = new JsonMapper();
-        String ld = jsonMapper.writeValueAsString(leasingDepositDTO_in);
-
-        System.out.println(ld);
-        MvcResult ldResponse = this.mockMvc.perform(post("/leasingDeposits")
-                .content(ld)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print()).andExpect(status().isOk())
-                .andReturn();
     }
 
     private void generatePeriods() throws Exception {
@@ -181,6 +122,28 @@ public class IntegrationTest {
                 .andReturn();
     }
 
+    private void addLd() throws Exception {
+        LeasingDepositDTO_in leasingDepositDTO_in = LeasingDepositDTO_in.builder()
+                .company(1L)
+                .counterpartner(1L)
+                .currency(2L)
+                .deposit_sum_not_disc(BigDecimal.valueOf(100000))
+                .is_created(STATUS_X.X)
+                .scenario(1L)
+                .start_date("01.01.2019")
+                .build();
+
+        JsonMapper jsonMapper = new JsonMapper();
+        String ld = jsonMapper.writeValueAsString(leasingDepositDTO_in);
+
+        System.out.println(ld);
+        MvcResult ldResponse = this.mockMvc.perform(post("/leasingDeposits")
+                .content(ld)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isOk())
+                .andReturn();
+    }
+
     private void addLdEndDate() throws Exception {
         EndDateDTO_in endDateDTO_in = EndDateDTO_in.builder()
                 .End_Date("30.12.2020")
@@ -198,6 +161,42 @@ public class IntegrationTest {
                 .content(s)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print()).andExpect(status().isOk())
+                .andReturn();
+    }
+
+    private void addDepositRate() throws Exception {
+        DepositRateDTO_in depositRateDTO_in = DepositRateDTO_in.builder()
+                .company(1L)
+                .currency(2L)
+                .duration(2L)
+                .START_PERIOD("01.01.2019")
+                .END_PERIOD("31.12.2020")
+                .RATE(BigDecimal.valueOf(10))
+                .scenario(1L)
+                .build();
+
+        JsonMapper jsonMapper = new JsonMapper();
+        String dr = jsonMapper.writeValueAsString(depositRateDTO_in);
+
+        MvcResult drResponse = this.mockMvc.perform(post("/depositRates")
+                .content(dr)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isOk())
+                .andReturn();
+    }
+
+    private void calculate() throws Exception {
+        MvcResult entryResponse = this.mockMvc.perform(post("/entries/calculator")
+                .queryParam("scenario_from", "1")
+                .queryParam("scenario_to", "1"))
+                .andDo(print()).andExpect(status().isOk())
+                .andReturn();
+    }
+
+    private void checkIfCountOfCalculatedEntriesEquals19() throws Exception {
+        MvcResult entryResponse = this.mockMvc.perform(get("/entries"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(19)))
                 .andReturn();
     }
 }

@@ -7,9 +7,11 @@ import LD.model.ExchangeRate.ExchangeRate;
 import LD.model.ExchangeRate.ExchangeRateDTO_out;
 import LD.model.ExchangeRate.ExchangeRateID;
 import LD.model.ExchangeRate.ExchangeRateTransform;
-import LD.model.Period.Period;
 import LD.model.Scenario.Scenario;
-import LD.repository.*;
+import LD.repository.CurrencyRepository;
+import LD.repository.ExchangeRateRepository;
+import LD.repository.PeriodRepository;
+import LD.repository.ScenarioRepository;
 import LD.rest.exceptions.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
@@ -19,300 +21,238 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
 @Log4j2
-public class ExchangeRateServiceImpl implements ExchangeRateService
-{
-	@Autowired
-	ExchangeRateRepository exchangeRateRepository;
-	@Autowired
-	ExchangeRateTransform exchangeRateTransform;
-	@Autowired
-	UserRepository userRepository;
-	@Autowired
-	CurrencyRepository currencyRepository;
-	@Autowired
-	PeriodRepository periodRepository;
-	@Autowired
-	PeriodsClosedRepository periodsClosedRepository;
-	@Autowired
-	ScenarioRepository scenarioRepository;
+public class ExchangeRateServiceImpl implements ExchangeRateService {
 
-	@Override
-	public List<ExchangeRateDTO_out> getAllExchangeRates()
-	{
-		List<ExchangeRate> resultFormDB = exchangeRateRepository.findAll();
-		List<ExchangeRateDTO_out> resultFormDB_out = new ArrayList<>();
+    @Autowired
+    ExchangeRateRepository exchangeRateRepository;
+    @Autowired
+    ExchangeRateTransform exchangeRateTransform;
+    @Autowired
+    UserRepository userRepository;
+    @Autowired
+    CurrencyRepository currencyRepository;
+    @Autowired
+    PeriodRepository periodRepository;
+    @Autowired
+    ScenarioRepository scenarioRepository;
 
-		if(resultFormDB.size() == 0)
-		{
-			resultFormDB_out.add(new ExchangeRateDTO_out());
-		}
-		else
-		{
-			resultFormDB_out = resultFormDB.stream()
-					.map(er -> exchangeRateTransform.ExchangeRate_to_ExchangeRateDTO_out(er))
-					.collect(Collectors.toList());
-		}
+    @Override
+    public List<ExchangeRateDTO_out> getAllExchangeRates() {
+        List<ExchangeRate> resultFormDB = exchangeRateRepository.findAll();
+        List<ExchangeRateDTO_out> resultFormDB_out = new ArrayList<>();
 
-		return resultFormDB_out;
-	}
+        if (resultFormDB.size() == 0) {
+            resultFormDB_out.add(new ExchangeRateDTO_out());
+        } else {
+            resultFormDB_out = resultFormDB.stream()
+                    .map(er -> exchangeRateTransform.ExchangeRate_to_ExchangeRateDTO_out(er))
+                    .collect(Collectors.toList());
+        }
 
-	@Override
-	public ExchangeRate getExchangeRate(ExchangeRateID id)
-	{
-		return exchangeRateRepository.findById(id).orElseThrow(NotFoundException::new);
-	}
+        return resultFormDB_out;
+    }
 
-	@Override
-	public ExchangeRate saveNewExchangeRate(ExchangeRate exchangeRate)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		exchangeRate.setUser(userRepository.findByUsername(username));
+    @Override
+    public ExchangeRate getExchangeRate(ExchangeRateID id) {
+        return exchangeRateRepository.findById(id).orElseThrow(NotFoundException::new);
+    }
 
-		exchangeRate.setLastChange(ZonedDateTime.now());
+    @Override
+    public ExchangeRate saveNewExchangeRate(ExchangeRate exchangeRate) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        exchangeRate.setUser(userRepository.findByUsername(username));
 
-		log.info("Валютный курс для сохранения = {}", exchangeRate);
+        exchangeRate.setLastChange(ZonedDateTime.now());
 
-		return exchangeRateRepository.save(exchangeRate);
-	}
+        log.info("Валютный курс для сохранения = {}", exchangeRate);
 
-	@Override
-	public ExchangeRate updateExchangeRate(ExchangeRateID id, ExchangeRate exchangeRate)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		exchangeRate.setUser(userRepository.findByUsername(username));
+        return exchangeRateRepository.save(exchangeRate);
+    }
 
-		exchangeRate.setLastChange(ZonedDateTime.now());
+    @Override
+    public ExchangeRate updateExchangeRate(ExchangeRateID id, ExchangeRate exchangeRate) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        exchangeRate.setUser(userRepository.findByUsername(username));
 
-		ExchangeRate exchangeRateToUpdate = getExchangeRate(id);
+        exchangeRate.setLastChange(ZonedDateTime.now());
 
-		BeanUtils.copyProperties(exchangeRate, exchangeRateToUpdate);
+        ExchangeRate exchangeRateToUpdate = getExchangeRate(id);
 
-		exchangeRateRepository.saveAndFlush(exchangeRateToUpdate);
+        BeanUtils.copyProperties(exchangeRate, exchangeRateToUpdate);
 
-		return exchangeRateToUpdate;
-	}
+        exchangeRateRepository.saveAndFlush(exchangeRateToUpdate);
 
-	@Override
-	public boolean delete(ExchangeRateID id)
-	{
-		try
-		{
-			exchangeRateRepository.deleteById(id);
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
+        return exchangeRateToUpdate;
+    }
 
-		return true;
-	}
+    @Override
+    public boolean delete(ExchangeRateID id) {
+        try {
+            exchangeRateRepository.deleteById(id);
+        } catch (Exception e) {
+            return false;
+        }
 
-	@Override
-	public void importExchangeRatesFormCBR(long scenario_id, boolean isAddOnlyNewestRates)
-	{
-		//перечень валют с кодом ЦБ
-		List<Currency> currenciesWithCBRCode = currencyRepository.findByCBRCurrencyCodeNotNull();
+        return true;
+    }
 
-		log.info("Перечень валют, которые имеют код ЦБ => {}", currenciesWithCBRCode);
+    @Override
+    public void importExchangeRatesFormCBR(long scenario_id, boolean isAddOnlyNewestRates) {
+        //перечень валют с кодом ЦБ
+        List<Currency> currenciesWithCBRCode = currencyRepository.findByCBRCurrencyCodeNotNull();
 
-		//самая ранняя дата периодов в базе данных (с неё будет загружаться информация с ЦБ)
-		Optional<Period> minPeriod = periodRepository.findAll().stream().min(Comparator.comparing(Period::getDate));
-		ZonedDateTime minPeriodDate;
+        log.info("Перечень валют, которые имеют код ЦБ => {}", currenciesWithCBRCode);
 
-		if(minPeriod.isPresent())
-			minPeriodDate = minPeriod.get().getDate().withDayOfMonth(1);
-		else
-		{
-			log.info("Наименьшая дата периода не представлена в справочнике периодов => завершение программы");
-			return;
-		}
+        //самая ранняя дата периодов в базе данных (с неё будет загружаться информация с ЦБ)
+        LocalDate minPeriodDate = periodRepository.findMinPeriodDateInDatabase();
+        log.info("Наименьшая дата (1е число) в справочнике периодов => {}", minPeriodDate);
 
-		log.info("Наименьшая дата (1е число) в справочнике периодов => {}", minPeriodDate);
+        //самая поздняя дата периодов в базе данных (по неё будет загружаться информация с ЦБ)
+        LocalDate maxPeriodDate = periodRepository.findMaxPeriodDateInDatabase();
+        log.info("Наибольшая дата в справочнике периодов => {}", maxPeriodDate);
 
-		//самая поздняя дата периодов в базе данных (по неё будет загружаться информация с ЦБ)
-		Optional<Period> maxPeriod = periodRepository.findAll().stream().max(Comparator.comparing(Period::getDate));
-		ZonedDateTime maxPeriodDate;
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User loadingUser = userRepository.findByUsername(username);
+        Scenario loadingScenario = scenarioRepository.findById(scenario_id).get();
 
-		if(maxPeriod.isPresent())
-			maxPeriodDate = maxPeriod.get().getDate().plusDays(1);
-		else
-		{
-			log.info("Наибольшая дата периода не представлена в справочнике периодов => завершение программы");
-			return;
-		}
+        currenciesWithCBRCode.stream().forEach(currency ->
+        {
+            if (isAddOnlyNewestRates) {
+                LocalDate maxCurExDate = LocalDate.MIN;
 
-		log.info("Наибольшая дата в справочнике периодов => {}", maxPeriodDate);
+                try {
+                    maxCurExDate = exchangeRateRepository.findMaxDateWithExchangeRateByCurrencyIdAndScenarioId(currency.getId(), scenario_id);
+                } catch (NoResultException e) {
+                    log.info("Курсов валют в базе не представлено, начинается загрузка с нуля");
+                }
 
-		//определим, за какие даты в базе данных есть курсы
-		HashMap<Currency, List<ExchangeRate>> CurExRates= new HashMap<>();
+                LocalDate prevDayBeforeNow = LocalDate.now();
 
-		currenciesWithCBRCode.stream().forEach(currency -> {
-			List<ExchangeRate> exchangeRates = exchangeRateRepository.findAll().stream()
-					.filter(er -> er.getExchangeRateID().getScenario().getId().equals(scenario_id))
-					.filter(er -> er.getExchangeRateID().getCurrency().equals(currency))
-					.collect(Collectors.toList());
+                if (!maxCurExDate.isEqual(LocalDate.MIN)) {
+                    if (maxPeriodDate.isAfter(maxCurExDate) && prevDayBeforeNow.isAfter(maxCurExDate)) {
+                        LocalDate saveFromDate = maxCurExDate.plusDays(1);
 
-			CurExRates.put(currency, exchangeRates);
-		});
+                        getCurExRateFrmCBRAndSaveIntoDB(loadingUser, loadingScenario, currency,
+                                saveFromDate, maxPeriodDate);
+                    } else {
+                        log.info("Даты равны: Максимальная дата курсов валют есть = {}, " +
+                                        "дата макс периода = {}, дата на момент расчета = {}; расчет проводиться не будет",
+                                maxCurExDate, maxPeriodDate, prevDayBeforeNow);
+                    }
+                } else {
+                    log.info("Курсов валют в базе не представлено, начинается загрузка с нуля");
+                    deleteDownloadSaveCurExFormCBR(minPeriodDate, maxPeriodDate, loadingUser, loadingScenario, currency);
+                }
+            } else {
+                log.info("Требуется всё удалить и загрузить по новой");
+                deleteDownloadSaveCurExFormCBR(minPeriodDate, maxPeriodDate, loadingUser, loadingScenario, currency);
+            }
+        });
+    }
 
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		User loadingUser = userRepository.findByUsername(username);
-		Scenario loadingScenario = scenarioRepository.findById(scenario_id).get();
+    private void deleteDownloadSaveCurExFormCBR(LocalDate minPeriodDate, LocalDate maxPeriodDate, User loadingUser, Scenario loadingScenario, Currency currency) {
+        List<ExchangeRate> toDeleteExR = exchangeRateRepository.findAll((root, query, qb) -> qb.equal(root.get("exchangeRateID").get("currency"), currency));
+        exchangeRateRepository.deleteAll(toDeleteExR);
 
-		CurExRates.keySet().stream().forEach(currency ->
-		{
-			if(isAddOnlyNewestRates)
-			{
-				Optional<ExchangeRate> maxCurEx = CurExRates.get(currency).stream()
-						.max(Comparator.comparing(er -> er.getExchangeRateID().getDate()));
+        getCurExRateFrmCBRAndSaveIntoDB(loadingUser, loadingScenario, currency, minPeriodDate, maxPeriodDate);
+    }
 
-				ZonedDateTime prevDayBeforeNow = ZonedDateTime.now().withZoneSameInstant(ZoneId.of("UTC"));
+    private void getCurExRateFrmCBRAndSaveIntoDB(User loadingUser, Scenario loadingScenario, Currency currency,
+                                                 LocalDate queryDateFrom, LocalDate queryDateTo) {
+        LocalDate now = LocalDate.now();
+        queryDateTo = now.isBefore(queryDateTo) ? now : queryDateTo;
 
-				if (maxCurEx.isPresent())
-				{
-					ZonedDateTime maxCurExDate = maxCurEx.get().getExchangeRateID().getDate();
+        LocalDate saveFromDate = queryDateFrom;
+        LocalDate saveTillDate = queryDateTo;
 
-					if (maxPeriodDate.isAfter(maxCurExDate) && prevDayBeforeNow.isAfter(maxCurExDate))
-					{
-						ZonedDateTime saveFromDate = maxCurEx.get().getExchangeRateID().getDate().plusDays(1);
+        queryDateFrom = queryDateFrom.minusMonths(1);
 
-						getCurExRateFrmCBRAndSaveIntoDB(loadingUser, loadingScenario, currency,
-								saveFromDate, maxPeriodDate);
-					}
-					else
-					{
-						log.info("Даты равны: Максимальная дата курсов валют есть = {}, " +
-								"дата макс периода = {}, дата на момент расчета = {}; расчет проводиться не будет",
-								maxCurEx, maxPeriodDate, prevDayBeforeNow);
-					}
-				}
-				else
-				{
-					log.info("Курсов валют в базе не представлено, начинается загрузка с нуля");
-					deleteDownloadSaveCurExFormCBR(minPeriodDate, maxPeriodDate, loadingUser, loadingScenario, currency);
-				}
-			}
-			else
-			{
-				log.info("Требуется всё удалить и загрузить по новой");
-				deleteDownloadSaveCurExFormCBR(minPeriodDate, maxPeriodDate, loadingUser, loadingScenario, currency);
-			}
-		});
-	}
+        TreeMap<LocalDate, BigDecimal> exRatesFormCBR =
+                getExRatesFromCBR(queryDateFrom, queryDateTo, currency);
 
-	private void deleteDownloadSaveCurExFormCBR(ZonedDateTime minPeriodDate, ZonedDateTime maxPeriodDate, User loadingUser, Scenario loadingScenario, Currency currency)
-	{
-		List<ExchangeRate> toDeleteExR = exchangeRateRepository.findAll((root, query, qb) -> qb.equal(root.get("exchangeRateID").get("currency"), currency));
-		exchangeRateRepository.deleteAll(toDeleteExR);
+        saveFromDate.datesUntil(saveTillDate.plusDays(1), java.time.Period.ofDays(1))
+                .forEach(date ->
+                {
+                    ExchangeRateID exRId = ExchangeRateID.builder()
+                            .scenario(loadingScenario)
+                            .currency(currency)
+                            .date(date)
+                            .build();
 
-		ZonedDateTime queryDateFrom = minPeriodDate;
-		ZonedDateTime queryDateTo = maxPeriodDate;
+                    ExchangeRate exR = ExchangeRate.builder()
+                            .exchangeRateID(exRId)
+                            .rate_at_date(exRatesFormCBR.floorEntry(date).getValue())
+                            .build();
 
-		getCurExRateFrmCBRAndSaveIntoDB(loadingUser, loadingScenario, currency, queryDateFrom, queryDateTo);
-	}
+                    exR.setLastChange(ZonedDateTime.now());
+                    exR.setUser(loadingUser);
 
-	private void getCurExRateFrmCBRAndSaveIntoDB(User loadingUser, Scenario loadingScenario, Currency currency,
-												 ZonedDateTime queryDateFrom, ZonedDateTime queryDateTo)
-	{
-		ZonedDateTime now = ZonedDateTime.now().withZoneSameInstant(ZoneId.of("UTC"));
-		queryDateTo = now.isBefore(queryDateTo) ? now : queryDateTo;
+                    exR = exchangeRateRepository.save(exR);
 
-		ZonedDateTime saveFromDate = queryDateFrom;
-		ZonedDateTime saveTillDate = queryDateTo;
+                    LocalDate lastDayOfDateMonth = date.withDayOfMonth(date.lengthOfMonth());
+                    BigDecimal avgRate = BigDecimal.ZERO;
+                    if (date.getDayOfMonth() == lastDayOfDateMonth.getDayOfMonth()) {
+                        for (int day = 1; day <= lastDayOfDateMonth.getDayOfMonth(); day++) {
+                            LocalDate z = date.withDayOfMonth(day);
+                            BigDecimal exRateForDay = exRatesFormCBR.floorEntry(z).getValue();
+                            avgRate = avgRate.add(exRateForDay);
+                        }
 
-		queryDateFrom = queryDateFrom.minusMonths(1);
+                        avgRate = avgRate.divide(BigDecimal.valueOf(lastDayOfDateMonth.getDayOfMonth()), RoundingMode.HALF_UP);
+                        exR.setAverage_rate_for_month(avgRate);
 
-		TreeMap<ZonedDateTime, BigDecimal> exRatesFormCBR =
-			getExRatesFromCBR(queryDateFrom, queryDateTo, currency);
+                        exchangeRateRepository.save(exR);
+                    }
 
-		saveFromDate.toLocalDate().datesUntil(saveTillDate.toLocalDate().plusDays(1), java.time.Period.ofDays(1))
-				.forEach(date ->
-		{
-			ZonedDateTime dateZDT = ZonedDateTime.of(date, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
+                });
+    }
 
-			ExchangeRateID exRId = ExchangeRateID.builder()
-					.scenario(loadingScenario)
-					.currency(currency)
-					.date(dateZDT)
-					.build();
+    private TreeMap<LocalDate, BigDecimal> getExRatesFromCBR(LocalDate queryDateFrom,
+                                                             LocalDate queryDateTo,
+                                                             Currency currency) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String dateFrom = queryDateFrom.format(dtf); //"01/01/2020";
+        String dateTo = queryDateTo.format(dtf); //"10/01/2020";
+        String curCodeCBR = currency.getCBRCurrencyCode();
 
-			ExchangeRate exR = ExchangeRate.builder()
-					.exchangeRateID(exRId)
-					.user(loadingUser)
-					.lastChange(ZonedDateTime.now())
-					.rate_at_date(exRatesFormCBR.floorEntry(dateZDT).getValue())
-					.build();
+        Document doc = null;
+        try {
+            doc = Jsoup.connect("http://www.cbr.ru/scripts/XML_dynamic.asp?date_req1=" +
+                    dateFrom + "&date_req2=" + dateTo + "&VAL_NM_RQ=" + curCodeCBR).get();
 
-			exR = exchangeRateRepository.save(exR);
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-			LocalDate lastDayOfDateMonth = date.withDayOfMonth(date.lengthOfMonth());
-			BigDecimal avgRate = BigDecimal.ZERO;
-			if(date.getDayOfMonth() == lastDayOfDateMonth.getDayOfMonth())
-			{
-				for(int day = 1; day <= lastDayOfDateMonth.getDayOfMonth(); day++)
-				{
-					ZonedDateTime z = ZonedDateTime.of(date.withDayOfMonth(day), LocalTime.MIDNIGHT, ZoneId.of("UTC"));
-					BigDecimal exRateForDay = exRatesFormCBR.floorEntry(z).getValue();
-					avgRate = avgRate.add(exRateForDay);
-				}
+            TreeMap<LocalDate, BigDecimal> currencyRates = new TreeMap<>();
 
-				avgRate = avgRate.divide(BigDecimal.valueOf(lastDayOfDateMonth.getDayOfMonth()), RoundingMode.HALF_UP);
-				exR.setAverage_rate_for_month(avgRate);
+            doc.select("Record").forEach(element -> {
+                LocalDate Date_curExRate = LocalDate.parse(element.attr("Date"), dateTimeFormatter);
+                log.info("Date_curExRate = " + Date_curExRate);
 
-				exchangeRateRepository.save(exR);
-			}
+                BigDecimal ExRateForDate = BigDecimal.valueOf(Double.parseDouble(
+                        element.select("Value").text().replace(",", ".")));
+                log.info("exRate = " + ExRateForDate);
 
-		});
-	}
+                currencyRates.put(Date_curExRate, ExRateForDate);
+            });
 
-	private TreeMap<ZonedDateTime, BigDecimal> getExRatesFromCBR(ZonedDateTime queryDateFrom,
-																 ZonedDateTime queryDateTo,
-																 Currency currency)
-	{
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-		String dateFrom = queryDateFrom.format(dtf); //"01/01/2020";
-		String dateTo = queryDateTo.format(dtf); //"10/01/2020";
-		String curCodeCBR = currency.getCBRCurrencyCode();
-
-		Document doc = null;
-		try
-		{
-			doc = Jsoup.connect("http://www.cbr.ru/scripts/XML_dynamic.asp?date_req1=" +
-					dateFrom + "&date_req2=" + dateTo + "&VAL_NM_RQ=" + curCodeCBR).get();
-
-			DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-			TreeMap<ZonedDateTime, BigDecimal> currencyRates = new TreeMap<>();
-
-			doc.select("Record").forEach(element -> {
-				LocalDate Date_curExRate = LocalDate.parse(element.attr("Date"), dateTimeFormatter);
-				log.info("Date_curExRate = " + Date_curExRate);
-				ZonedDateTime DateTime_curExRate = ZonedDateTime.of(Date_curExRate, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
-				log.info("DateTime_curExRate = " + DateTime_curExRate);
-
-				BigDecimal ExRateForDate = BigDecimal.valueOf(Double.parseDouble(
-						element.select("Value").text().replace(",", ".")));
-				log.info("exRate = " + ExRateForDate);
-
-				currencyRates.put(DateTime_curExRate, ExRateForDate);
-			});
-
-			return currencyRates;
-		}
-		catch (IOException e)
-		{
-			log.info(e);
-			return null;
-		}
-	}
+            return currencyRates;
+        } catch (IOException e) {
+            log.info(e);
+            return null;
+        }
+    }
 }

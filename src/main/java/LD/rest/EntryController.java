@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -37,7 +38,7 @@ public class EntryController {
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_READER)")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Все транзакции возвращаются в ответе."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     public List<EntryDTO_out> getAllEntries() {
         return entryService.getAllLDEntries();
@@ -48,7 +49,7 @@ public class EntryController {
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_READER)")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Все транзакции возвращаются в ответе."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     public List<EntryDTO_out_RegLD1> getAllEntries_RegLD1(
             @RequestParam @NonNull Long scenarioFromId,
@@ -61,7 +62,7 @@ public class EntryController {
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_READER)")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Все транзакции возвращаются в ответе."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     public List<EntryDTO_out_RegLD2> getAllEntries_RegLD2(
             @RequestParam @NonNull Long scenarioFromId,
@@ -74,7 +75,7 @@ public class EntryController {
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_READER)")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Все транзакции возвращаются в ответе."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     public List<EntryDTO_out_RegLD3> getAllEntries_RegLD3(
             @RequestParam @NonNull Long scenarioFromId,
@@ -104,7 +105,7 @@ public class EntryController {
     @ApiOperation(value = "Сохранение новой транзакции", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Новая транзакция была сохранена."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_ADDER)")
     public ResponseEntity saveNewEntry(@RequestBody EntryDTO_in entryDTO_in) {
@@ -125,7 +126,7 @@ public class EntryController {
             @RequestParam(name = "scenario_to") Long scenarioTo,
             @RequestParam(name = "dateCopyStart", required = false) String dateCopyStart)
             throws ExecutionException, InterruptedException {
-        ZonedDateTime parsedCopyDate;
+        LocalDate parsedCopyDate;
 
         try {
             parsedCopyDate = DateFormat.parsingDate(dateCopyStart)
@@ -134,7 +135,7 @@ public class EntryController {
                     .minusDays(1);
         }
         catch (Exception e) {
-            parsedCopyDate = ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC"));
+            parsedCopyDate = LocalDate.MIN;
 		}
 
         log.info("Дата начала копирования была запарсена в {}", parsedCopyDate);
@@ -157,7 +158,7 @@ public class EntryController {
     @ApiOperation(value = "Изменение значений транзакции", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Транзакция была изменена."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_EDITOR)")
     public ResponseEntity update(@RequestBody EntryDTO_in entryDTO_in) {

@@ -1,14 +1,16 @@
 package LD.model.ExchangeRate;
 
-import LD.config.Security.model.User.User;
+import LD.model.AbstractModelClass;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 
 @Table(name = "ExchangeRate")
 @Entity
@@ -16,21 +18,14 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor()
 @Builder
 @AllArgsConstructor
-public class ExchangeRate
-{
-	@EmbeddedId
-	private ExchangeRateID exchangeRateID;
+public class ExchangeRate extends AbstractModelClass {
 
-	@Column(columnDefinition = "DECIMAL(31,12)", nullable = false)
-	private BigDecimal rate_at_date;
+    @EmbeddedId
+    private ExchangeRateID exchangeRateID;
 
-	@Column(columnDefinition = "DECIMAL(31,12)")
-	private BigDecimal average_rate_for_month;
+    @Column(columnDefinition = "DECIMAL(31,12)", nullable = false)
+    private BigDecimal rate_at_date;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @Column(columnDefinition = "DECIMAL(31,12)")
+    private BigDecimal average_rate_for_month;
 }

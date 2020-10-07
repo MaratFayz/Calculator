@@ -1,11 +1,9 @@
 package LD.model.Company;
 
-import LD.config.Security.model.User.User;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import LD.model.AbstractModelClass;
 import lombok.*;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "Company")
@@ -15,23 +13,16 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
-public class Company
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, unique = true)
-	private Long id;
+public class Company extends AbstractModelClass {
 
-	@Column(length = 10, name = "code", nullable = false)
-	private String code;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true)
+    private Long id;
 
-	@Column(name = "name", nullable = false)
-	private String name;
+    @Column(length = 10, name = "code", nullable = false)
+    private String code;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @Column(name = "name", nullable = false)
+    private String name;
 }

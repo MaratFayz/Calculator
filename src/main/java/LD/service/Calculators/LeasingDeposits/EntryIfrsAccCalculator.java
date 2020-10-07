@@ -20,13 +20,13 @@ public class EntryIfrsAccCalculator extends RecursiveTask<List<EntryIFRSAcc>> {
     private static final int THRESHOLD = 10;
     List<EntryIFRSAcc> mappedResult;
     Entry[] allEntries;
-    GeneralDataKeeper GDK;
+    CalculationParametersSource calculationParametersSource;
 
-    public EntryIfrsAccCalculator(Entry[] allEntries, GeneralDataKeeper GDK) {
+    public EntryIfrsAccCalculator(Entry[] allEntries, CalculationParametersSource calculationParametersSource) {
         log.info("Создание объекта-калькулятора для МСФО счетов");
         this.mappedResult = new ArrayList<>();
         this.allEntries = allEntries;
-        this.GDK = GDK;
+        this.calculationParametersSource = calculationParametersSource;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class EntryIfrsAccCalculator extends RecursiveTask<List<EntryIFRSAcc>> {
                             (al1, al2) -> al1.addAll(al2));
         }
         else {
-            countLDENTRY_IN_IFRS_ACC(this.allEntries, GDK.getAllIFRSAccounts());
+            countLDENTRY_IN_IFRS_ACC(this.allEntries, calculationParametersSource.getAllIfrsAccounts());
             return this.mappedResult;
         }
     }
@@ -49,10 +49,10 @@ public class EntryIfrsAccCalculator extends RecursiveTask<List<EntryIFRSAcc>> {
         List<EntryIfrsAccCalculator> dividedTasks = new ArrayList<>();
 
         dividedTasks.add(new EntryIfrsAccCalculator(
-                Arrays.copyOfRange(allEntries, 0, allEntries.length / 2), GDK));
+                Arrays.copyOfRange(allEntries, 0, allEntries.length / 2), calculationParametersSource));
         dividedTasks.add(new EntryIfrsAccCalculator(
                 Arrays.copyOfRange(allEntries, allEntries.length / 2,
-                        allEntries.length), GDK));
+                        allEntries.length), calculationParametersSource));
 
         return dividedTasks;
     }
@@ -192,8 +192,9 @@ public class EntryIfrsAccCalculator extends RecursiveTask<List<EntryIFRSAcc>> {
         ldEntryIFRSAcc.setSum(sum);
         ldEntryIFRSAcc.setUser(entry.getUser());
         ldEntryIFRSAcc.setLastChange(entry.getLastChange());
-        if (isInverse) ldEntryIFRSAcc.setSum(ldEntryIFRSAcc.getSum()
-                .negate());
+        if (isInverse) {
+            ldEntryIFRSAcc.setSum(ldEntryIFRSAcc.getSum().negate());
+        }
 
         this.mappedResult.add(ldEntryIFRSAcc);
     }

@@ -21,12 +21,12 @@ public class EntryIfrsAccCalculatorTest {
     TestEntitiesKeeper testEntitiesKeeper;
 
     @Mock
-    private GeneralDataKeeper gdk;
+    private CalculationParametersSourceImpl gdk;
 
     @Test
     @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/testDataForEntriesOnIfrsAcc/testData_IfrsAcc_1.xml")
     public void compute_shouldReturnListOfIfrsEntries_whenInputsAreCorrect() {
-        when(gdk.getAllIFRSAccounts()).thenReturn(testEntitiesKeeper.getIfrsAccounts());
+        when(gdk.getAllIfrsAccounts()).thenReturn(testEntitiesKeeper.getIfrsAccounts());
 
         EntryIfrsAccCalculator ldeIFRSAcc = new EntryIfrsAccCalculator(List.of(testEntitiesKeeper.getEntryForEntryIfrsCalculation()).toArray(Entry[]::new), gdk);
         List<EntryIFRSAcc> calculatedIfrsEntries = ldeIFRSAcc.compute();

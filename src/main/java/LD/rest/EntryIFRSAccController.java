@@ -32,7 +32,7 @@ public class EntryIFRSAccController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_IFRS_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все компании возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<EntryIFRSAccDTO_out> getAllEntryIFRSAccs()
 	{
@@ -72,7 +72,7 @@ public class EntryIFRSAccController
 	@ApiOperation(value = "Сохранение новой записи на счетах МСФО", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новая запись на счетах МСФО была сохранена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_IFRS_ADDER)")
 	public ResponseEntity saveNewEntryIFRSAcc(@RequestBody EntryIFRSAccDTO_in entryIFRSAccDTO_in)
@@ -86,7 +86,7 @@ public class EntryIFRSAccController
 	@ApiOperation(value = "Изменение записи на счетах МСФО", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Запись на счетах МСФО была изменена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_IFRS_EDITOR)")
 	public ResponseEntity update(@RequestBody EntryIFRSAccDTO_in entryIFRSAccDTO_in)

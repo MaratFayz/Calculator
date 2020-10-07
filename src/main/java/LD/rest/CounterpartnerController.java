@@ -30,7 +30,7 @@ public class CounterpartnerController
 	@ApiOperation(value = "Получение всех контрагентов", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все контрагенты возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COUNTERPARTNER_READER)")
 	public List<Counterpartner_out> getAllCounterpartners()
@@ -57,7 +57,7 @@ public class CounterpartnerController
 	@ApiOperation(value = "Сохранение нового контрагента", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новый контрагент был сохранен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COUNTERPARTNER_ADDER)")
 	public ResponseEntity saveNewCounterpartner(@RequestBody CounterpartnerDTO_in counterpartnerDTOIn)
@@ -71,7 +71,7 @@ public class CounterpartnerController
 	@ApiOperation(value = "Изменение значений контрагента", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Контрагент был изменен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).COUNTERPARTNER_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody CounterpartnerDTO_in counterpartnerDTOIn)

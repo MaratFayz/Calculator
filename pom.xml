@@ -15,6 +15,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>14</maven.compiler.source>
         <maven.compiler.target>14</maven.compiler.target>
+        <maven.test.skip>true</maven.test.skip>
+
         <junit>5.5.2</junit>
         <spring-boot.version>2.2.6.RELEASE</spring-boot.version>
         <jackson.version>2.10.3</jackson.version>
@@ -30,6 +32,7 @@
         <h2.version>1.4.200</h2.version>
         <swagger.version>2.9.2</swagger.version>
         <log4j.version>2.13.1</log4j.version>
+        <hibernate-jpamodelgen.version>5.4.21.Final</hibernate-jpamodelgen.version>
     </properties>
 
     <parent>
@@ -37,6 +40,63 @@
         <groupId>org.springframework.boot</groupId>
         <version>2.2.6.RELEASE</version>
     </parent>
+
+    <profiles>
+        <profile>
+            <id>unit-tests</id>
+            <properties>
+                <maven.test.skip>false</maven.test.skip>
+            </properties>
+<!--            <plugins>-->
+                <!--                <plugin>-->
+                <!--                    <jacoco>-->
+                <!--                </plugin>-->
+<!--            </plugins>-->
+        </profile>
+        <profile>
+            <id>buildDockerImageIntoLocalRepo</id>
+            <!--            <build>-->
+            <!--                <plugins>-->
+            <!--                    <plugin>-->
+            <!--                        <groupId>com.google.cloud.tools</groupId>-->
+            <!--                        <artifactId>jib-maven-plugin</artifactId>-->
+            <!--                        <version>2.5.0</version>-->
+            <!--                        <configuration>-->
+            <!--                            <to>-->
+            <!--                                <image>${artifactId}:${version}:INTEGRATION-TEST</image>-->
+            <!--                            </to>-->
+            <!--                        </configuration>-->
+            <!--                    </plugin>-->
+            <!--                </plugins>-->
+            <!--            </build>-->
+<!--            <execution>-->
+<!--                <stage = deploy></stage>-->
+<!--            </execution>-->
+        </profile>
+        <profile>
+            <id>buildDockerImageIntoRemoteRepo</id>
+            <!--            <build>-->
+            <!--                <plugins>-->
+            <!--                    <plugin>-->
+            <!--                        <groupId>com.google.cloud.tools</groupId>-->
+            <!--                        <artifactId>jib-maven-plugin</artifactId>-->
+            <!--                        <version>2.5.0</version>-->
+            <!--                        <configuration>-->
+            <!--                            <to>-->
+            <!--                                <image>${artifactId}:${version}:RELEASE</image>-->
+            <!--                            </to>-->
+            <!--                        </configuration>-->
+            <!--                    </plugin>-->
+            <!--                </plugins>-->
+            <!--            </build>-->
+            <!--            <execution>-->
+            <!--                <stage = deploy></stage>-->
+            <!--            </execution>-->
+        </profile>
+        <profile>
+            <id>sonar</id>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
@@ -130,6 +190,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -175,17 +236,6 @@
             <version>${swagger.version}</version>
         </dependency>
         <dependency>
-            <!--        TODO: Change to S4log-->
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>${log4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>${log4j.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
             <version>${spring-boot.version}</version>
@@ -208,6 +258,12 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <version>${hibernate-jpamodelgen.version}</version>
+            <scope>compile</scope>
         </dependency>
 
     </dependencies>

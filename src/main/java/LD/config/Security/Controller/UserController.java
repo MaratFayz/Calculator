@@ -34,7 +34,7 @@ public class UserController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все пользователи возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<UserDTO_out> getUsers()
 	{
@@ -60,7 +60,7 @@ public class UserController
 	@ApiOperation(value = "Сохранение нового пользователя", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новый пользователь был сохранен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_ADDER)")
 	public ResponseEntity saveNewUser(@RequestBody UserDTO_in userDTO_in)
@@ -74,7 +74,7 @@ public class UserController
 	@ApiOperation(value = "Изменение значений пользователя", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Пользователь был изменен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody UserDTO_in userDTO_in)

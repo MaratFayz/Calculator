@@ -45,8 +45,10 @@ public class UserServiceImpl implements UserService
 		if(user == null)
 		{
 			log.info("В базе данных НЕ найден юзер {}", username);
-			new UsernameNotFoundException("User not found");
+			throw new UsernameNotFoundException("User not found");
 		}
+
+		log.info("user authorities = {}", user.getAuthorities());
 
 		return user;
 	}
@@ -60,7 +62,7 @@ public class UserServiceImpl implements UserService
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		user.setUser_changed(userRepository.findByUsername(username));
+		user.setUser(userRepository.findByUsername(username));
 
 		user.setLastChange(ZonedDateTime.now());
 
@@ -117,7 +119,7 @@ public class UserServiceImpl implements UserService
 		user.setId(id);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		user.setUser_changed(userRepository.findByUsername(username));
+		user.setUser(userRepository.findByUsername(username));
 
 		user.setLastChange(ZonedDateTime.now());
 

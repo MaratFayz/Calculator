@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
 @Embeddable
@@ -27,10 +28,10 @@ public class DepositRateID implements Serializable
 	private Company company;
 
 	@Column(name = "START_PERIOD", nullable = false, columnDefinition = "DATE")
-	private ZonedDateTime START_PERIOD;
+	private LocalDate START_PERIOD;
 
 	@Column(name = "END_PERIOD", nullable = false, columnDefinition = "DATE")
-	private ZonedDateTime END_PERIOD;
+	private LocalDate END_PERIOD;
 
 	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "currency_id", nullable = false)

@@ -12,22 +12,22 @@ import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import java.io.Serializable;
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Embeddable
-public class ExchangeRateID implements Serializable
-{
-	static final Long serialVersionUID = 4L;
+public class ExchangeRateID implements Serializable {
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private Currency currency;
+    static final Long serialVersionUID = 4L;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private Scenario scenario;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Currency currency;
 
-	private ZonedDateTime date;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Scenario scenario;
+
+    private LocalDate date;
 }

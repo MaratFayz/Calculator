@@ -62,7 +62,7 @@ public class CurrencyController
 	@ApiOperation(value = "Сохранение новой валюты", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новая валюта была сохранена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CURRENCY_ADDER)")
 	public ResponseEntity saveNewCurrency(@RequestBody CurrencyDTO_in currencyDTOIn)
@@ -76,7 +76,7 @@ public class CurrencyController
 	@ApiOperation(value = "Изменение значений валюты", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Валюта была изменена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CURRENCY_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody CurrencyDTO_in currencyDTOIn)

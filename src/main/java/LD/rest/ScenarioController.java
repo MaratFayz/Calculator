@@ -31,7 +31,7 @@ public class ScenarioController
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).SCENARIO_READER)")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Все сценарии возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	public List<ScenarioDTO_out> getAllScenarios()
 	{
@@ -57,7 +57,7 @@ public class ScenarioController
 	@ApiOperation(value = "Сохранение нового сценария", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Новый сценарий был сохранен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).SCENARIO_ADDER)")
 	public ResponseEntity saveNewScenario(@RequestBody ScenarioDTO_in scenarioDTOIn)
@@ -71,7 +71,7 @@ public class ScenarioController
 	@ApiOperation(value = "Изменение значений сценария", response = ResponseEntity.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Сценарий был изменен."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
+			@ApiResponse(code = 403, message = "Доступ запрещён")
 	})
 	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).SCENARIO_EDITOR)")
 	public ResponseEntity update(@PathVariable Long id, @RequestBody ScenarioDTO_in scenarioDTOIn)
