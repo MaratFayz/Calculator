@@ -35,7 +35,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
             (date1, date2) -> (int) (date1.toEpochDay() - date2.toEpochDay());
 
     private ArrayList<Entry> entriesExistingBeforeCalculating = new ArrayList<>();
-    private ArrayList<Entry> calculatedStornoDeletedEntries;
+    private ArrayList<Entry> calculatedStornoDeletedEntries = new ArrayList<>();
     private ArrayList<Entry> onlyCalculatedEntries = new ArrayList<>();
     private ArrayList<Entry> calculatedAndExistingBeforeCalculationEntries = new ArrayList<>();
 
@@ -54,7 +54,8 @@ public class EntryCalculator implements Callable<List<Entry>> {
     private Scenario scenarioFrom;
     private LeasingDeposit leasingDepositToCalculate;
     private SupportEntryCalculator supportData;
-    private BigDecimal exRateAtStartDate;
+    private BigDecimal exchangeRateToRubAtStartDate;
+    private BigDecimal nominalDepositSum;
 
     public EntryCalculator(LeasingDeposit leasingDepositToCalculate,
                            CalculationParametersSource calculationParametersSource,
@@ -90,6 +91,8 @@ public class EntryCalculator implements Callable<List<Entry>> {
         } else {
             log.trace("Депозит не является удалённым");
 
+            calculateNominalSumRub();
+
             supportData = SupportEntryCalculator.calculateDateUntilThatEntriesMustBeCalculated(this.leasingDepositToCalculate,
                     this.scenarioTo, this.depositRatesRepository, this.firstOpenPeriodOfScenarioTo);
 
@@ -112,7 +115,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 keepNominalValue();
             }
 
-            log.info("deposit_sum_discounted_on_firstEndDate = {}", depositSumDiscountedOnFirstEndDate);
+            log.info("depositSumDiscountedOnFirstEndDate = {}", depositSumDiscountedOnFirstEndDate);
 
             stornoExistingEntries();
 
@@ -125,39 +128,8 @@ public class EntryCalculator implements Callable<List<Entry>> {
         return calculatedStornoDeletedEntries;
     }
 
-    private void throwExceptionIfLastEntryOfDepositInScenarioFromNotEqualToOrOneMonthLessFirstOpenPeriod() {
-        LocalDate firstNotCalculatedPeriodOfScenarioFrom = calculateFirstUncalculatedPeriodForScenario(scenarioFrom);
-
-        LocalDate lastDateWithEntry = firstNotCalculatedPeriodOfScenarioFrom.withDayOfMonth(1).minusDays(1);
-        if (!(lastDateWithEntry.isEqual(firstOpenPeriodOfScenarioFrom) ||
-                firstNotCalculatedPeriodOfScenarioFrom.isEqual(firstOpenPeriodOfScenarioFrom))) {
-            throw new IllegalArgumentException(
-                    "Транзакции лизингового депозита не соответствуют закрытому периоду: " +
-                            "период последней рассчитанной транзакции должен быть или " +
-                            "равен первому открытому периоду или должен быть меньше строго на один период");
-        }
-    }
-
-    private boolean isScenarioToFullStorno() {
-        return scenarioTo.getStatus().equals(ScenarioStornoStatus.FULL);
-    }
-
-    private void keepNominalValue() {
-        depositSumDiscountedOnFirstEndDate =
-                this.leasingDepositToCalculate.getDeposit_sum_not_disc();
-    }
-
-    private void discountNominalValue() {
-        depositSumDiscountedOnFirstEndDate =
-                calculateDiscountedValueFromStartDateToNeededDate(this.firstEndDate, this.leasingDepositToCalculate.getStart_date());
-    }
-
-    private boolean isDepositDurationMoreThanOneYear() {
-        return supportData.isDurationMoreThanOneYear();
-    }
-
-    private void copyEntriesIntoCalculationResultList() {
-        entriesExistingBeforeCalculating.addAll(this.leasingDepositToCalculate.getEntries());
+    private void calculateNominalSumRub() {
+        nominalDepositSum = this.leasingDepositToCalculate.getDeposit_sum_not_disc();
     }
 
     private boolean isDepositAlreadyHasEntries() {
@@ -170,115 +142,131 @@ public class EntryCalculator implements Callable<List<Entry>> {
         return false;
     }
 
+    private void copyEntriesIntoCalculationResultList() {
+        entriesExistingBeforeCalculating.addAll(this.leasingDepositToCalculate.getEntries());
+    }
+
     private boolean isDepositDeleted() {
         return this.leasingDepositToCalculate.getIs_deleted() == STATUS_X.X;
     }
 
     private void setDeleteStatusToAllEntriesIntoCalculationResultList() {
-        calculatedStornoDeletedEntries =
-                changeStatusInLastEntries(scenarioTo,
-                        EntryStatus.DELETED);
-
-        /*    private ArrayList<Entry> changeStatusInLastEntries(Scenario scenarioWhereToChangeStatusInEntries, EntryStatus newStatus) {
-        ArrayList<Entry> DeletedStornoEntries = new ArrayList<>();
-
-        List<Entry> stream_ActualEntries = entriesExistingBeforeCalculating.stream()
-                .filter(entry -> {
-                    if (entry.getStatus()
-                            .equals(EntryStatus.ACTUAL)) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                })
+        List<Entry> deletedEntries = entriesExistingBeforeCalculating.stream()
+                .filter(entry -> entry.getStatus().equals(EntryStatus.ACTUAL))
+                .peek(entry -> entry.setStatus(EntryStatus.DELETED))
                 .collect(Collectors.toList());
 
-        if (newStatus == EntryStatus.STORNO) {
-            stream_ActualEntries = stream_ActualEntries.stream()
-                    .filter(entry -> {
-                        if (entry.getEntryID()
-                                .getScenario()
-                                .equals(scenarioWhereToChangeStatusInEntries)) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    })
-                    .collect(Collectors.toList());
+        calculatedStornoDeletedEntries.addAll(deletedEntries);
+    }
 
-            if (scenarioWhereToChangeStatusInEntries.getStatus() == ScenarioStornoStatus.ADDITION) {
-                stream_ActualEntries = stream_ActualEntries.stream()
-                        .filter(entry -> entry.getEntryID()
-                                .getPeriod()
-                                .getDate()
-                                .equals(this.firstOpenPeriodOfScenarioTo
-                                ))
-                        .collect(Collectors.toList());
-            }
+    private boolean isDepositDurationMoreThanOneYear() {
+        return supportData.isDurationMoreThanOneYear();
+    }
 
-        }
+    private void discountNominalValue() {
+        depositSumDiscountedOnFirstEndDate = discountNominalValueUntilStartDateFromDate(this.firstEndDate);
+    }
 
-        stream_ActualEntries.forEach(entry -> {
-            entry.setStatus(newStatus);
-            DeletedStornoEntries.add(entry);
-        });
-
-        return DeletedStornoEntries;
-    }*/
-
+    private void keepNominalValue() {
+        depositSumDiscountedOnFirstEndDate = nominalDepositSum;
     }
 
     private void stornoExistingEntries() {
-        calculatedStornoDeletedEntries =
-                changeStatusInLastEntries(this.scenarioTo,
-                        EntryStatus.STORNO);
-    }
-
-    private ArrayList<Entry> changeStatusInLastEntries(Scenario scenarioWhereToChangeStatusInEntries, EntryStatus newStatus) {
-        ArrayList<Entry> DeletedStornoEntries = new ArrayList<>();
-
-        List<Entry> stream_ActualEntries = entriesExistingBeforeCalculating.stream()
+        List<Entry> stornoEntries = entriesExistingBeforeCalculating.stream()
+                .filter(entry -> entry.getStatus().equals(EntryStatus.ACTUAL))
+                .filter(entry -> entry.getEntryID().getScenario().equals(this.scenarioTo))
                 .filter(entry -> {
-                    if (entry.getStatus()
-                            .equals(EntryStatus.ACTUAL)) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                })
-                .collect(Collectors.toList());
-
-        if (newStatus == EntryStatus.STORNO) {
-            stream_ActualEntries = stream_ActualEntries.stream()
-                    .filter(entry -> {
-                        if (entry.getEntryID()
-                                .getScenario()
-                                .equals(scenarioWhereToChangeStatusInEntries)) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    })
-                    .collect(Collectors.toList());
-
-            if (scenarioWhereToChangeStatusInEntries.getStatus() == ScenarioStornoStatus.ADDITION) {
-                stream_ActualEntries = stream_ActualEntries.stream()
-                        .filter(entry -> entry.getEntryID()
+                    if (scenarioTo.getStatus() == ScenarioStornoStatus.ADDITION) {
+                        return entry.getEntryID()
                                 .getPeriod()
                                 .getDate()
-                                .equals(this.firstOpenPeriodOfScenarioTo
-                                ))
-                        .collect(Collectors.toList());
-            }
+                                .equals(this.firstOpenPeriodOfScenarioTo);
+                    } else {
+                        return true;
+                    }
+                })
+                .peek(entry -> entry.setStatus(EntryStatus.STORNO))
+                .collect(Collectors.toList());
 
+        calculatedStornoDeletedEntries.addAll(stornoEntries);
+    }
+
+    private LocalDate findFirstNotCalculatedPeriod() {
+        LocalDate firstNotCalculatedPeriod = UNINITIALIZED;
+
+        if (isCalculationScenariosEqual()) {
+            if (isScenarioFromAdditional()) {
+                firstNotCalculatedPeriod = calculateFirstUncalculatedPeriodForScenario(scenarioFrom);
+            } else if (isScenarioFromFullStorno()) {
+                throw new IllegalArgumentException("Запрещённая операция расчёта между одним сценарием со статусом: FULL -> FULL");
+            }
+        } else if (isCalculationScenariosDiffer()) {
+            throwExceptionIfLastEntryOfDepositInScenarioFromNotEqualToOrOneMonthLessFirstOpenPeriod();
+
+            if (isDateCopyFromInitialized()) {
+                firstNotCalculatedPeriod = calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo();
+            } else {
+                firstNotCalculatedPeriod = firstOpenPeriodOfScenarioFrom;
+            }
         }
 
-        stream_ActualEntries.forEach(entry -> {
-            entry.setStatus(newStatus);
-            DeletedStornoEntries.add(entry);
-        });
+        return firstNotCalculatedPeriod;
+    }
 
-        return DeletedStornoEntries;
+    private boolean isCalculationScenariosEqual() {
+        return scenarioFrom.equals(scenarioTo);
+    }
+
+    private boolean isScenarioFromAdditional() {
+        return scenarioFrom.getStatus().equals(ScenarioStornoStatus.ADDITION);
+    }
+
+    private LocalDate calculateFirstUncalculatedPeriodForScenario(Scenario scenario) {
+        LocalDate LastPeriodWithEntry = this.depositLastDayOfFirstMonth.minusMonths(1);
+
+        for (LocalDate date : getDatesFromStartMonthTillDateUntilEntriesMustBeCalculated()) {
+            date = transformIntoLastDayOfMonth(date);
+
+            if (isCountEntriesWithScenarioAndDateAtLeastOne(scenario, date)) {
+                LastPeriodWithEntry = date;
+            } else {
+                break;
+            }
+        }
+
+        LocalDate nextDateAfterLastWithEntry = LastPeriodWithEntry.plusMonths(1);
+        nextDateAfterLastWithEntry = transformIntoLastDayOfMonth(nextDateAfterLastWithEntry);
+
+        return nextDateAfterLastWithEntry;
+    }
+
+    private List<LocalDate> getDatesFromStartMonthTillDateUntilEntriesMustBeCalculated() {
+        return this.depositLastDayOfFirstMonth.datesUntil(
+                dateUntilThatEntriesMustBeCalculated,
+                java.time.Period.ofMonths(1))
+                .collect(Collectors.toList());
+    }
+
+    private LocalDate transformIntoLastDayOfMonth(LocalDate date) {
+        return date.withDayOfMonth(date.lengthOfMonth());
+    }
+
+    private boolean isCountEntriesWithScenarioAndDateAtLeastOne(Scenario scenario, LocalDate date) {
+        return entriesExistingBeforeCalculating.stream()
+                .filter(entry -> entry.getEntryID()
+                        .getScenario()
+                        .equals(scenario))
+                .filter(entry -> entry.getStatus()
+                        .equals(EntryStatus.ACTUAL))
+                .filter(entry -> entry.getEntryID()
+                        .getPeriod()
+                        .getDate()
+                        .isEqual(date))
+                .count() > 0;
+    }
+
+    private boolean isScenarioFromFullStorno() {
+        return scenarioFrom.getStatus().equals(ScenarioStornoStatus.FULL);
     }
 
     private void calculateNewEntriesForPeriod() {
@@ -306,15 +294,77 @@ public class EntryCalculator implements Callable<List<Entry>> {
         calculatedStornoDeletedEntries.addAll(onlyCalculatedEntries);
     }
 
+    private boolean allEntriesNotCalculated() {
+        //Для случаев, когда все транзакции сделаны => чтоб не было новых
+        return firstNotCalculatedPeriod.isBefore(dateUntilThatEntriesMustBeCalculated);
+    }
+
+    private List<LocalDate> getPeriodsForCalculation() {
+        return firstNotCalculatedPeriod.datesUntil(dateUntilThatEntriesMustBeCalculated, Period.ofMonths(1))
+                .map(period -> period.withDayOfMonth(period.lengthOfMonth()))
+                .collect(Collectors.toList());
+    }
+
+    private boolean isCalculationScenariosDiffer() {
+        return !scenarioFrom.equals(scenarioTo);
+    }
+
+    private void throwExceptionIfLastEntryOfDepositInScenarioFromNotEqualToOrOneMonthLessFirstOpenPeriod() {
+        LocalDate firstNotCalculatedPeriodOfScenarioFrom = calculateFirstUncalculatedPeriodForScenario(scenarioFrom);
+
+        LocalDate lastDateWithEntry = firstNotCalculatedPeriodOfScenarioFrom.withDayOfMonth(1).minusDays(1);
+        if (!(lastDateWithEntry.isEqual(firstOpenPeriodOfScenarioFrom) ||
+                firstNotCalculatedPeriodOfScenarioFrom.isEqual(firstOpenPeriodOfScenarioFrom))) {
+            throw new IllegalArgumentException(
+                    "Транзакции лизингового депозита не соответствуют закрытому периоду: " +
+                            "период последней рассчитанной транзакции должен быть или " +
+                            "равен первому открытому периоду или должен быть меньше строго на один период");
+        }
+    }
+
+    private boolean isDateCopyFromInitialized() {
+        return !this.calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo().isEqual(UNINITIALIZED);
+    }
+
+    private boolean isCopyDateBeforeFirstOpenPeriodOfScenarioFrom(LocalDate calculationPeriod) {
+        return (calculationPeriod.isEqual(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo()) ||
+                calculationPeriod.isAfter(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo())) &&
+                calculationPeriod.isBefore(firstOpenPeriodOfScenarioFrom);
+    }
+
+    private void copyEntryFromScenarioFromIntoScenarioTo(LocalDate calculationPeriod) {
+        log.info("Осуществляется копирование со сценария {} на сценарий {}",
+                scenarioFrom.getName(),
+                scenarioTo.getName());
+
+        Entry entryToCopy = entriesExistingBeforeCalculating.stream()
+                .filter(entry -> entry.getEntryID().getScenario().equals(scenarioFrom))
+                .filter(entry -> entry.getEntryID().getPeriod().getDate().isEqual(calculationPeriod))
+                .findAny()
+                .get();
+
+        EntryID newEntryID = entryToCopy.getEntryID()
+                .toBuilder()
+                .scenario(scenarioTo)
+                .CALCULATION_TIME(ZonedDateTime.now())
+                .build();
+
+        Entry newEntry = entryToCopy.toBuilder()
+                .entryID(newEntryID)
+                .build();
+
+        this.calculatedStornoDeletedEntries.add(newEntry);
+    }
+
     private void calculateNewEntriesForPeriod(LocalDate calculationPeriod) {
         getExchangeRateAtStartDate();
 
         Entry newEntry = createEntryIdAndMetaData(calculationPeriod);
 
-        LocalDate previousCalculatedPeriod = calculatePreviousCalculatedPeriodFrom(calculationPeriod);
+        LocalDate previousCalculatedPeriod = calculatePreviousCalculatedPeriodDate(calculationPeriod);
         log.info("Предыдущая дата закрытия => {}", previousCalculatedPeriod);
 
-        calculateRegLd1(previousCalculatedPeriod, calculationPeriod, calculationPeriod, newEntry);
+        calculateRegLd1(previousCalculatedPeriod, calculationPeriod, newEntry);
         calculateRegLd2(calculationPeriod, newEntry, previousCalculatedPeriod);
         calculateRegLd3(calculationPeriod, newEntry, previousCalculatedPeriod);
 
@@ -323,12 +373,8 @@ public class EntryCalculator implements Callable<List<Entry>> {
         log.info("Расчет за период закончен");
     }
 
-    private LocalDate calculatePreviousCalculatedPeriodFrom(LocalDate calculationPeriod) {
-        return calculationPeriod.minusMonths(1).withDayOfMonth(calculationPeriod.minusMonths(1).lengthOfMonth());
-    }
-
     private void getExchangeRateAtStartDate() {
-        exRateAtStartDate = this.exchangeRateRepository.getRateAtDate(
+        exchangeRateToRubAtStartDate = this.exchangeRateRepository.getRateAtDate(
                 this.leasingDepositToCalculate.getStart_date(),
                 this.leasingDepositToCalculate.getScenario(),
                 this.leasingDepositToCalculate.getCurrency());
@@ -364,16 +410,21 @@ public class EntryCalculator implements Callable<List<Entry>> {
         return newEntry;
     }
 
-    private LocalDate calculateRegLd1(LocalDate previousClosingDate, LocalDate calculationPeriod, LocalDate finalClosingdate, Entry calculatingEntry) {
-        calculateAndSaveDiscontAtStartDateInto(calculatingEntry);
-        calculateAndSaveDiscontAtStartDateRubInto(calculatingEntry);
+    private LocalDate calculatePreviousCalculatedPeriodDate(LocalDate calculationPeriod) {
+        return calculationPeriod.minusMonths(1).withDayOfMonth(calculationPeriod.minusMonths(1).lengthOfMonth());
+    }
 
-        if (isCalculationPeriodEqualFirstDepositPeriod(calculationPeriod)) {
+
+    private LocalDate calculateRegLd1(LocalDate previousClosingDate, LocalDate calculationPeriod, Entry calculatingEntry) {
+        calculateAndSaveDiscountAtStartDateInto(calculatingEntry);
+        calculateAndSaveDiscountAtStartDateRubInto(calculatingEntry);
+
+        if (isEqualFirstDepositPeriod(calculationPeriod)) {
             calculateAndSaveNominalSumRubInto(calculatingEntry);
-            calculateAndSaveDiscontRubInto(calculatingEntry);
+            calculateAndSaveDiscountRubInto(calculatingEntry);
         } else {
-            saveZeroNominalSumInto(calculatingEntry);
             saveZeroNominalSumRubInto(calculatingEntry);
+            saveZeroDiscountSumRubInto(calculatingEntry);
         }
 
         if (isOneMonthAheadThanFirstMonth(previousClosingDate) &&
@@ -384,15 +435,15 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 discountedDepositValueOnCurrentEndDate =
                         discountNominalValueUntilStartDateFromDate(calculatingEntry.getEnd_date_at_this_period());
             } else {
-                discountedDepositValueOnCurrentEndDate = this.leasingDepositToCalculate.getDeposit_sum_not_disc();
+                discountedDepositValueOnCurrentEndDate = nominalDepositSum;
             }
 
             calculatingEntry.setDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P(
                     discountedDepositValueOnCurrentEndDate.subtract(
-                            this.leasingDepositToCalculate.getDeposit_sum_not_disc()).setScale(10, RoundingMode.HALF_UP));
+                            nominalDepositSum).setScale(10, RoundingMode.HALF_UP));
             calculatingEntry.setDISC_SUM_AT_NEW_END_DATE_rub_REG_LD_1_Q(
                     calculatingEntry.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()
-                            .multiply(exRateAtStartDate).setScale(10, RoundingMode.HALF_UP));
+                            .multiply(exchangeRateToRubAtStartDate).setScale(10, RoundingMode.HALF_UP));
 
             if (isDepositDurationMoreThanOneYear()) {
                 //Поиск последнего периода с суммой в поле корректировки дисконта в рублях
@@ -400,7 +451,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
                 if (isCalculationScenariosDiffer()) {
                     if (previousClosingDate.isBefore(firstOpenPeriodOfScenarioFrom)) {
-                        lastRevaluationOfDiscount = findLastRevaluationOfDiscount(scenarioFrom, finalClosingdate);
+                        lastRevaluationOfDiscount = findLastRevaluationOfDiscount(scenarioFrom, calculationPeriod);
                     } else {
                         LocalDate prevDateBeforeFirstOpenPeriodForScenarioFrom =
                                 firstOpenPeriodOfScenarioFrom
@@ -411,7 +462,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                                 findLastRevaluationOfDiscount(scenarioFrom, prevDateBeforeFirstOpenPeriodForScenarioFrom);
 
                         BigDecimal lastCalculatedDiscountForScenarioTo =
-                                findLastRevaluationOfDiscount(scenarioTo, finalClosingdate);
+                                findLastRevaluationOfDiscount(scenarioTo, calculationPeriod);
 
                         lastRevaluationOfDiscount =
                                 lastCalculatedDiscountForScenarioTo.compareTo(
@@ -421,7 +472,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     }
                 } else {
                     lastRevaluationOfDiscount =
-                            findLastRevaluationOfDiscount(scenarioTo, finalClosingdate);
+                            findLastRevaluationOfDiscount(scenarioTo, calculationPeriod);
                 }
 
                 if (lastRevaluationOfDiscount.compareTo(BigDecimal.ZERO) == 0) {
@@ -447,8 +498,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
             if (isCalculationScenariosDiffer()) {
                 if (previousClosingDate.isBefore(firstOpenPeriodOfScenarioFrom)) {
-                    lastCalculatedDiscount =
-                            findLastCalculatedDiscount(scenarioFrom, finalClosingdate);
+                    lastCalculatedDiscount = findLastCalculatedDiscount(scenarioFrom, calculationPeriod);
                 } else {
                     LocalDate prevDateBeforeFirstOpenPeriodForScenarioFrom =
                             firstOpenPeriodOfScenarioFrom
@@ -459,15 +509,14 @@ public class EntryCalculator implements Callable<List<Entry>> {
                             findLastCalculatedDiscount(scenarioFrom, prevDateBeforeFirstOpenPeriodForScenarioFrom);
 
                     BigDecimal lastCalculatedDiscountForScenarioTo =
-                            findLastCalculatedDiscount(scenarioTo, finalClosingdate);
+                            findLastCalculatedDiscount(scenarioTo, calculationPeriod);
 
                     lastCalculatedDiscount = lastCalculatedDiscountForScenarioTo.compareTo(
                             BigDecimal.ZERO) != 0 ? lastCalculatedDiscountForScenarioTo :
                             lastCalculatedDiscountForScenarioFromOnDateBeforeFirstOpenPeriod1;
                 }
             } else {
-                lastCalculatedDiscount =
-                        findLastCalculatedDiscount(scenarioTo, finalClosingdate);
+                lastCalculatedDiscount = findLastCalculatedDiscount(scenarioTo, calculationPeriod);
             }
 
             if (isDepositDurationMoreThanOneYear()) {
@@ -476,13 +525,13 @@ public class EntryCalculator implements Callable<List<Entry>> {
                             calculatingEntry.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()
                                     .subtract(calculatingEntry.getDISCONT_AT_START_DATE_cur_REG_LD_1_K())
                                     .multiply(curExOnPrevClosingDate.subtract(
-                                            exRateAtStartDate)).setScale(10, RoundingMode.HALF_UP));
+                                            exchangeRateToRubAtStartDate)).setScale(10, RoundingMode.HALF_UP));
                 } else {
                     calculatingEntry.setREVAL_CORR_DISC_rub_REG_LD_1_S(
                             calculatingEntry.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()
                                     .subtract(lastCalculatedDiscount)
                                     .multiply(curExOnPrevClosingDate.subtract(
-                                            exRateAtStartDate)).setScale(10, RoundingMode.HALF_UP));
+                                            exchangeRateToRubAtStartDate)).setScale(10, RoundingMode.HALF_UP));
                 }
             } else {
                 calculatingEntry.setREVAL_CORR_DISC_rub_REG_LD_1_S(BigDecimal.ZERO);
@@ -541,6 +590,65 @@ public class EntryCalculator implements Callable<List<Entry>> {
         return previousClosingDate;
     }
 
+    private void calculateAndSaveDiscountAtStartDateInto(Entry newEntry) {
+
+        BigDecimal discontAtStartDate = this.depositSumDiscountedOnFirstEndDate.subtract(
+                nominalDepositSum);
+
+        discontAtStartDate = roundNumberToScale10(discontAtStartDate);
+
+        newEntry.setDISCONT_AT_START_DATE_cur_REG_LD_1_K(discontAtStartDate);
+    }
+
+    private BigDecimal roundNumberToScale10(BigDecimal number) {
+        return number.setScale(10, RoundingMode.HALF_UP);
+    }
+
+    private void calculateAndSaveDiscountAtStartDateRubInto(Entry newEntry) {
+        BigDecimal discontAtStartDateRub = newEntry.getDISCONT_AT_START_DATE_cur_REG_LD_1_K()
+                .multiply(exchangeRateToRubAtStartDate);
+
+        discontAtStartDateRub = roundNumberToScale10(discontAtStartDateRub);
+
+        newEntry.setDISCONT_AT_START_DATE_RUB_REG_LD_1_L(discontAtStartDateRub);
+    }
+
+    private void calculateAndSaveDiscountRubInto(Entry calculatingEntry) {
+        BigDecimal discountAtStartDateRub = calculatingEntry.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L();
+
+        discountAtStartDateRub = roundNumberToScale10(discountAtStartDateRub);
+
+        calculatingEntry.setDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M(discountAtStartDateRub);
+    }
+
+    private void calculateAndSaveNominalSumRubInto(Entry calculatingEntry) {
+        BigDecimal nominalDepositSumRub = nominalDepositSum.multiply(exchangeRateToRubAtStartDate);
+
+        nominalDepositSumRub = roundNumberToScale10(nominalDepositSumRub);
+
+        calculatingEntry.setDeposit_sum_not_disc_RUB_REG_LD_1_N(nominalDepositSumRub);
+    }
+
+    private void saveZeroNominalSumRubInto(Entry calculatingEntry) {
+        calculatingEntry.setDeposit_sum_not_disc_RUB_REG_LD_1_N(BigDecimal.ZERO);
+    }
+
+    private void saveZeroDiscountSumRubInto(Entry calculatingEntry) {
+        calculatingEntry.setDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M(BigDecimal.ZERO);
+    }
+
+    private boolean isOneMonthAheadThanFirstMonth(LocalDate previousClosingDate) {
+        return previousClosingDate.isAfter(this.depositLastDayOfFirstMonth);
+    }
+
+    private boolean isEndDateChangedComparedToPreviousPeriod(LocalDate previousClosingDate, Entry calculatingEntry) {
+        return !this.mappingPeriodEndDate.floorEntry(previousClosingDate)
+                .getValue()
+                .isEqual(calculatingEntry.getEnd_date_at_this_period());
+    }
+
+    //-->>
+
     private void setZeroToFieldsDependsOnChangingDates(Entry calculatingEntry) {
         log.info("Дата закрытия периода позже первого отчетного периода для депозита, " +
                 "дата завершения депозита по сравнению с прошлым периодом не изменилась");
@@ -557,59 +665,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
         calculatingEntry.setCORR_ACC_AMORT_DISC_rub_REG_LD_1_T(BigDecimal.ZERO);
     }
 
-    private boolean isEndDateChangedComparedToPreviousPeriod(LocalDate previousClosingDate, Entry calculatingEntry) {
-        return !this.mappingPeriodEndDate.floorEntry(previousClosingDate)
-                .getValue()
-                .isEqual(calculatingEntry.getEnd_date_at_this_period());
-    }
-
-    private boolean isOneMonthAheadThanFirstMonth(LocalDate previousClosingDate) {
-        return previousClosingDate.isAfter(this.depositLastDayOfFirstMonth);
-    }
-
-    private void saveZeroNominalSumRubInto(Entry calculatingEntry) {
-        calculatingEntry.setDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M(BigDecimal.ZERO);
-    }
-
-    private void saveZeroNominalSumInto(Entry calculatingEntry) {
-        calculatingEntry.setDeposit_sum_not_disc_RUB_REG_LD_1_N(BigDecimal.ZERO);
-    }
-
-    private void calculateAndSaveDiscontRubInto(Entry calculatingEntry) {
-        BigDecimal discontAtStartDateRub = calculatingEntry.getDISCONT_AT_START_DATE_RUB_REG_LD_1_L();
-
-        discontAtStartDateRub = roundNumberToScale10(discontAtStartDateRub);
-
-        calculatingEntry.setDISCONT_AT_START_DATE_RUB_forIFRSAcc_REG_LD_1_M(discontAtStartDateRub);
-    }
-
-    private void calculateAndSaveNominalSumRubInto(Entry calculatingEntry) {
-        BigDecimal nominalSumRub = this.leasingDepositToCalculate.getDeposit_sum_not_disc().multiply(exRateAtStartDate);
-
-        nominalSumRub = roundNumberToScale10(nominalSumRub);
-
-        calculatingEntry.setDeposit_sum_not_disc_RUB_REG_LD_1_N(nominalSumRub);
-    }
-
-    private void calculateAndSaveDiscontAtStartDateRubInto(Entry newEntry) {
-        BigDecimal discontAtStartDateRub = newEntry.getDISCONT_AT_START_DATE_cur_REG_LD_1_K()
-                .multiply(exRateAtStartDate);
-
-        discontAtStartDateRub = roundNumberToScale10(discontAtStartDateRub);
-
-        newEntry.setDISCONT_AT_START_DATE_RUB_REG_LD_1_L(discontAtStartDateRub);
-    }
-
-    private void calculateAndSaveDiscontAtStartDateInto(Entry newEntry) {
-        BigDecimal discontAtStartDate = this.depositSumDiscountedOnFirstEndDate.subtract(
-                this.leasingDepositToCalculate.getDeposit_sum_not_disc());
-
-        discontAtStartDate = roundNumberToScale10(discontAtStartDate);
-
-        newEntry.setDISCONT_AT_START_DATE_cur_REG_LD_1_K(discontAtStartDate);
-    }
-
-    private boolean isCalculationPeriodEqualFirstDepositPeriod(LocalDate calculationPeriod) {
+    private boolean isEqualFirstDepositPeriod(LocalDate calculationPeriod) {
         return calculationPeriod.isEqual(this.depositLastDayOfFirstMonth);
     }
 
@@ -617,7 +673,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
         //Reg.LeasingDeposit.model.LeasingDeposit.3---------------------START
         if (newEntry.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P().compareTo(BigDecimal.ZERO) != 0) {
             newEntry.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(
-                    this.leasingDepositToCalculate.getDeposit_sum_not_disc()
+                    nominalDepositSum
                             .add(newEntry.getDISCONT_SUM_AT_NEW_END_DATE_cur_REG_LD_1_P()).setScale(10, RoundingMode.HALF_UP));
         } else {
             BigDecimal lastCalculatedDiscount = BigDecimal.ZERO;
@@ -643,11 +699,11 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
             if (lastCalculatedDiscount.compareTo(BigDecimal.ZERO) == 0) {
                 newEntry.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(
-                        this.leasingDepositToCalculate.getDeposit_sum_not_disc()
+                        nominalDepositSum
                                 .add(newEntry.getDISCONT_AT_START_DATE_cur_REG_LD_1_K()).setScale(10, RoundingMode.HALF_UP));
             } else {
                 newEntry.setDiscountedSum_at_current_end_date_cur_REG_LD_3_G(
-                        this.leasingDepositToCalculate.getDeposit_sum_not_disc()
+                        nominalDepositSum
                                 .add(lastCalculatedDiscount).setScale(10, RoundingMode.HALF_UP));
             }
         }
@@ -656,10 +712,10 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 scenarioTo,
                 this.leasingDepositToCalculate.getCurrency());
 
-        if (isCalculationPeriodEqualFirstDepositPeriod(calculationPeriod)) {
+        if (isEqualFirstDepositPeriod(calculationPeriod)) {
             newEntry.setINCOMING_LD_BODY_RUB_REG_LD_3_L(
                     newEntry.getDiscountedSum_at_current_end_date_cur_REG_LD_3_G()
-                            .multiply(exRateAtStartDate).setScale(10, RoundingMode.HALF_UP));
+                            .multiply(exchangeRateToRubAtStartDate).setScale(10, RoundingMode.HALF_UP));
             newEntry.setACCUM_AMORT_DISCONT_START_PERIOD_RUB_REG_LD_3_R(BigDecimal.ZERO);
         } else {
             BigDecimal ExRateOnPrevClosingdate = getExchangeRateOnPreviousCalculatingDate(previousCalculationPeriod);
@@ -769,7 +825,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                 .equals(LeasingDepositDuration.ST)) {
             newEntry.setADVANCE_CURRENTPERIOD_REG_LD_3_AE(
                     this.depositSumDiscountedOnFirstEndDate.multiply(
-                            exRateAtStartDate).setScale(10, RoundingMode.HALF_UP));
+                            exchangeRateToRubAtStartDate).setScale(10, RoundingMode.HALF_UP));
         } else {
             newEntry.setADVANCE_CURRENTPERIOD_REG_LD_3_AE(BigDecimal.ZERO);
         }
@@ -922,67 +978,12 @@ public class EntryCalculator implements Callable<List<Entry>> {
         return curExOnPrevClosingDate;
     }
 
-    private void copyEntryFromScenarioFromIntoScenarioTo(LocalDate calculationPeriod) {
-        log.info("Осуществляется копирование со сценария {} на сценарий {}",
-                scenarioFrom.getName(),
-                calculationParametersSource.getScenarioTo().getName());
-
-        List<Entry> L_entryTocopy = this.leasingDepositToCalculate.getEntries()
-                .stream()
-                .filter(entry -> entry.getEntryID()
-                        .getScenario()
-                        .equals(scenarioFrom))
-                .collect(Collectors.toList());
-
-        L_entryTocopy = L_entryTocopy.stream()
-                .filter(entry -> entry.getEntryID()
-                        .getPeriod()
-                        .getDate()
-
-                        .isEqual(calculationPeriod))
-                .collect(Collectors.toList());
-
-        Entry entryToCopy = L_entryTocopy.get(0);
-
-        EntryID newEntryID = entryToCopy.getEntryID()
-                .toBuilder()
-                .scenario(calculationParametersSource.getScenarioTo())
-                .CALCULATION_TIME(ZonedDateTime.now())
-                .build();
-
-        Entry newEntry = entryToCopy.toBuilder()
-                .entryID(newEntryID)
-                .build();
-        this.calculatedStornoDeletedEntries.add(newEntry);
-    }
-
-    private boolean isCopyDateBeforeFirstOpenPeriodOfScenarioFrom(LocalDate calculationPeriod) {
-        return (calculationPeriod.isEqual(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo()) ||
-                calculationPeriod.isAfter(calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo())) &&
-                calculationPeriod.isBefore(firstOpenPeriodOfScenarioFrom);
-    }
-
-    private List<LocalDate> getPeriodsForCalculation() {
-        return firstNotCalculatedPeriod.datesUntil(dateUntilThatEntriesMustBeCalculated, Period.ofMonths(1))
-                .map(period -> period.withDayOfMonth(period.lengthOfMonth()))
-                .collect(Collectors.toList());
-    }
-
-    private boolean allEntriesNotCalculated() {
-        //Для случаев, когда все транзакции сделаны => чтоб не было новых
-        return firstNotCalculatedPeriod.isBefore(dateUntilThatEntriesMustBeCalculated);
-    }
-
-    private BigDecimal roundNumberToScale10(BigDecimal number) {
-        return number.setScale(10, RoundingMode.HALF_UP);
-    }
-
     private BigDecimal calculateDiscountedValueFromStartDateToNeededDate(LocalDate endDate, LocalDate neededDate) {
         BigDecimal discountedNominalValue = discountNominalValueUntilStartDateFromDate(endDate);
-        return increaseDiscountedValueUntilNeededDate(discountedNominalValue, neededDate);
+        return increaseDiscountedNominalValueUntilNeededDate(discountedNominalValue, neededDate);
     }
 
-    private BigDecimal increaseDiscountedValueUntilNeededDate(BigDecimal discountedNominalValue, LocalDate neededDate) {
+    private BigDecimal increaseDiscountedNominalValueUntilNeededDate(BigDecimal discountedNominalValue, LocalDate neededDate) {
         int ldDurationFromStartToNeededDays = calculateDurationInDaysBetween(this.leasingDepositToCalculate.getStart_date(), neededDate);
 
         return discountedNominalValue.multiply(BigDecimal.ONE.add(percentPerDay).pow(ldDurationFromStartToNeededDays));
@@ -993,10 +994,10 @@ public class EntryCalculator implements Callable<List<Entry>> {
 
         int ldDurationDays = calculateDurationInDaysBetween(this.leasingDepositToCalculate.getStart_date(), endDate);
 
-        discountNominalValue = this.leasingDepositToCalculate.getDeposit_sum_not_disc()
+        discountNominalValue = nominalDepositSum
                 .setScale(32)
-                .divide(BigDecimal.ONE.add(percentPerDay)
-                        .pow(ldDurationDays), RoundingMode.HALF_UP);
+                .divide(BigDecimal.ONE.add(percentPerDay).pow(ldDurationDays),
+                        RoundingMode.HALF_UP);
 
         return discountNominalValue;
     }
@@ -1094,92 +1095,6 @@ public class EntryCalculator implements Callable<List<Entry>> {
         }
 
         return LastRevaluation;
-    }
-
-    private LocalDate findFirstNotCalculatedPeriod() {
-        LocalDate firstNotCalculatedPeriod = UNINITIALIZED;
-
-        if (isCalculationScenariosEqual()) {
-            if (isScenarioFromAdditional()) {
-                firstNotCalculatedPeriod = calculateFirstUncalculatedPeriodForScenario(scenarioFrom);
-            } else if (isScenarioFromFullStorno()) {
-                throw new IllegalArgumentException("Запрещённая операция расчёта между одним сценарием со статусом: FULL -> FULL");
-            }
-        } else if (isCalculationScenariosDiffer()) {
-            throwExceptionIfLastEntryOfDepositInScenarioFromNotEqualToOrOneMonthLessFirstOpenPeriod();
-
-            if (isDateCopyFromInitialized()) {
-                firstNotCalculatedPeriod = calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo();
-            } else {
-                firstNotCalculatedPeriod = firstOpenPeriodOfScenarioFrom;
-            }
-        }
-
-        return firstNotCalculatedPeriod;
-    }
-
-    private boolean isDateCopyFromInitialized() {
-        return !this.calculationParametersSource.getEntriesCopyDateFromScenarioFromToScenarioTo().isEqual(UNINITIALIZED);
-    }
-
-    private boolean isScenarioFromAdditional() {
-        return scenarioFrom.getStatus().equals(ScenarioStornoStatus.ADDITION);
-    }
-
-    private boolean isScenarioFromFullStorno() {
-        return scenarioFrom.getStatus().equals(ScenarioStornoStatus.FULL);
-    }
-
-    private boolean isCalculationScenariosEqual() {
-        return scenarioFrom.equals(scenarioTo);
-    }
-
-    private boolean isCalculationScenariosDiffer() {
-        return !scenarioFrom.equals(scenarioTo);
-    }
-
-    private LocalDate calculateFirstUncalculatedPeriodForScenario(Scenario scenario) {
-        LocalDate LastPeriodWithEntry = this.depositLastDayOfFirstMonth.minusMonths(1);
-
-        for (LocalDate date : getDatesFromStartMonthTillDateUntilEntriesMustBeCalculated()) {
-            date = transformIntoLastDayOfMonth(date);
-
-            if (isCountEntriesWithScenarioAndDateAtLeastOne(scenario, date)) {
-                LastPeriodWithEntry = date;
-            } else {
-                break;
-            }
-        }
-
-        LocalDate nextDateAfterLastWithEntry = LastPeriodWithEntry.plusMonths(1);
-        nextDateAfterLastWithEntry = transformIntoLastDayOfMonth(nextDateAfterLastWithEntry);
-
-        return nextDateAfterLastWithEntry;
-    }
-
-    private boolean isCountEntriesWithScenarioAndDateAtLeastOne(Scenario scenario, LocalDate date) {
-        return entriesExistingBeforeCalculating.stream()
-                .filter(entry -> entry.getEntryID()
-                        .getScenario()
-                        .equals(scenario))
-                .filter(entry -> entry.getStatus()
-                        .equals(EntryStatus.ACTUAL))
-                .filter(entry -> entry.getEntryID()
-                        .getPeriod()
-                        .getDate()
-                        .isEqual(date))
-                .count() > 0;
-    }
-
-    private LocalDate transformIntoLastDayOfMonth(LocalDate date) {
-        return date.withDayOfMonth(date.lengthOfMonth());
-    }
-
-    private List<LocalDate> getDatesFromStartMonthTillDateUntilEntriesMustBeCalculated() {
-        return this.depositLastDayOfFirstMonth.datesUntil(
-                dateUntilThatEntriesMustBeCalculated,
-                java.time.Period.ofMonths(1))
-                .collect(Collectors.toList());
     }
 
     private LocalDate getDateOneMonthBehindLastDayOfFirstMonth() {
