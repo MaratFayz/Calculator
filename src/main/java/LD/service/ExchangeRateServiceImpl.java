@@ -146,7 +146,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
                     if (maxPeriodDate.isAfter(maxCurExDate) && prevDayBeforeNow.isAfter(maxCurExDate)) {
                         LocalDate saveFromDate = maxCurExDate.plusDays(1);
 
-                        getCurExRateFrmCBRAndSaveIntoDB(loadingUser, loadingScenario, currency,
+                        getCurExRateFromCentrobankAndSaveIntoDB(loadingUser, loadingScenario, currency,
                                 saveFromDate, maxPeriodDate);
                     } else {
                         log.info("Даты равны: Максимальная дата курсов валют есть = {}, " +
@@ -168,21 +168,21 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         List<ExchangeRate> toDeleteExR = exchangeRateRepository.findAll((root, query, qb) -> qb.equal(root.get("exchangeRateID").get("currency"), currency));
         exchangeRateRepository.deleteAll(toDeleteExR);
 
-        getCurExRateFrmCBRAndSaveIntoDB(loadingUser, loadingScenario, currency, minPeriodDate, maxPeriodDate);
+        getCurExRateFromCentrobankAndSaveIntoDB(loadingUser, loadingScenario, currency, minPeriodDate, maxPeriodDate);
     }
 
-    private void getCurExRateFrmCBRAndSaveIntoDB(User loadingUser, Scenario loadingScenario, Currency currency,
-                                                 LocalDate queryDateFrom, LocalDate queryDateTo) {
+    private void getCurExRateFromCentrobankAndSaveIntoDB(User loadingUser, Scenario loadingScenario, Currency currency,
+                                                         LocalDate queryDateFrom, LocalDate queryDateTo) {
         LocalDate now = LocalDate.now();
         queryDateTo = now.isBefore(queryDateTo) ? now : queryDateTo;
+        LocalDate saveFromDate = queryDateFrom.minusMonths(1);
 
-        LocalDate saveFromDate = queryDateFrom;
+        queryDateFrom = queryDateFrom.minusMonths(2);
         LocalDate saveTillDate = queryDateTo;
 
         queryDateFrom = queryDateFrom.minusMonths(1);
 
-        TreeMap<LocalDate, BigDecimal> exRatesFormCBR =
-                getExRatesFromCBR(queryDateFrom, queryDateTo, currency);
+        TreeMap<LocalDate, BigDecimal> exRatesFormCBR = getExRatesFromCBR(queryDateFrom, queryDateTo, currency);
 
         saveFromDate.datesUntil(saveTillDate.plusDays(1), java.time.Period.ofDays(1))
                 .forEach(date ->

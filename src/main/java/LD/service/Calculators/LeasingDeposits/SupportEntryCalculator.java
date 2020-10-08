@@ -122,8 +122,7 @@ public class SupportEntryCalculator {
         firstEndDate = mappingPeriodEndDate.get(depositLastDayOfFirstMonth);
 
         if (isNull(firstEndDate)) {
-            throw new IllegalArgumentException(
-                    "There no ONE end date for " + depositLastDayOfFirstMonth);
+            throw new IllegalArgumentException("There no ONE end date for " + depositLastDayOfFirstMonth);
         }
     }
 
