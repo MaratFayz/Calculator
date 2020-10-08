@@ -55,7 +55,7 @@ public class CurrencyServiceImpl implements CurrencyService
 	public Currency saveNewCurrency(Currency currency)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		currency.setUser(userRepository.findByUsername(username));
+		currency.setUserLastChanged(userRepository.findByUsername(username));
 
 		currency.setLastChange(ZonedDateTime.now());
 
@@ -68,7 +68,7 @@ public class CurrencyServiceImpl implements CurrencyService
 		currency.setId(id);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		currency.setUser(userRepository.findByUsername(username));
+		currency.setUserLastChanged(userRepository.findByUsername(username));
 
 		currency.setLastChange(ZonedDateTime.now());
 

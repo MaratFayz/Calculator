@@ -37,7 +37,7 @@ public class ExchangeRateTransform
 				.date(DateFormat.formatDate(exchangeRate.getExchangeRateID().getDate()))
 				.rate_at_date(exchangeRate.getRate_at_date())
 				.average_rate_for_month(exchangeRate.getAverage_rate_for_month())
-				.user(exchangeRate.getUser().getUsername())
+				.user(exchangeRate.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(exchangeRate.getLastChange()))
 				.build();
 	}

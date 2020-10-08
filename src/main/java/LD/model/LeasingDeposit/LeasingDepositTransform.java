@@ -46,7 +46,7 @@ public class LeasingDepositTransform {
                 .start_date(DateFormat.formatDate(leasingDeposit.getStart_date()))
                 .deposit_sum_not_disc(leasingDeposit.getDeposit_sum_not_disc())
                 .scenario(leasingDeposit.getScenario().getId())
-                .user(leasingDeposit.getUser().getUsername())
+                .user(leasingDeposit.getUserLastChanged().getUsername())
                 .lastChange(DateFormat.formatDate(leasingDeposit.getLastChange()))
                 .is_created(leasingDeposit.getIs_created())
                 .is_deleted(leasingDeposit.getIs_deleted())
@@ -64,7 +64,7 @@ public class LeasingDepositTransform {
                 .scenario(leasingDeposit.getScenario().getName())
                 .is_created(leasingDeposit.getIs_created())
                 .is_deleted(leasingDeposit.getIs_deleted())
-                .username(leasingDeposit.getUser().getUsername())
+                .username(leasingDeposit.getUserLastChanged().getUsername())
                 .lastChange(DateFormat.formatDate(leasingDeposit.getLastChange()))
                 .endDate(DateFormat.formatDate(endDate))
                 .build();

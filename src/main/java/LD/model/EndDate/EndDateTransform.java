@@ -45,7 +45,7 @@ public class EndDateTransform
 				.leasingDeposit_id(endDate.getLeasingDeposit().getId())
 				.scenario(endDate.endDateID.getScenario().getId())
 				.period(endDate.endDateID.getPeriod().getId())
-				.user(endDate.getUser().getUsername())
+				.user(endDate.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(endDate.getLastChange()))
 				.build();
 	}

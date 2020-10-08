@@ -33,7 +33,7 @@ public class CounterpartnerServiceImpl implements CounterpartnerService
 	public Counterpartner saveNewCounterpartner(Counterpartner counterpartner)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		counterpartner.setUser(userRepository.findByUsername(username));
+		counterpartner.setUserLastChanged(userRepository.findByUsername(username));
 
 		counterpartner.setLastChange(ZonedDateTime.now());
 
@@ -46,7 +46,7 @@ public class CounterpartnerServiceImpl implements CounterpartnerService
 		counterpartner.setId(id);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		counterpartner.setUser(userRepository.findByUsername(username));
+		counterpartner.setUserLastChanged(userRepository.findByUsername(username));
 
 		counterpartner.setLastChange(ZonedDateTime.now());
 

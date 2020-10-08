@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 
 @Component
 public class DepositRateTransform
@@ -48,7 +47,7 @@ public class DepositRateTransform
 				.START_PERIOD(DateFormat.formatDate(depositRate.depositRateID.getSTART_PERIOD()))
 				.END_PERIOD(DateFormat.formatDate(depositRate.depositRateID.getEND_PERIOD()))
 				.scenario(depositRate.depositRateID.getScenario().getId())
-				.user(depositRate.getUser().getUsername())
+				.user(depositRate.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(depositRate.getLastChange()))
 				.RATE(depositRate.getRATE())
 				.build();

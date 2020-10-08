@@ -190,7 +190,7 @@ public class EntryIfrsAccCalculator extends RecursiveTask<List<EntryIFRSAcc>> {
         EntryIFRSAcc ldEntryIFRSAcc = new EntryIFRSAcc();
         ldEntryIFRSAcc.setEntryIFRSAccID(entryIFRSID);
         ldEntryIFRSAcc.setSum(sum);
-        ldEntryIFRSAcc.setUser(entry.getUser());
+        ldEntryIFRSAcc.setUserLastChanged(entry.getUserLastChanged());
         ldEntryIFRSAcc.setLastChange(entry.getLastChange());
         if (isInverse) {
             ldEntryIFRSAcc.setSum(ldEntryIFRSAcc.getSum().negate());

@@ -55,7 +55,7 @@ public class IFRSAccountServiceImpl implements IFRSAccountService
 	public IFRSAccount saveNewIFRSAccount(IFRSAccount ifrsAccount)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		ifrsAccount.setUser(userRepository.findByUsername(username));
+		ifrsAccount.setUserLastChanged(userRepository.findByUsername(username));
 
 		ifrsAccount.setLastChange(ZonedDateTime.now());
 
@@ -70,7 +70,7 @@ public class IFRSAccountServiceImpl implements IFRSAccountService
 		ifrsAccount.setId(id);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		ifrsAccount.setUser(userRepository.findByUsername(username));
+		ifrsAccount.setUserLastChanged(userRepository.findByUsername(username));
 
 		ifrsAccount.setLastChange(ZonedDateTime.now());
 

@@ -1,7 +1,6 @@
 package LD.service;
 
 import LD.config.Security.Repository.UserRepository;
-import LD.model.Company.Company;
 import LD.model.DepositRate.DepositRate;
 import LD.model.DepositRate.DepositRateDTO_out;
 import LD.model.DepositRate.DepositRateID;
@@ -60,7 +59,7 @@ public class DepositRatesServiceImpl implements DepositRatesService
 	public DepositRate saveNewDepositRates(DepositRate depositRate)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		depositRate.setUser(userRepository.findByUsername(username));
+		depositRate.setUserLastChanged(userRepository.findByUsername(username));
 
 		depositRate.setLastChange(ZonedDateTime.now());
 
@@ -73,7 +72,7 @@ public class DepositRatesServiceImpl implements DepositRatesService
 	public DepositRate updateDepositRates(DepositRateID id, DepositRate depositRate)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		depositRate.setUser(userRepository.findByUsername(username));
+		depositRate.setUserLastChanged(userRepository.findByUsername(username));
 
 		depositRate.setLastChange(ZonedDateTime.now());
 

@@ -24,7 +24,7 @@ public class Builders {
         c.setName(name);
         c.setStatus(status);
         c.setLastChange(ZonedDateTime.now());
-        c.setUser(user);
+        c.setUserLastChanged(user);
         return c;
     }
 

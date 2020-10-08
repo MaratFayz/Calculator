@@ -74,7 +74,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     @Override
     public ExchangeRate saveNewExchangeRate(ExchangeRate exchangeRate) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        exchangeRate.setUser(userRepository.findByUsername(username));
+        exchangeRate.setUserLastChanged(userRepository.findByUsername(username));
 
         exchangeRate.setLastChange(ZonedDateTime.now());
 
@@ -86,7 +86,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     @Override
     public ExchangeRate updateExchangeRate(ExchangeRateID id, ExchangeRate exchangeRate) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        exchangeRate.setUser(userRepository.findByUsername(username));
+        exchangeRate.setUserLastChanged(userRepository.findByUsername(username));
 
         exchangeRate.setLastChange(ZonedDateTime.now());
 
@@ -199,7 +199,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
                             .build();
 
                     exR.setLastChange(ZonedDateTime.now());
-                    exR.setUser(loadingUser);
+                    exR.setUserLastChanged(loadingUser);
 
                     exR = exchangeRateRepository.save(exR);
 

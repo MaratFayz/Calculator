@@ -52,7 +52,7 @@ public class PeriodServiceImpl implements PeriodService {
     @Override
     public Period saveNewPeriod(Period period) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        period.setUser(userRepository.findByUsername(username));
+        period.setUserLastChanged(userRepository.findByUsername(username));
 
         period.setLastChange(ZonedDateTime.now());
 
@@ -66,7 +66,7 @@ public class PeriodServiceImpl implements PeriodService {
         period.setId(id);
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        period.setUser(userRepository.findByUsername(username));
+        period.setUserLastChanged(userRepository.findByUsername(username));
 
         period.setLastChange(ZonedDateTime.now());
 
@@ -133,7 +133,7 @@ public class PeriodServiceImpl implements PeriodService {
                         .build();
 
                 newPeriod.setLastChange(ZonedDateTime.now());
-                newPeriod.setUser(userCreated);
+                newPeriod.setUserLastChanged(userCreated);
 
                 log.info("Для даты {} был создан период {}", date, newPeriod);
 

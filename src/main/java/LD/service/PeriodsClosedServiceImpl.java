@@ -75,7 +75,7 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
     @Override
     public PeriodsClosed saveNewPeriodsClosed(PeriodsClosed periodClosed) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        periodClosed.setUser(userRepository.findByUsername(username));
+        periodClosed.setUserLastChanged(userRepository.findByUsername(username));
 
         periodClosed.setLastChange(ZonedDateTime.now());
 
@@ -87,7 +87,7 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
     @Override
     public PeriodsClosed updatePeriodsClosed(PeriodsClosedID id, PeriodsClosed periodClosed) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        periodClosed.setUser(userRepository.findByUsername(username));
+        periodClosed.setUserLastChanged(userRepository.findByUsername(username));
 
         periodClosed.setLastChange(ZonedDateTime.now());
 
@@ -132,7 +132,7 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
                 PeriodsClosed pcToUpdate = periodsClosedForPeriod.get(0);
                 pcToUpdate.setISCLOSED(STATUS_X.X);
                 pcToUpdate.setLastChange(ZonedDateTime.now());
-                pcToUpdate.setUser(userChanging);
+                pcToUpdate.setUserLastChanged(userChanging);
 
                 periodsClosedRepository.saveAndFlush(pcToUpdate);
             } else {
@@ -148,7 +148,7 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
                         .build();
 
                 pcToUpdate.setLastChange(ZonedDateTime.now());
-                pcToUpdate.setUser(userChanging);
+                pcToUpdate.setUserLastChanged(userChanging);
 
                 periodsClosedRepository.saveAndFlush(pcToUpdate);
             }
@@ -170,7 +170,7 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
                 PeriodsClosed pcToUpdate = periodsClosedForPeriod.get(0);
                 pcToUpdate.setISCLOSED(null);
                 pcToUpdate.setLastChange(ZonedDateTime.now());
-                pcToUpdate.setUser(userChanging);
+                pcToUpdate.setUserLastChanged(userChanging);
 
                 periodsClosedRepository.saveAndFlush(pcToUpdate);
             }

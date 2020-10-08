@@ -30,7 +30,7 @@ public class PeriodsClosedTransform
 				.period(periodsClosed.getPeriodsClosedID().getPeriod().getId())
 				.scenario(periodsClosed.getPeriodsClosedID().getScenario().getId())
 				.ISCLOSED(periodsClosed.getISCLOSED())
-				.user(periodsClosed.getUser().getUsername())
+				.user(periodsClosed.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(periodsClosed.getLastChange()))
 				.build();
 	}

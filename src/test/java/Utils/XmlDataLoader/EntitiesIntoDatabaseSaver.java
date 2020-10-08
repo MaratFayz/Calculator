@@ -85,7 +85,7 @@ public class EntitiesIntoDatabaseSaver implements BeforeEachCallback {
     }
 
     private void setUserIntoEntries() {
-        testEntitiesKeeper.getEntriesForIfrsSumDaoTest().forEach(e -> e.setUser(testEntitiesKeeper.getUser()));
+        testEntitiesKeeper.getEntriesForIfrsSumDaoTest().forEach(e -> e.setUserLastChanged(testEntitiesKeeper.getUser()));
     }
 
     private void setNullIntoUserId() {

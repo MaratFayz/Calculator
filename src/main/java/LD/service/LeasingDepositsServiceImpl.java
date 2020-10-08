@@ -59,7 +59,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
     @Override
     public LeasingDeposit saveNewLeasingDeposit(LeasingDeposit leasingDeposit) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        leasingDeposit.setUser(userRepository.findByUsername(username));
+        leasingDeposit.setUserLastChanged(userRepository.findByUsername(username));
 
         leasingDeposit.setLastChange(ZonedDateTime.now());
 
@@ -73,7 +73,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
         leasingDeposit.setId(id);
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        leasingDeposit.setUser(userRepository.findByUsername(username));
+        leasingDeposit.setUserLastChanged(userRepository.findByUsername(username));
 
         leasingDeposit.setLastChange(ZonedDateTime.now());
 

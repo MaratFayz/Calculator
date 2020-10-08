@@ -55,7 +55,7 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
     @Override
     public EntryIFRSAcc saveNewEntryIFRSAcc(EntryIFRSAcc entryIFRSAcc) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        entryIFRSAcc.setUser(userRepository.findByUsername(username));
+        entryIFRSAcc.setUserLastChanged(userRepository.findByUsername(username));
 
         entryIFRSAcc.setLastChange(ZonedDateTime.now());
 
@@ -67,7 +67,7 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
     @Override
     public EntryIFRSAcc updateEntryIFRSAcc(EntryIFRSAccID id, EntryIFRSAcc entryIFRSAcc) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        entryIFRSAcc.setUser(userRepository.findByUsername(username));
+        entryIFRSAcc.setUserLastChanged(userRepository.findByUsername(username));
 
         entryIFRSAcc.setLastChange(ZonedDateTime.now());
 

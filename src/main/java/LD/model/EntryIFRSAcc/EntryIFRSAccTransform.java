@@ -8,8 +8,6 @@ import LD.service.IFRSAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-
 @Component
 public class EntryIFRSAccTransform
 {
@@ -51,7 +49,7 @@ public class EntryIFRSAccTransform
 				.scenario(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getScenario().getId())
 				.period(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getPeriod().getId())
 				.CALCULATION_TIME(entryIFRSAcc.getEntryIFRSAccID().getEntry().getEntryID().getCALCULATION_TIME().toString())
-				.user(entryIFRSAcc.getUser().getUsername())
+				.user(entryIFRSAcc.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(entryIFRSAcc.getLastChange()))
 				.ifrsAccount(entryIFRSAcc.getEntryIFRSAccID().getIfrsAccount().getId())
 				.sum(entryIFRSAcc.getSum())

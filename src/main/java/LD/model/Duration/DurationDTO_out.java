@@ -31,7 +31,7 @@ public class DurationDTO_out
 				.MIN_MONTH(duration.getMIN_MONTH())
 				.MAX_MONTH(duration.getMAX_MONTH())
 				.name(duration.getName())
-				.user(duration.getUser().getUsername())
+				.user(duration.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(duration.getLastChange()))
 				.build();
 	}

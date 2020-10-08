@@ -88,7 +88,7 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
                         joinLd.get(LeasingDeposit_.counterpartner).get(Counterpartner_.name),
                         joinLd.get(LeasingDeposit_.is_created),
                         joinLd.get(LeasingDeposit_.is_deleted),
-                        joinLd.get(LeasingDeposit_.user).get(User_.username),
+                        joinLd.get(LeasingDeposit_.userLastChanged).get(User_.username),
                         joinLd.get(LeasingDeposit_.lastChange).as(String.class)
                 )
         )
