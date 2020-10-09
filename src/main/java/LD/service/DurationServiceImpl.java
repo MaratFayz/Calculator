@@ -55,7 +55,7 @@ public class DurationServiceImpl implements DurationService
 	public Duration saveNewDuration(Duration duration)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		duration.setUser(userRepository.findByUsername(username));
+		duration.setUserLastChanged(userRepository.findByUsername(username));
 
 		duration.setLastChange(ZonedDateTime.now());
 
@@ -70,7 +70,7 @@ public class DurationServiceImpl implements DurationService
 		duration.setId(id);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		duration.setUser(userRepository.findByUsername(username));
+		duration.setUserLastChanged(userRepository.findByUsername(username));
 
 		duration.setLastChange(ZonedDateTime.now());
 

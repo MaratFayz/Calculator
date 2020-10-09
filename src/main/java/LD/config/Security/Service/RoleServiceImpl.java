@@ -31,7 +31,7 @@ public class RoleServiceImpl implements RoleService
 	public Role saveNewRole(Role role)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		role.setUser(userRepository.findByUsername(username));
+		role.setUserLastChanged(userRepository.findByUsername(username));
 
 		role.setLastChange(ZonedDateTime.now());
 
@@ -88,7 +88,7 @@ public class RoleServiceImpl implements RoleService
 		role.setId(id);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		role.setUser(userRepository.findByUsername(username));
+		role.setUserLastChanged(userRepository.findByUsername(username));
 
 		role.setLastChange(ZonedDateTime.now());
 

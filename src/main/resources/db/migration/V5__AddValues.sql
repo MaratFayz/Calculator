@@ -1,21 +1,21 @@
-INSERT INTO currency(id, name, short_name, user_id, cbrcurrency_code, date_time_last_change)
+INSERT INTO currency(id, name, short_name, user_last_changed_id, cbrcurrency_code, date_time_last_change)
 VALUES (1, 'Russian Ruble', 'RUB', 1, NULL, '2020-05-27 21:05:12.937360'),
        (2, 'USA Dollar', 'USD', 1, 'R01235', '2020-05-27 21:05:12.937360');
 
 
-INSERT INTO scenario(id, name, storno_status, user_id, is_blocked, date_time_last_change)
+INSERT INTO scenario(id, name, storno_status, user_last_changed_id, is_blocked, date_time_last_change)
 VALUES (1, 'FACT', 'ADDITION', 1, NULL, '2020-05-27 21:05:12.937360');
 
 
-INSERT INTO counterpartner(id, name, user_id, date_time_last_change)
+INSERT INTO counterpartner(id, name, user_last_changed_id, date_time_last_change)
 VALUES (1, 'SuperBP', 1, '2020-05-27 21:05:12.937360');
 
 
-INSERT INTO company(id, code, name, user_id, date_time_last_change)
+INSERT INTO company(id, code, name, user_last_changed_id, date_time_last_change)
 VALUES (1, 'C1001', 'SuperCompany', 1, '2020-05-27 21:05:12.937360');
 
 
-INSERT INTO ifrs_account(id, account_code, account_name, flow_code, flow_name, dr, pa, ct, sh, is_inverse_sum, mapping_form_and_column, date_time_last_change, user_id)
+INSERT INTO ifrs_account(id, account_code, account_name, flow_code, flow_name, dr, pa, ct, sh, is_inverse_sum, mapping_form_and_column, date_time_last_change, user_last_changed_id)
 VALUES (1, 'A0203010100', 'Долгосрочные депозиты по аренде ВС - основная сумма', 'F2000', 'Поступление', '-', 'THP99', 'RUB', '-', FALSE, 'Reg.LD.1=N5', '2020-05-27 21:05:12.937360', 1),
        (2, 'A0208010000', 'Долгосрочные авансы выданные', 'F2000', 'Поступление', '-', 'THP99', 'RUB', '-', TRUE, 'Reg.LD.1=N5', '2020-05-27 21:05:12.937360', 1),
        (3, 'A0208010000', 'Долгосрочные авансы выданные', 'F2000', 'Поступление', '-', 'THP99', 'RUB', '-', TRUE, 'Reg.LD.1=M5', '2020-05-27 21:05:12.937360', 1),
@@ -55,7 +55,7 @@ VALUES (1, 'A0203010100', 'Долгосрочные депозиты по аре
        (37, 'A0102010200', 'Краткосрочные депозиты по аренде ВС - проценты', 'F5000', 'Реклассификация между группами актива/обязательства', '-', 'THP99', 'RUB', '-', FALSE, 'Reg.LD.3=AB5-Reg.LD.3=AD5', '2020-05-27 21:05:12.937360', 1);
 
 
-INSERT INTO duration(id, max_month, min_month, date_time_last_change, name, user_id)
+INSERT INTO duration(id, max_month, min_month, date_time_last_change, name, user_last_changed_id)
 VALUES (1, 12, 0, '2020-05-27 21:05:12.937360', '<= 12 мес.', 1),
        (2, 24, 13, '2020-05-27 21:05:12.937360', '13-24 мес.', 1),
        (3, 36, 25, '2020-05-27 21:05:12.937360', '25-36 мес.', 1),

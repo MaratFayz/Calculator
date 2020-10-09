@@ -91,7 +91,7 @@ public class EntryDaoImpl implements EntryDao {
     private Selection<?>[] formRegLd1(Root<Entry> root) {
         Join<EntryID, Scenario> joinEntryIdScenario = root.join(Entry_.entryID).join(EntryID_.scenario);
         Join<EntryID, Period> joinEntryIdDate = root.join(Entry_.entryID).join(EntryID_.period);
-        Join<Entry, User> joinEntryUser = root.join(Entry_.user);
+        Join<Entry, User> joinEntryUser = root.join(Entry_.userLastChanged);
 
         return new Selection[]{
                 root.get(Entry_.entryID).get(EntryID_.leasingDeposit_id).alias("leasingDeposit"),
@@ -123,7 +123,7 @@ public class EntryDaoImpl implements EntryDao {
     private Selection<?>[] formRegLd2(Root<Entry> entryRoot) {
         Join<EntryID, Scenario> joinEntryIdScenario = root.join(Entry_.entryID).join(EntryID_.scenario);
         Join<EntryID, Period> joinEntryIdDate = root.join(Entry_.entryID).join(EntryID_.period);
-        Join<Entry, User> joinEntryUser = root.join(Entry_.user);
+        Join<Entry, User> joinEntryUser = root.join(Entry_.userLastChanged);
 
         return new Selection[]{
                 root.get(Entry_.entryID).get(EntryID_.leasingDeposit_id).alias("leasingDeposit"),
@@ -148,7 +148,7 @@ public class EntryDaoImpl implements EntryDao {
     private Selection<?>[] formRegLd3(Root<Entry> entryRoot) {
         Join<EntryID, Scenario> joinEntryIdScenario = root.join(Entry_.entryID).join(EntryID_.scenario);
         Join<EntryID, Period> joinEntryIdDate = root.join(Entry_.entryID).join(EntryID_.period);
-        Join<Entry, User> joinEntryUser = root.join(Entry_.user);
+        Join<Entry, User> joinEntryUser = root.join(Entry_.userLastChanged);
 
         return new Selection[]{
                 root.get(Entry_.entryID).get(EntryID_.leasingDeposit_id).alias("leasingDeposit"),

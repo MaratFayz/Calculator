@@ -4,17 +4,12 @@ import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.User.User;
 import LD.config.Security.model.User.UserDTO_out;
 import LD.config.Security.model.User.UserTransform;
-import LD.model.Company.Company;
-import LD.model.Company.CompanyDTO_out;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -62,7 +57,7 @@ public class UserServiceImpl implements UserService
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		user.setUser(userRepository.findByUsername(username));
+		user.setUserLastChanged(userRepository.findByUsername(username));
 
 		user.setLastChange(ZonedDateTime.now());
 
@@ -119,7 +114,7 @@ public class UserServiceImpl implements UserService
 		user.setId(id);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		user.setUser(userRepository.findByUsername(username));
+		user.setUserLastChanged(userRepository.findByUsername(username));
 
 		user.setLastChange(ZonedDateTime.now());
 

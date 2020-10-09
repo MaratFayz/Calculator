@@ -8,12 +8,10 @@ import LD.model.Enums.STATUS_X;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Scenario.Scenario;
-import LD.service.Calculators.LeasingDeposits.EntryCalculator;
 import Utils.Builders;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -60,13 +58,13 @@ public class LeasingDepositRepositoryTest {
         plan2022 = testEntityManager.persist(plan2022);
 
         Currency usd = Builders.getCUR("USD");
-        usd.setUser(user);
+        usd.setUserLastChanged(user);
 
         Company C1001 = Builders.getEN("C1001", "Компания-1");
-        C1001.setUser(user);
+        C1001.setUserLastChanged(user);
 
         Counterpartner CP = Builders.getCP("ООО \"Лизинговая компания\"");
-        CP.setUser(user);
+        CP.setUserLastChanged(user);
 
         usd = testEntityManager.persist(usd);
         C1001 = testEntityManager.persist(C1001);
@@ -83,7 +81,7 @@ public class LeasingDepositRepositoryTest {
                 leasingDeposit1.setScenario(sc);
                 leasingDeposit1.setIs_created(STATUS_X.X);
                 leasingDeposit1.setLastChange(ZonedDateTime.now());
-                leasingDeposit1.setUser(user);
+                leasingDeposit1.setUserLastChanged(user);
 
                 testEntityManager.persist(leasingDeposit1);
                 testEntityManager.flush();
@@ -100,7 +98,7 @@ public class LeasingDepositRepositoryTest {
                 leasingDeposit1.setStart_date(Builders.getDate(10, 3, 2017));
                 leasingDeposit1.setScenario(sc);
                 leasingDeposit1.setLastChange(ZonedDateTime.now());
-                leasingDeposit1.setUser(user);
+                leasingDeposit1.setUserLastChanged(user);
 
                 testEntityManager.persist(leasingDeposit1);
                 testEntityManager.flush();
@@ -118,7 +116,7 @@ public class LeasingDepositRepositoryTest {
                 leasingDeposit1.setScenario(sc);
                 leasingDeposit1.setIs_deleted(STATUS_X.X);
                 leasingDeposit1.setLastChange(ZonedDateTime.now());
-                leasingDeposit1.setUser(user);
+                leasingDeposit1.setUserLastChanged(user);
 
                 testEntityManager.persist(leasingDeposit1);
                 testEntityManager.flush();
@@ -137,7 +135,7 @@ public class LeasingDepositRepositoryTest {
                 leasingDeposit1.setIs_created(STATUS_X.X);
                 leasingDeposit1.setIs_deleted(STATUS_X.X);
                 leasingDeposit1.setLastChange(ZonedDateTime.now());
-                leasingDeposit1.setUser(user);
+                leasingDeposit1.setUserLastChanged(user);
 
                 testEntityManager.persist(leasingDeposit1);
                 testEntityManager.flush();

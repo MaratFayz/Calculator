@@ -33,7 +33,7 @@ public class ScenarioDTO_out
 				.name(scenario.getName())
 				.status(scenario.getStatus())
 				.isBlocked(scenario.getIsBlocked())
-				.user(scenario.getUser().getUsername())
+				.user(scenario.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(scenario.getLastChange()))
 				.build();
 	}

@@ -131,7 +131,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         company.setLastChange(DateFormat.parsingZonedDateTime(testCompanyToCompany.getLastChange()));
-        company.setUser(this.user.getId().equals(testCompanyToCompany.getUserCode()) ? user : null);
+        company.setUserLastChanged(this.user.getId().equals(testCompanyToCompany.getUserCode()) ? user : null);
         return company;
     }
 
@@ -148,7 +148,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         sc.setLastChange(DateFormat.parsingZonedDateTime(testScenarioToScenario.getLastChange()));
-        sc.setUser(this.user.getId().equals(testScenarioToScenario.getUserCode()) ? user : null);
+        sc.setUserLastChanged(this.user.getId().equals(testScenarioToScenario.getUserCode()) ? user : null);
 
         return sc;
     }
@@ -166,7 +166,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         cur.setLastChange(DateFormat.parsingZonedDateTime(testCurrencyToCurrency.getLastChange()));
-        cur.setUser(this.user.getId().equals(testCurrencyToCurrency.getUserCode()) ? user : null);
+        cur.setUserLastChanged(this.user.getId().equals(testCurrencyToCurrency.getUserCode()) ? user : null);
         return cur;
     }
 
@@ -182,7 +182,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         c.setLastChange(DateFormat.parsingZonedDateTime(testCPtoCP.getLastChange()));
-        c.setUser(this.user.getId().equals(testCPtoCP.getUserCode()) ? user : null);
+        c.setUserLastChanged(this.user.getId().equals(testCPtoCP.getUserCode()) ? user : null);
         return c;
     }
 
@@ -242,7 +242,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         d.setLastChange(DateFormat.parsingZonedDateTime(testDurationToDuration.getLastChange()));
-        d.setUser(this.user.getId().equals(testDurationToDuration.getUserCode()) ? user : null);
+        d.setUserLastChanged(this.user.getId().equals(testDurationToDuration.getUserCode()) ? user : null);
         return d;
     }
 
@@ -274,7 +274,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         dr.setLastChange(DateFormat.parsingZonedDateTime(testDepositRateToDepositRate.getLastChange()));
-        dr.setUser(this.user.getId().equals(testDepositRateToDepositRate.getUserCode()) ? user : null);
+        dr.setUserLastChanged(this.user.getId().equals(testDepositRateToDepositRate.getUserCode()) ? user : null);
         return dr;
     }
 
@@ -305,7 +305,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         ld.setLastChange(DateFormat.parsingZonedDateTime(testLeasingDepositToLeasingDeposit.getLastChange()));
-        ld.setUser(this.user.getId().equals(testLeasingDepositToLeasingDeposit.getUserCode()) ? user : null);
+        ld.setUserLastChanged(this.user.getId().equals(testLeasingDepositToLeasingDeposit.getUserCode()) ? user : null);
         return ld;
     }
 
@@ -329,7 +329,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         endDate.setLastChange(DateFormat.parsingZonedDateTime(testEndDateToEndDate.getLastChange()));
-        endDate.setUser(this.user.getId().equals(testEndDateToEndDate.getUserCode()) ? user : null);
+        endDate.setUserLastChanged(this.user.getId().equals(testEndDateToEndDate.getUserCode()) ? user : null);
         return endDate;
     }
 
@@ -444,7 +444,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         exchangeRate.setLastChange(ZonedDateTime.now());
-        exchangeRate.setUser(user);
+        exchangeRate.setUserLastChanged(user);
         return exchangeRate;
     }
 
@@ -473,7 +473,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         ifrsAccount.setLastChange(ZonedDateTime.now());
-        ifrsAccount.setUser(this.user.getId().equals(testIfrsAccountToIfrsAccount.getUserCode()) ? user : null);
+        ifrsAccount.setUserLastChanged(this.user.getId().equals(testIfrsAccountToIfrsAccount.getUserCode()) ? user : null);
         return ifrsAccount;
     }
 
@@ -510,7 +510,7 @@ public class TestEntitiesKeeper {
                 .build();
 
         entryIFRSAcc.setLastChange(DateFormat.parsingZonedDateTime(testEntryIfrsToEntryIfrs.getLastChange()));
-        entryIFRSAcc.setUser(this.user.getId().equals(testEntryIfrsToEntryIfrs.getUserCode()) ? user : null);
+        entryIFRSAcc.setUserLastChanged(this.user.getId().equals(testEntryIfrsToEntryIfrs.getUserCode()) ? user : null);
         return entryIFRSAcc;
     }
 }

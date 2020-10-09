@@ -56,7 +56,7 @@ public class CompanyServiceImpl implements CompanyService
 	public Company saveNewCompany(Company company)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		company.setUser(userRepository.findByUsername(username));
+		company.setUserLastChanged(userRepository.findByUsername(username));
 
 		company.setLastChange(ZonedDateTime.now());
 
@@ -71,7 +71,7 @@ public class CompanyServiceImpl implements CompanyService
 		company.setId(id);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		company.setUser(userRepository.findByUsername(username));
+		company.setUserLastChanged(userRepository.findByUsername(username));
 
 		company.setLastChange(ZonedDateTime.now());
 

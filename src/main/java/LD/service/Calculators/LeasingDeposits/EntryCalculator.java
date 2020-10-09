@@ -401,7 +401,7 @@ public class EntryCalculator implements Callable<List<Entry>> {
                     EntryPeriodCreation.CURRENT_PERIOD);
         }
 
-        newEntry.setUser(this.calculationParametersSource.getUser());
+        newEntry.setUserLastChanged(this.calculationParametersSource.getUser());
         newEntry.setLeasingDeposit(this.leasingDepositToCalculate);
         newEntry.setEntryID(entryID);
         newEntry.setEnd_date_at_this_period(this.mappingPeriodEndDate.floorEntry(calculationPeriod).getValue());

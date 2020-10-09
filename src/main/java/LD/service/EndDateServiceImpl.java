@@ -61,7 +61,7 @@ public class EndDateServiceImpl implements EndDateService
 		log.info("Конечная дата для сохранения = {}", endDate);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		endDate.setUser(userRepository.findByUsername(username));
+		endDate.setUserLastChanged(userRepository.findByUsername(username));
 
 		endDate.setLastChange(ZonedDateTime.now());
 
@@ -74,7 +74,7 @@ public class EndDateServiceImpl implements EndDateService
 	public EndDate update(EndDateID id, EndDate endDate)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		endDate.setUser(userRepository.findByUsername(username));
+		endDate.setUserLastChanged(userRepository.findByUsername(username));
 
 		endDate.setLastChange(ZonedDateTime.now());
 

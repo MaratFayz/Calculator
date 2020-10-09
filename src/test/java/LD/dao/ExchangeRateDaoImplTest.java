@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -21,12 +22,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.annotation.DirtiesContext.*;
 
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
 @DataJpaTest
 @ContextConfiguration(classes = {Application.class, ExchangeRateDaoImpl.class})
 @TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto = create",
         "spring.flyway.baselineOnMigrate = false"})
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class ExchangeRateDaoImplTest {
 
     @Autowired

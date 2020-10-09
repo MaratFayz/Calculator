@@ -28,7 +28,7 @@ public class CompanyDTO_out
 				.id(company.getId())
 				.code(company.getCode())
 				.name(company.getName())
-				.user(company.getUser().getUsername())
+				.user(company.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(company.getLastChange()))
 				.build();
 	}

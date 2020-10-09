@@ -3,12 +3,10 @@ package LD.config.Security.model.Role;
 import LD.config.DateFormat;
 import LD.config.Security.Repository.CustomAuthorityRepository;
 import LD.config.Security.model.Authority.CustomAuthority;
-import LD.model.Enums.STATUS_X;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -54,7 +52,7 @@ public class RoleTransform
 				.id(role.getId())
 				.name(role.getName())
 				.authorities(RoleAuthorities)
-				.user_changed(role.getUser() == null ? null : role.getUser().getUsername())
+				.user_changed(role.getUserLastChanged() == null ? null : role.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(role.getLastChange()))
 				.build();
 	}

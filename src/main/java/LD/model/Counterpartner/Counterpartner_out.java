@@ -25,7 +25,7 @@ public class Counterpartner_out
 		return Counterpartner_out.builder()
 				.id(counterpartner.getId())
 				.name(counterpartner.getName())
-				.user(counterpartner.getUser().getUsername())
+				.user(counterpartner.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(counterpartner.getLastChange()))
 				.build();
 	}

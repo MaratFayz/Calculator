@@ -46,7 +46,7 @@ public class IFRSAccountDTO_out
 				.dr(ifrsAccount.getDr())
 				.isInverseSum(ifrsAccount.isInverseSum())
 				.mappingFormAndColumn(ifrsAccount.getMappingFormAndColumn())
-				.user(ifrsAccount.getUser().getUsername())
+				.user(ifrsAccount.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(ifrsAccount.getLastChange()))
 				.build();
 	}

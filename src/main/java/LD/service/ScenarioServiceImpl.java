@@ -55,7 +55,7 @@ public class ScenarioServiceImpl implements ScenarioService
 	public Scenario saveNewScenario(Scenario scenario)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		scenario.setUser(userRepository.findByUsername(username));
+		scenario.setUserLastChanged(userRepository.findByUsername(username));
 
 		scenario.setLastChange(ZonedDateTime.now());
 
@@ -70,7 +70,7 @@ public class ScenarioServiceImpl implements ScenarioService
 		scenario.setId(id);
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		scenario.setUser(userRepository.findByUsername(username));
+		scenario.setUserLastChanged(userRepository.findByUsername(username));
 
 		scenario.setLastChange(ZonedDateTime.now());
 

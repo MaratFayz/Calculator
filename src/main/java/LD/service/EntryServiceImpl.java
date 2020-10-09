@@ -2,14 +2,12 @@ package LD.service;
 
 import LD.config.Security.Repository.UserRepository;
 import LD.dao.DaoKeeper;
-import LD.dao.EntryDao;
 import LD.model.Entry.*;
 import LD.model.EntryIFRSAcc.EntryIFRSAcc;
-import LD.model.Enums.EntryStatus;
 import LD.model.LeasingDeposit.LeasingDeposit;
-import LD.model.Period.Period;
-import LD.model.Scenario.Scenario;
-import LD.repository.*;
+import LD.repository.EntryIFRSAccRepository;
+import LD.repository.EntryRepository;
+import LD.repository.LeasingDepositRepository;
 import LD.rest.exceptions.NotFoundException;
 import LD.service.Calculators.LeasingDeposits.CalculationParametersSource;
 import LD.service.Calculators.LeasingDeposits.CalculationParametersSourceImpl;
@@ -29,7 +27,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,35 +34,25 @@ import java.util.stream.Collectors;
 public class EntryServiceImpl implements EntryService {
 
     @Autowired
-    EntryRepository entryRepository;
+    private EntryRepository entryRepository;
     @Autowired
-    DepositRatesRepository depositRatesRepository;
+    private EntryIFRSAccRepository entry_ifrs_acc_repository;
     @Autowired
-    EntryIFRSAccRepository entry_ifrs_acc_repository;
+    private CalculationParametersSource calculationParametersSource;
     @Autowired
-    CalculationParametersSource calculationParametersSource;
+    private LeasingDepositRepository leasingDepositRepository;
     @Autowired
-    LeasingDepositRepository leasingDepositRepository;
+    private EntryTransform entryTransform;
     @Autowired
-    EntryTransform entryTransform;
-    @Autowired
-    ScenarioRepository scenarioRepository;
-    @Autowired
-    PeriodsClosedRepository periodsClosedRepository;
-    @Autowired
-    UserRepository userRepository;
-    ReentrantLock reentrantLock;
+    private UserRepository userRepository;
+    private ReentrantLock reentrantLock;
     @Autowired
     private DaoKeeper daoKeeper;
-    @Autowired
-    private EntryDao entryDao;
 
     public EntryServiceImpl(EntryRepository entryRepository,
-                            DepositRatesRepository depositRatesRepository,
                             EntryIFRSAccRepository entry_ifrs_acc_repository,
                             CalculationParametersSourceImpl calculationParametersSource) {
         this.entryRepository = entryRepository;
-        this.depositRatesRepository = depositRatesRepository;
         this.entry_ifrs_acc_repository = entry_ifrs_acc_repository;
         this.calculationParametersSource = calculationParametersSource;
         this.reentrantLock = new ReentrantLock();
@@ -181,17 +168,17 @@ public class EntryServiceImpl implements EntryService {
 
     @Override
     public List<EntryDTO_out_RegLD1> getAllLDEntries_RegLD1(Long scenarioToId) {
-        return entryDao.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd1(scenarioToId);
+        return entryRepository.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd1(scenarioToId);
     }
 
     @Override
     public List<EntryDTO_out_RegLD2> getAllLDEntries_RegLD2(Long scenarioToId) {
-        return entryDao.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd2(scenarioToId);
+        return entryRepository.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd2(scenarioToId);
     }
 
     @Override
     public List<EntryDTO_out_RegLD3> getAllLDEntries_RegLD3(Long scenarioToId) {
-        return entryDao.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd3(scenarioToId);
+        return entryRepository.getActiveEntriesForScenarioAndFirstOpenPeriodRegLd3(scenarioToId);
     }
 
     @Override
@@ -202,7 +189,7 @@ public class EntryServiceImpl implements EntryService {
     @Override
     public Entry update(EntryID id, Entry entry) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        entry.setUser(userRepository.findByUsername(username));
+        entry.setUserLastChanged(userRepository.findByUsername(username));
 
         entry.setLastChange(ZonedDateTime.now());
 
@@ -218,7 +205,7 @@ public class EntryServiceImpl implements EntryService {
     @Override
     public Entry saveEntry(Entry entry) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        entry.setUser(userRepository.findByUsername(username));
+        entry.setUserLastChanged(userRepository.findByUsername(username));
 
         entry.setLastChange(ZonedDateTime.now());
 

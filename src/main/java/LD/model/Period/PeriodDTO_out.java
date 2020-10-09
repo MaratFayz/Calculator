@@ -22,7 +22,7 @@ public class PeriodDTO_out
 		return PeriodDTO_out.builder()
 				.id(period.getId())
 				.date(DateFormat.formatDate(period.getDate()))
-				.user(period.getUser().getUsername())
+				.user(period.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(period.getLastChange()))
 				.build();
 	}
