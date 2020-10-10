@@ -1,14 +1,23 @@
 package LD;
 
+import LD.config.Security.model.User.User;
 import LD.model.DepositRate.DepositRateDTO_in;
 import LD.model.EndDate.EndDateDTO_in;
+import LD.model.Entry.Entry;
+import LD.model.Entry.EntryDTO_out;
+import LD.model.Entry.EntryTransform;
 import LD.model.Enums.STATUS_X;
 import LD.model.LeasingDeposit.LeasingDepositDTO_in;
 import LD.model.PeriodsClosed.PeriodsClosedDTO_in;
+import Utils.TestEntitiesKeeper;
+import Utils.XmlDataLoader.LoadXmlFileForLeasingDepositsTest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -22,11 +31,14 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -34,13 +46,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@ExtendWith(SpringExtension.class)
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
 @Testcontainers
+@Log4j2
 public class IntegrationTest {
 
     private MockMvc mockMvc;
     @Autowired
     private WebApplicationContext wac;
+    private TestEntitiesKeeper testEntitiesKeeper;
+    private MvcResult entryResponse;
+    @Autowired
+    private EntryTransform entryTransform;
 
     // will be shared between test methods
     @Container
@@ -66,6 +83,7 @@ public class IntegrationTest {
     @WithMockUser(username = "superadmin", authorities = {"DEPOSIT_RATES_ADDER",
             "END_DATE_ADDER", "LEASING_DEPOSIT_ADDER", "AUTO_ADDING_PERIODS",
             "AUTO_CLOSING_PERIODS", "CALCULATE", "LOAD_EXCHANGE_RATE_FROM_CBR", "PERIODS_CLOSED_ADDER", "ENTRY_READER"})
+    @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/IntegrationTests/integrationTests.xml")
     public void application_shouldNotThrowExceptionAndCountOfEntriesEquals19_whenCalculating() {
         assertDoesNotThrow(() -> {
             generatePeriods();
@@ -77,6 +95,7 @@ public class IntegrationTest {
             addDepositRate();
             calculate();
             checkIfCountOfCalculatedEntriesEquals19();
+            checkIfResponseContentEqualsToExpectedContent();
         });
     }
 
@@ -194,9 +213,54 @@ public class IntegrationTest {
     }
 
     private void checkIfCountOfCalculatedEntriesEquals19() throws Exception {
-        MvcResult entryResponse = this.mockMvc.perform(get("/entries"))
+
+        entryResponse = this.mockMvc.perform(get("/entries"))
                 .andExpect(status().isOk())
+                .andDo(print())
                 .andExpect(jsonPath("$", hasSize(19)))
                 .andReturn();
+
+    }
+
+    private void checkIfResponseContentEqualsToExpectedContent() {
+        String expectedResult = prepareExpectedResult();
+        String actualResult = prepareActualResult();
+
+        assertEquals(expectedResult, actualResult);
+    }
+
+    private String prepareExpectedResult() {
+        List<Entry> entries_expected = testEntitiesKeeper.getEntries_expected();
+        User user = User.builder().username("superadmin").build();
+        entries_expected.stream().forEach(e -> e.setUserLastChanged(user));
+        entries_expected.stream().forEach(e -> e.setLastChange(ZonedDateTime.now()));
+        List<EntryDTO_out> collect = entries_expected.stream().map(e -> entryTransform.Entry_to_EntryDTO_out(e)).collect(Collectors.toList());
+        JsonMapper jsonMapper = new JsonMapper();
+        String expectedString = null;
+
+        try {
+            expectedString = jsonMapper.writeValueAsString(collect);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        expectedString = expectedString.replaceAll(",\"calculation_TIME\":.+\"", "");
+        expectedString = expectedString.replaceAll("0\\.0+", "0\\.0");
+        log.info("expected string => {}", expectedString);
+        return expectedString;
+    }
+
+    private String prepareActualResult() {
+        String actualResult = null;
+        try {
+            actualResult = entryResponse.getResponse().getContentAsString();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        actualResult = actualResult.replaceAll(",\"calculation_TIME\":.+\"", "");
+        actualResult = actualResult.replaceAll("0\\.0+", "0\\.0");
+
+        log.info("actual string => {}", actualResult);
+        return actualResult;
     }
 }

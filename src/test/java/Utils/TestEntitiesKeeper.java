@@ -190,14 +190,16 @@ public class TestEntitiesKeeper {
         if (nonNull(testDataKeeper.getPeriods_start()) && nonNull(testDataKeeper.getPeriods_end())) {
             periods_start = toLocalDate(testDataKeeper.getPeriods_start());
             periods_end = toLocalDate(testDataKeeper.getPeriods_end());
+            long id = 1L;
 
             if (periods_start.plusDays(1).isBefore(periods_end) || periods_start.plusDays(1).isEqual(periods_end)) {
-                periods_start.datesUntil(periods_end, java.time.Period.ofMonths(1)).collect(Collectors.toList()).forEach(date -> {
+                for (LocalDate date : periods_start.datesUntil(periods_end, java.time.Period.ofMonths(1)).collect(Collectors.toList())) {
                     LocalDate d = date.plusMonths(1).withDayOfMonth(1).minusDays(1);
 
-                    Period period = Period.builder().date(d).build();
+                    Period period = Period.builder().id(id).date(d).build();
                     periods.add(period);
-                });
+                    id++;
+                }
             } else {
                 throw new IllegalStateException("Error: periods_start is greater than periods_end!");
             }
