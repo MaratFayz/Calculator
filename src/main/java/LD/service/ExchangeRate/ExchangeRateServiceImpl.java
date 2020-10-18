@@ -1,4 +1,4 @@
-package LD.service;
+package LD.service.ExchangeRate;
 
 import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.User.User;
@@ -18,6 +18,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -230,9 +231,12 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         String curCodeCBR = currency.getCBRCurrencyCode();
 
         Document doc = null;
+
+        String url = getUrl(dateFrom, dateTo, curCodeCBR);
+
         try {
-            doc = Jsoup.connect("http://www.cbr.ru/scripts/XML_dynamic.asp?date_req1=" +
-                    dateFrom + "&date_req2=" + dateTo + "&VAL_NM_RQ=" + curCodeCBR).get();
+
+            doc = Jsoup.connect(url).get();
 
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
@@ -254,5 +258,29 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
             log.info(e);
             return null;
         }
+    }
+
+    @Lookup
+    GetPropertiesForLdProjectFromFile getDataFromFile(String fileDirectory) {
+        return null;
+    }
+
+    private String getUrl(String dateFrom, String dateTo, String curCodeCBR) {
+        GetPropertiesForLdProjectFromFile dataFromFile = getDataFromFile("dist/PropertiesForLdProject.xml");
+        PropertiesForLdProject propertiesForLdProject = dataFromFile.getPropertiesForLdProject();
+
+        String cbrUrl = propertiesForLdProject.getCbrUrl();
+        String dateFromValue = propertiesForLdProject.getDateFromFile();
+        String dateToValue = propertiesForLdProject.getDateToName();
+        String currencyValue = propertiesForLdProject.getCurrencyValue();
+
+        String url = cbrUrl +
+                dateFromValue + "=" + dateFrom +
+                "&" +
+                dateToValue + "=" + dateTo +
+                "&" +
+                currencyValue + "=" + curCodeCBR;
+
+        return url;
     }
 }

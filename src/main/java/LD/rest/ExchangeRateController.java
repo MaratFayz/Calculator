@@ -1,7 +1,7 @@
 package LD.rest;
 
 import LD.model.ExchangeRate.*;
-import LD.service.ExchangeRateService;
+import LD.service.ExchangeRate.ExchangeRateService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -19,107 +19,99 @@ import java.util.List;
 @RestController
 @RequestMapping("/exchangeRates")
 @Log4j2
-public class ExchangeRateController
-{
-	@Autowired
-	ExchangeRateService exchangeRateService;
-	@Autowired
-	ExchangeRateTransform exchangeRateTransform;
+public class ExchangeRateController {
 
-	@GetMapping
-	@ApiOperation(value = "Получение всех курсов валют", response = ResponseEntity.class)
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_READER)")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Все курсы возвращаются в ответе."),
-			@ApiResponse(code = 403, message = "Доступ запрещён")
-	})
-	public List<ExchangeRateDTO_out> getAllExchangeRates()
-	{
-		return exchangeRateService.getAllExchangeRates();
-	}
+    @Autowired
+    ExchangeRateService exchangeRateService;
+    @Autowired
+    ExchangeRateTransform exchangeRateTransform;
 
-	@GetMapping("{scenario_id}/{currency_id}/{date}")
-	@ApiOperation(value = "Получение курса с определённым id", response = ResponseEntity.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Валютный курс существует, возвращается в ответе."),
-			@ApiResponse(code = 403, message = "Доступ запрещён"),
-			@ApiResponse(code = 404, message = "Валютный курс отсутствует")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_READER)")
-	public ResponseEntity getExchangeRate(@PathVariable Long scenario_id, @PathVariable Long currency_id, @PathVariable String date)
-	{
-		ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(scenario_id, currency_id, date);
-		ExchangeRate exchangeRate = exchangeRateService.getExchangeRate(id);
-		log.info("(getExchangeRate): exchangeRate was taken: " + exchangeRate);
-		return new ResponseEntity(exchangeRateTransform.ExchangeRate_to_ExchangeRateDTO_out(exchangeRate), HttpStatus.OK);
-	}
+    @GetMapping
+    @ApiOperation(value = "Получение всех курсов валют", response = ResponseEntity.class)
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_READER)")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Все курсы возвращаются в ответе."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    public List<ExchangeRateDTO_out> getAllExchangeRates() {
+        return exchangeRateService.getAllExchangeRates();
+    }
 
-	@PostMapping
-	@ApiOperation(value = "Сохранение нового курса валют", response = ResponseEntity.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Новый курс валют был сохранен."),
-			@ApiResponse(code = 403, message = "Доступ запрещён")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_ADDER)")
-	public ResponseEntity saveNewExchangeRate(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in)
-	{
-		ExchangeRate exchangeRate = exchangeRateTransform.ExchangeRateDTO_in_to_ExchangeRate(exchangeRateDTO_in);
-		ExchangeRate newExchangeRate = exchangeRateService.saveNewExchangeRate(exchangeRate);
-		return new ResponseEntity(exchangeRateTransform.ExchangeRate_to_ExchangeRateDTO_out(newExchangeRate), HttpStatus.OK);
-	}
+    @GetMapping("{scenario_id}/{currency_id}/{date}")
+    @ApiOperation(value = "Получение курса с определённым id", response = ResponseEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Валютный курс существует, возвращается в ответе."),
+            @ApiResponse(code = 403, message = "Доступ запрещён"),
+            @ApiResponse(code = 404, message = "Валютный курс отсутствует")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_READER)")
+    public ResponseEntity getExchangeRate(@PathVariable Long scenario_id, @PathVariable Long currency_id, @PathVariable String date) {
+        ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(scenario_id, currency_id, date);
+        ExchangeRate exchangeRate = exchangeRateService.getExchangeRate(id);
+        log.info("(getExchangeRate): exchangeRate was taken: " + exchangeRate);
+        return new ResponseEntity(exchangeRateTransform.ExchangeRate_to_ExchangeRateDTO_out(exchangeRate), HttpStatus.OK);
+    }
 
-	@PostMapping("/importERFromCBR")
-	@ApiOperation(value = "Загрузка курсов валют с сайта Центробанка РФ по датам, если дата есть, а курса нет",
-					response = ResponseEntity.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Курсы валют были импортированы и сохранены."),
-			@ApiResponse(code = 403, message = "Доступ запрещён")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LOAD_EXCHANGE_RATE_FROM_CBR)")
-	public ResponseEntity importExchangeRatesFormCBR(@RequestParam long scenario_id,
-													 @RequestParam boolean isAddOnlyNewestRates)
-	{
-		exchangeRateService.importExchangeRatesFormCBR(scenario_id, isAddOnlyNewestRates);
-		return new ResponseEntity(HttpStatus.OK);
-	}
+    @PostMapping
+    @ApiOperation(value = "Сохранение нового курса валют", response = ResponseEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Новый курс валют был сохранен."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_ADDER)")
+    public ResponseEntity saveNewExchangeRate(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in) {
+        ExchangeRate exchangeRate = exchangeRateTransform.ExchangeRateDTO_in_to_ExchangeRate(exchangeRateDTO_in);
+        ExchangeRate newExchangeRate = exchangeRateService.saveNewExchangeRate(exchangeRate);
+        return new ResponseEntity(exchangeRateTransform.ExchangeRate_to_ExchangeRateDTO_out(newExchangeRate), HttpStatus.OK);
+    }
 
-	@PutMapping
-	@ApiOperation(value = "Изменение значений курса валют", response = ResponseEntity.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Курс валют был изменен."),
-			@ApiResponse(code = 403, message = "Доступ запрещён")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_EDITOR)")
-	public ResponseEntity update(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in)
-	{
-		log.info("(update): Поступил объект exchangeRateDTO_in = {}", exchangeRateDTO_in);
+    @PostMapping("/importERFromCBR")
+    @ApiOperation(value = "Загрузка курсов валют с сайта Центробанка РФ по датам, если дата есть, а курса нет",
+            response = ResponseEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Курсы валют были импортированы и сохранены."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).LOAD_EXCHANGE_RATE_FROM_CBR)")
+    public ResponseEntity importExchangeRatesFormCBR(@RequestParam long scenario_id,
+                                                     @RequestParam boolean isAddOnlyNewestRates) {
+        exchangeRateService.importExchangeRatesFormCBR(scenario_id, isAddOnlyNewestRates);
+        return new ResponseEntity(HttpStatus.OK);
+    }
 
-		ExchangeRate exchangeRate = exchangeRateTransform.ExchangeRateDTO_in_to_ExchangeRate(exchangeRateDTO_in);
+    @PutMapping
+    @ApiOperation(value = "Изменение значений курса валют", response = ResponseEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Курс валют был изменен."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_EDITOR)")
+    public ResponseEntity update(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in) {
+        log.info("(update): Поступил объект exchangeRateDTO_in = {}", exchangeRateDTO_in);
 
-		ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO_in.getScenario(),
-				exchangeRateDTO_in.getCurrency(),
-				exchangeRateDTO_in.getDate());
+        ExchangeRate exchangeRate = exchangeRateTransform.ExchangeRateDTO_in_to_ExchangeRate(exchangeRateDTO_in);
 
-		ExchangeRate updatedExchangeRate = exchangeRateService.updateExchangeRate(id, exchangeRate);
-		return new ResponseEntity(exchangeRateTransform.ExchangeRate_to_ExchangeRateDTO_out(updatedExchangeRate), HttpStatus.OK);
-	}
+        ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO_in.getScenario(),
+                exchangeRateDTO_in.getCurrency(),
+                exchangeRateDTO_in.getDate());
 
-	@DeleteMapping
-	@ApiOperation(value = "Удаление значения")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Курс валют был успешно удален"),
-			@ApiResponse(code = 403, message = "Доступ запрещён"),
-			@ApiResponse(code = 404, message = "Курс валют не был обнаружен")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_DELETER)")
-	public ResponseEntity delete(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in)
-	{
-		ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO_in.getScenario(),
-				exchangeRateDTO_in.getCurrency(),
-				exchangeRateDTO_in.getDate());
+        ExchangeRate updatedExchangeRate = exchangeRateService.updateExchangeRate(id, exchangeRate);
+        return new ResponseEntity(exchangeRateTransform.ExchangeRate_to_ExchangeRateDTO_out(updatedExchangeRate), HttpStatus.OK);
+    }
 
-		return exchangeRateService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
-	}
+    @DeleteMapping
+    @ApiOperation(value = "Удаление значения")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Курс валют был успешно удален"),
+            @ApiResponse(code = 403, message = "Доступ запрещён"),
+            @ApiResponse(code = 404, message = "Курс валют не был обнаружен")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_DELETER)")
+    public ResponseEntity delete(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in) {
+        ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO_in.getScenario(),
+                exchangeRateDTO_in.getCurrency(),
+                exchangeRateDTO_in.getDate());
 
+        return exchangeRateService.delete(id) ? ResponseEntity.ok().build() : ResponseEntity.status(404).build();
+    }
 }
-
