@@ -16,6 +16,7 @@
         <maven.compiler.source>14</maven.compiler.source>
         <maven.compiler.target>14</maven.compiler.target>
         <maven.test.skip>true</maven.test.skip>
+        <enable.security.in.project>false</enable.security.in.project>
 
         <junit>5.5.2</junit>
         <spring-boot.version>2.2.6.RELEASE</spring-boot.version>
@@ -47,11 +48,17 @@
             <properties>
                 <maven.test.skip>false</maven.test.skip>
             </properties>
-<!--            <plugins>-->
-                <!--                <plugin>-->
-                <!--                    <jacoco>-->
-                <!--                </plugin>-->
-<!--            </plugins>-->
+            <!--            <plugins>-->
+            <!--                <plugin>-->
+            <!--                    <jacoco>-->
+            <!--                </plugin>-->
+            <!--            </plugins>-->
+        </profile>
+        <profile>
+            <id>enableSecurity</id>
+            <properties>
+                <enable.security.in.project>true</enable.security.in.project>
+            </properties>
         </profile>
         <profile>
             <id>buildDockerImageIntoLocalRepo</id>
@@ -69,9 +76,9 @@
             <!--                    </plugin>-->
             <!--                </plugins>-->
             <!--            </build>-->
-<!--            <execution>-->
-<!--                <stage = deploy></stage>-->
-<!--            </execution>-->
+            <!--            <execution>-->
+            <!--                <stage = deploy></stage>-->
+            <!--            </execution>-->
         </profile>
         <profile>
             <id>buildDockerImageIntoRemoteRepo</id>

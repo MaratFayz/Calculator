@@ -20,111 +20,91 @@ import java.util.stream.Collectors;
 
 @Service
 @Log4j2
-public class UserServiceImpl implements UserService
-{
-	@Autowired
-	private UserRepository userRepository;
-	@Autowired
-	private PasswordEncoder passwordEncoder;
-	@Autowired
-	private UserTransform userTransform;
+public class UserServiceImpl implements UserService {
 
-	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
-	{
-		log.info("Проверка юзера {} в базе данных", username);
-		User user = userRepository.findByUsername(username);
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private UserTransform userTransform;
 
-		log.info(passwordEncoder.encode("a"));
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        log.info("Проверка юзера {} в базе данных", username);
+        User user = userRepository.findByUsername(username);
 
-		if(user == null)
-		{
-			log.info("В базе данных НЕ найден юзер {}", username);
-			throw new UsernameNotFoundException("User not found");
-		}
+        if (user == null) {
+            log.info("В базе данных НЕ найден юзер {}", username);
+            throw new UsernameNotFoundException("User not found");
+        }
 
-		log.info("user authorities = {}", user.getAuthorities());
+        log.info("user authorities = {}", user.getAuthorities());
 
-		return user;
-	}
+        return user;
+    }
 
-	@Override
-	public User saveNewUser(User user)
-	{
-		User userFromDB = userRepository.findByUsername(user.getUsername());
-		if(userFromDB != null) return null;
+    @Override
+    public User saveNewUser(User user) {
+        User userFromDB = userRepository.findByUsername(user.getUsername());
+        if (userFromDB != null) return null;
 
-		user.setPassword(passwordEncoder.encode(user.getPassword()));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        user.setUserLastChanged(userRepository.findByUsername(username));
 
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		user.setUserLastChanged(userRepository.findByUsername(username));
+        user.setLastChange(ZonedDateTime.now());
 
-		user.setLastChange(ZonedDateTime.now());
+        log.info("Пользователь для сохранения = {}", user);
 
-		log.info("Пользователь для сохранения = {}", user);
+        return userRepository.save(user);
+    }
 
-		return userRepository.save(user);
-	}
+    @Override
+    public List<UserDTO_out> getUsers() {
+        List<User> resultFormDB = userRepository.findAll();
+        List<UserDTO_out> resultFormDB_out = new ArrayList<>();
 
-	@Override
-	public List<UserDTO_out> getUsers()
-	{
-		List<User> resultFormDB = userRepository.findAll();
-		List<UserDTO_out> resultFormDB_out = new ArrayList<>();
+        if (resultFormDB.size() == 0) {
+            resultFormDB_out.add(new UserDTO_out());
+        } else {
+            resultFormDB_out = resultFormDB.stream()
+                    .map(c -> userTransform.User_to_UserDTO_out(c))
+                    .collect(Collectors.toList());
+        }
 
-		if(resultFormDB.size() == 0)
-		{
-			resultFormDB_out.add(new UserDTO_out());
-		}
-		else
-		{
-			resultFormDB_out = resultFormDB.stream()
-					.map(c -> userTransform.User_to_UserDTO_out(c))
-					.collect(Collectors.toList());
-		}
+        return resultFormDB_out;
+    }
 
-		return resultFormDB_out;
-	}
+    @Override
+    public User findById(Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
 
-	@Override
-	public User findById(Long id)
-	{
-		return userRepository.findById(id).orElse(null);
-	}
+    @Override
+    public boolean delete(User user) {
+        try {
+            userRepository.delete(user);
+        } catch (Exception e) {
+            log.info("Не получилось удалить пользователя: {}", e);
+            return false;
+        }
 
-	@Override
-	public boolean delete(User user)
-	{
-		try
-		{
-			userRepository.delete(user);
-		}
-		catch (Exception e)
-		{
-			log.info("Не получилось удалить пользователя: {}", e);
-			return false;
-		}
+        return true;
+    }
 
-		return true;
-	}
+    @Override
+    public User updateUser(Long id, User user) {
+        user.setId(id);
 
-	@Override
-	public User updateUser(Long id, User user)
-	{
-		user.setId(id);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        user.setUserLastChanged(userRepository.findByUsername(username));
 
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		user.setUserLastChanged(userRepository.findByUsername(username));
+        user.setLastChange(ZonedDateTime.now());
 
-		user.setLastChange(ZonedDateTime.now());
+        User userToUpdate = findById(id);
 
-		User userToUpdate = findById(id);
+        BeanUtils.copyProperties(user, userToUpdate);
 
-		BeanUtils.copyProperties(user, userToUpdate);
+        userRepository.saveAndFlush(userToUpdate);
 
-		userRepository.saveAndFlush(userToUpdate);
-
-		return userToUpdate;
-	}
+        return userToUpdate;
+    }
 }
-
