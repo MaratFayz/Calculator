@@ -10,15 +10,16 @@ import LD.repository.PeriodsClosedRepository;
 import LD.repository.ScenarioRepository;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -26,12 +27,16 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @Log4j2
 @Component
+@Scope("prototype")
 @ToString
 public class CalculationParametersSourceImpl implements CalculationParametersSource {
+
+    private LocalDate copyDate;
+    private Long scenarioFrom_id;
+    private Long scenarioTo_id;
 
     private LocalDate firstOpenPeriodOfScenarioTo;
     private LocalDate firstOpenPeriodOfScenarioFrom;
@@ -50,7 +55,16 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
     @Autowired
     private UserRepository userRepository;
 
-    public void prepareParameters(LocalDate copyDate, Long scenarioFrom_id, Long scenarioTo_id) {
+    public CalculationParametersSourceImpl(LocalDate copyDate, Long scenarioFrom_id, Long scenarioTo_id) {
+        this.copyDate = copyDate;
+        this.scenarioFrom_id = scenarioFrom_id;
+        this.scenarioTo_id = scenarioTo_id;
+    }
+
+    @PostConstruct
+    private void prepareParameters() {
+        log.info("PostConstruct");
+
         getCalculatingUser();
 
         checkIfCopyDateNonNullOrThrowException(copyDate);

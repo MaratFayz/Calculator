@@ -10,9 +10,12 @@ import LD.repository.ScenarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,14 +32,25 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@ContextConfiguration(classes = {CalculationParametersSourceImpl.class})
+@ExtendWith({SpringExtension.class})
+@ContextConfiguration(classes = {CalculationParametersSourceImpl.class, CalculationParametersSourceImplTest.TestBeansFactory.class})
 public class CalculationParametersSourceImplTest {
 
     @Autowired
-    private CalculationParametersSource cps;
+    TestBeansFactory testBeansFactory;
+
+    @Configuration
+    static class TestBeansFactory {
+
+        @Bean
+        @Scope("prototype")
+        CalculationParametersSourceImpl getCalculationParametersSourceImpl(LocalDate copyDate, Long scenarioFrom, Long scenarioTo) {
+            return new CalculationParametersSourceImpl(copyDate, scenarioFrom, scenarioTo);
+        }
+    }
+
     @MockBean
-    ScenarioRepository scenarioRepository;
+    private ScenarioRepository scenarioRepository;
     @MockBean
     private PeriodsClosedRepository periodsClosedRepository;
     @MockBean
@@ -72,11 +86,13 @@ public class CalculationParametersSourceImplTest {
         when(scenarioRepository.findById(eq(scenarioSourceId))).thenReturn(Optional.ofNullable(scenarioSourceAddition));
         when(scenarioRepository.findById(eq(scenarioDestinationId))).thenReturn(Optional.ofNullable(scenarioDestinationAddition));
 
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            cps.prepareParameters(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
+        Throwable thrown = assertThrows(BeanCreationException.class, () -> {
+            testBeansFactory.getCalculationParametersSourceImpl(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
         });
 
-        assertEquals("Запрещённая операция расчёта между разными сценариями со статусами: ADDITION -> ADDITION", thrown.getMessage());
+        Throwable beanCreationThrownCause = thrown.getCause();
+        assertEquals(IllegalArgumentException.class, beanCreationThrownCause.getClass());
+        assertEquals("Запрещённая операция расчёта между разными сценариями со статусами: ADDITION -> ADDITION", beanCreationThrownCause.getMessage());
     }
 
     @Test
@@ -95,7 +111,7 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationAddition))).thenReturn(LocalDate.of(2019, 11, 30));
 
         assertDoesNotThrow(() -> {
-            cps.prepareParameters(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
+            testBeansFactory.getCalculationParametersSourceImpl(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
         });
     }
 
@@ -114,7 +130,7 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationFull))).thenReturn(LocalDate.of(2019, 11, 30));
 
         assertDoesNotThrow(() -> {
-            cps.prepareParameters(LocalDate.MIN, scenarioSource, scenarioDestination);
+            testBeansFactory.getCalculationParametersSourceImpl(LocalDate.MIN, scenarioSource, scenarioDestination);
         });
     }
 
@@ -132,11 +148,13 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioSourceFull))).thenReturn(LocalDate.of(2019, 11, 30));
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationAddition))).thenReturn(LocalDate.of(2019, 11, 30));
 
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            cps.prepareParameters(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
+        Throwable thrown = assertThrows(BeanCreationException.class, () -> {
+            testBeansFactory.getCalculationParametersSourceImpl(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
         });
 
-        assertEquals("Запрещённая операция расчёта между разными сценариями со статусами: FULL -> ADDITION", thrown.getMessage());
+        Throwable beanCreationThrownCause = thrown.getCause();
+        assertEquals(IllegalArgumentException.class, beanCreationThrownCause.getClass());
+        assertEquals("Запрещённая операция расчёта между разными сценариями со статусами: FULL -> ADDITION", beanCreationThrownCause.getMessage());
     }
 
     @Test
@@ -154,11 +172,13 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioSourceFull))).thenReturn(LocalDate.of(2019, 11, 30));
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationFull))).thenReturn(LocalDate.of(2019, 11, 30));
 
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            cps.prepareParameters(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
+        Throwable thrown = assertThrows(BeanCreationException.class, () -> {
+            testBeansFactory.getCalculationParametersSourceImpl(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
         });
 
-        assertEquals("Запрещённая операция расчёта между разными сценариями со статусами: FULL -> FULL", thrown.getMessage());
+        Throwable beanCreationThrownCause = thrown.getCause();
+        assertEquals(IllegalArgumentException.class, beanCreationThrownCause.getClass());
+        assertEquals("Запрещённая операция расчёта между разными сценариями со статусами: FULL -> FULL", beanCreationThrownCause.getMessage());
     }
 
     @Test
@@ -176,11 +196,13 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioSourceFull))).thenReturn(LocalDate.of(2019, 11, 30));
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationFull))).thenReturn(LocalDate.of(2019, 11, 30));
 
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            cps.prepareParameters(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
+        Throwable thrown = assertThrows(BeanCreationException.class, () -> {
+            testBeansFactory.getCalculationParametersSourceImpl(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
         });
 
-        assertEquals("Запрещённая операция расчёта между одним сценарием со статусом: FULL -> FULL", thrown.getMessage());
+        Throwable beanCreationThrownCause = thrown.getCause();
+        assertEquals(IllegalArgumentException.class, beanCreationThrownCause.getClass());
+        assertEquals("Запрещённая операция расчёта между одним сценарием со статусом: FULL -> FULL", beanCreationThrownCause.getMessage());
     }
 
     @Test
@@ -199,12 +221,14 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioSourceAddition))).thenReturn(LocalDate.of(2019, 11, 30));
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationFull))).thenReturn(LocalDate.of(2019, 11, 30));
 
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            cps.prepareParameters(copyDate, scenarioSourceId, scenarioDestinationId);
+        Throwable thrown = assertThrows(BeanCreationException.class, () -> {
+            testBeansFactory.getCalculationParametersSourceImpl(copyDate, scenarioSourceId, scenarioDestinationId);
         });
 
+        Throwable beanCreationThrownCause = thrown.getCause();
+        assertEquals(IllegalArgumentException.class, beanCreationThrownCause.getClass());
         assertEquals("Дата начала копирования со сценария-источника всегда " +
-                "должна быть меньше любого первого открытого периода каждого из двух сценариев, либо равна LocalDate.MIN", thrown.getMessage());
+                "должна быть меньше любого первого открытого периода каждого из двух сценариев, либо равна LocalDate.MIN", beanCreationThrownCause.getMessage());
     }
 
     @Test
@@ -223,12 +247,14 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioSourceAddition))).thenReturn(LocalDate.of(2019, 11, 30));
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationFull))).thenReturn(LocalDate.of(2019, 11, 30));
 
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            cps.prepareParameters(copyDate, scenarioSourceId, scenarioDestinationId);
+        Throwable thrown = assertThrows(BeanCreationException.class, () -> {
+            testBeansFactory.getCalculationParametersSourceImpl(copyDate, scenarioSourceId, scenarioDestinationId);
         });
 
+        Throwable beanCreationThrownCause = thrown.getCause();
+        assertEquals(IllegalArgumentException.class, beanCreationThrownCause.getClass());
         assertEquals("Дата начала копирования со сценария-источника всегда должна быть " +
-                "меньше любого первого открытого периода каждого из двух сценариев, либо равна LocalDate.MIN", thrown.getMessage());
+                "меньше любого первого открытого периода каждого из двух сценариев, либо равна LocalDate.MIN", beanCreationThrownCause.getMessage());
     }
 
     @Test
@@ -248,7 +274,7 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationFull))).thenReturn(LocalDate.of(2019, 11, 30));
 
         assertDoesNotThrow(() -> {
-            cps.prepareParameters(copyDate, scenarioSource, scenarioDestination);
+            testBeansFactory.getCalculationParametersSourceImpl(copyDate, scenarioSource, scenarioDestination);
         });
     }
 
@@ -267,7 +293,7 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationFull))).thenReturn(LocalDate.of(2019, 11, 30));
 
         assertDoesNotThrow(() -> {
-            cps.prepareParameters(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
+            testBeansFactory.getCalculationParametersSourceImpl(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
         });
     }
 
@@ -286,7 +312,7 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationFull))).thenReturn(LocalDate.of(2019, 11, 30));
 
         assertDoesNotThrow(() -> {
-            cps.prepareParameters(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
+            testBeansFactory.getCalculationParametersSourceImpl(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
         });
     }
 
@@ -304,20 +330,24 @@ public class CalculationParametersSourceImplTest {
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioSourceAddition))).thenReturn(LocalDate.of(2019, 12, 31));
         when(periodsClosedRepository.findFirstOpenPeriodDateByScenario(eq(scenarioDestinationFull))).thenReturn(LocalDate.of(2019, 11, 30));
 
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            cps.prepareParameters(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
+        Throwable thrown = assertThrows(BeanCreationException.class, () -> {
+            testBeansFactory.getCalculationParametersSourceImpl(LocalDate.MIN, scenarioSourceId, scenarioDestinationId);
         });
 
+        Throwable beanCreationThrownCause = thrown.getCause();
+        assertEquals(IllegalArgumentException.class, beanCreationThrownCause.getClass());
         assertEquals("Дата первого открытого периода сценария-источника всегда должна быть меньше " +
-                "ИЛИ равно первому открытому периоду сценария-получателя", thrown.getMessage());
+                "ИЛИ равно первому открытому периоду сценария-получателя", beanCreationThrownCause.getMessage());
     }
 
     @Test
     public void prepareParameters_shouldThrowException_whenCopyDateIsNull() {
-        Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
-            cps.prepareParameters(null, 1L, 2L);
+        Throwable thrown = assertThrows(BeanCreationException.class, () -> {
+            testBeansFactory.getCalculationParametersSourceImpl(null, 1L, 2L);
         });
 
-        assertEquals("Wrong! copyDate equals null!", exception.getMessage());
+        Throwable beanCreationThrownCause = thrown.getCause();
+        assertEquals(IllegalArgumentException.class, beanCreationThrownCause.getClass());
+        assertEquals("Wrong! copyDate equals null!", beanCreationThrownCause.getMessage());
     }
 }

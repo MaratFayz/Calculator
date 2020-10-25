@@ -9,8 +9,6 @@ import java.util.List;
 
 public interface CalculationParametersSource {
 
-    void prepareParameters(LocalDate copyDate, Long scenarioFrom_id, Long scenarioTo_id);
-
     Scenario getScenarioFrom();
 
     Scenario getScenarioTo();

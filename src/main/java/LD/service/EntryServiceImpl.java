@@ -1,7 +1,6 @@
 package LD.service;
 
 import LD.config.Security.Repository.UserRepository;
-import LD.dao.DaoKeeper;
 import LD.model.Entry.*;
 import LD.model.EntryIFRSAcc.EntryIFRSAcc;
 import LD.model.LeasingDeposit.LeasingDeposit;
@@ -10,14 +9,15 @@ import LD.repository.EntryRepository;
 import LD.repository.LeasingDepositRepository;
 import LD.rest.exceptions.NotFoundException;
 import LD.service.Calculators.LeasingDeposits.CalculationParametersSource;
-import LD.service.Calculators.LeasingDeposits.CalculationParametersSourceImpl;
 import LD.service.Calculators.LeasingDeposits.EntryCalculator;
 import LD.service.Calculators.LeasingDeposits.EntryIfrsAccCalculator;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -38,35 +38,32 @@ public class EntryServiceImpl implements EntryService {
     @Autowired
     private EntryIFRSAccRepository entry_ifrs_acc_repository;
     @Autowired
-    private CalculationParametersSource calculationParametersSource;
-    @Autowired
     private LeasingDepositRepository leasingDepositRepository;
     @Autowired
     private EntryTransform entryTransform;
     @Autowired
     private UserRepository userRepository;
     private ReentrantLock reentrantLock;
-    @Autowired
-    private DaoKeeper daoKeeper;
 
     public EntryServiceImpl(EntryRepository entryRepository,
-                            EntryIFRSAccRepository entry_ifrs_acc_repository,
-                            CalculationParametersSourceImpl calculationParametersSource) {
+                            EntryIFRSAccRepository entry_ifrs_acc_repository) {
         this.entryRepository = entryRepository;
         this.entry_ifrs_acc_repository = entry_ifrs_acc_repository;
-        this.calculationParametersSource = calculationParametersSource;
         this.reentrantLock = new ReentrantLock();
     }
 
     @Override
+    @Transactional
     public void calculateEntries(LocalDate copyDate, Long scenarioFrom, Long scenarioTo) throws ExecutionException, InterruptedException {
         this.reentrantLock.lock();
         try {
+            CalculationParametersSource calculationParametersSource = prepareParametersForCalculation(copyDate, scenarioFrom, scenarioTo);
+
             log.trace("Начинается расчет проводок в calculateEntries");
-            List<Entry> allEntriesOfAllLds = calculateAndSaveEntries(copyDate, scenarioFrom, scenarioTo);
+            List<Entry> allEntriesOfAllLds = calculateAndSaveEntries(copyDate, scenarioFrom, scenarioTo, calculationParametersSource);
 
             log.trace("Расчёт проводок окончен, начинается расчет проводок на МСФО счетах");
-            calculateAndSaveEntriesIfrsAcc(allEntriesOfAllLds);
+            calculateAndSaveEntriesIfrsAcc(allEntriesOfAllLds, calculationParametersSource);
             log.trace("Расчёт проводок на МСФО счетах окончен");
         } catch (Exception e) {
             log.error("Произошла ошибка при расчете: {}", e);
@@ -76,29 +73,26 @@ public class EntryServiceImpl implements EntryService {
         }
     }
 
-    private List<Entry> calculateAndSaveEntries(LocalDate copyDate, Long scenarioFrom, Long scenarioTo) throws ExecutionException, InterruptedException {
-        prepareParametersForCalculation(copyDate, scenarioFrom, scenarioTo);
-
+    private List<Entry> calculateAndSaveEntries(LocalDate copyDate, Long scenarioFrom, Long scenarioTo,
+                                                CalculationParametersSource calculationParametersSource) throws ExecutionException, InterruptedException {
         Collection<LeasingDeposit> calculatingLeasingDeposits = getDepositsByScenariosFromAndTo(scenarioFrom, scenarioTo);
 
-        List<Entry> allEntriesOfAllLds = calculateEntries(calculatingLeasingDeposits);
+        List<Entry> allEntriesOfAllLds = calculateEntries(calculatingLeasingDeposits, calculationParametersSource);
         entryRepository.saveAll(allEntriesOfAllLds);
         return allEntriesOfAllLds;
     }
 
-    private void prepareParametersForCalculation(LocalDate copyDate, Long scenarioFrom, Long scenarioTo) {
+    private CalculationParametersSource prepareParametersForCalculation(LocalDate copyDate, Long scenarioFrom, Long scenarioTo) {
         log.info("Начат расчет calculationParametersSource");
-        calculationParametersSource.prepareParameters(copyDate, scenarioFrom, scenarioTo);
-        log.info("Окончен расчет calculationParametersSource");
+        CalculationParametersSource calculationParametersSource = getCalculationParametersSource(copyDate, scenarioFrom, scenarioTo);
+        log.info("Окончен расчет calculationParametersSource = {}", calculationParametersSource);
+
+        return calculationParametersSource;
     }
 
-    private void calculateAndSaveEntriesIfrsAcc(List<Entry> allEntriesOfAllLds) {
-        EntryIfrsAccCalculator ldeIFRSAcc = new EntryIfrsAccCalculator(allEntriesOfAllLds.stream().toArray(Entry[]::new), calculationParametersSource);
-        List<EntryIFRSAcc> resultEntryInIFRS = ldeIFRSAcc.compute();
-
-        log.info("После калькулятора количество транзакций по счетам МСФО стало равно = {}", resultEntryInIFRS.size());
-
-        entry_ifrs_acc_repository.saveAll(resultEntryInIFRS);
+    @Lookup
+    CalculationParametersSource getCalculationParametersSource(LocalDate copyDate, Long scenarioFrom, Long scenarioTo) {
+        return null;
     }
 
     private Collection<LeasingDeposit> getDepositsByScenariosFromAndTo(Long scenarioFrom, Long scenarioTo) {
@@ -113,20 +107,20 @@ public class EntryServiceImpl implements EntryService {
         return result;
     }
 
-    private List<Entry> calculateEntries(Collection<LeasingDeposit> calculatingLeasingDeposits) throws ExecutionException, InterruptedException {
-        List<Future<List<Entry>>> allEntriesOfAllLds = getFutureEntries(calculatingLeasingDeposits);
+    private List<Entry> calculateEntries(Collection<LeasingDeposit> calculatingLeasingDeposits, CalculationParametersSource calculationParametersSource) throws ExecutionException, InterruptedException {
+        List<Future<List<Entry>>> allEntriesOfAllLds = getFutureEntries(calculatingLeasingDeposits, calculationParametersSource);
         List<Entry> allEntries = extractEntriesFromFuture(allEntriesOfAllLds);
 
         log.trace("calculateEntries рассчитал записей: {}", allEntries.size());
         return allEntries;
     }
 
-    private List<Future<List<Entry>>> getFutureEntries(Collection<LeasingDeposit> calculatingLeasingDeposits) {
+    private List<Future<List<Entry>>> getFutureEntries(Collection<LeasingDeposit> calculatingLeasingDeposits, CalculationParametersSource calculationParametersSource) {
         ExecutorService threadExecutor = Executors.newFixedThreadPool(10);
         List<Future<List<Entry>>> allEntriesOfAllLds = new ArrayList<>();
 
         calculatingLeasingDeposits.stream().forEach(ld -> {
-            EntryCalculator lec = new EntryCalculator(ld, calculationParametersSource, daoKeeper);
+            EntryCalculator lec = getEntryCalculator(ld, calculationParametersSource);
             Future<List<Entry>> entries = threadExecutor.submit(lec);
             allEntriesOfAllLds.add(entries);
         });
@@ -134,6 +128,12 @@ public class EntryServiceImpl implements EntryService {
         threadExecutor.shutdown();
 
         return allEntriesOfAllLds;
+    }
+
+    @Lookup
+    EntryCalculator getEntryCalculator(LeasingDeposit leasingDepositToCalculate,
+                                               CalculationParametersSource calculationParametersSource) {
+        return null;
     }
 
     private List<Entry> extractEntriesFromFuture(List<Future<List<Entry>>> futureEntries) throws InterruptedException, ExecutionException {
@@ -148,6 +148,20 @@ public class EntryServiceImpl implements EntryService {
         log.info("Количество рассчитанных транзакций по депозитам => {}", allEntries.size());
 
         return allEntries;
+    }
+
+    private void calculateAndSaveEntriesIfrsAcc(List<Entry> allEntriesOfAllLds, CalculationParametersSource calculationParametersSource) {
+        EntryIfrsAccCalculator ldeIFRSAcc = getEntryIfrsAccCalculator(allEntriesOfAllLds.stream().toArray(Entry[]::new), calculationParametersSource);
+        List<EntryIFRSAcc> resultEntryInIFRS = ldeIFRSAcc.calculateEntryIfrsAcc();
+
+        log.info("После калькулятора количество транзакций по счетам МСФО стало равно = {}", resultEntryInIFRS.size());
+
+        entry_ifrs_acc_repository.saveAll(resultEntryInIFRS);
+    }
+
+    @Lookup
+    EntryIfrsAccCalculator getEntryIfrsAccCalculator(Entry[] allEntries, CalculationParametersSource calculationParametersSource) {
+        return null;
     }
 
     @Override

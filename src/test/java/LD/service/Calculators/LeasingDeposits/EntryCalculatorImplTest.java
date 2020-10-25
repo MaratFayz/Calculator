@@ -1,7 +1,5 @@
 package LD.service.Calculators.LeasingDeposits;
 
-import LD.dao.DaoKeeper;
-import LD.dao.DaoKeeperImpl;
 import LD.model.Currency.Currency;
 import LD.model.Entry.Entry;
 import LD.model.Enums.EntryStatus;
@@ -11,17 +9,20 @@ import LD.model.Scenario.Scenario;
 import LD.repository.DepositRatesRepository;
 import LD.repository.ExchangeRateRepository;
 import LD.repository.PeriodRepository;
-import Utils.Builders;
 import Utils.EntryComparator;
 import Utils.TestEntitiesKeeper;
 import Utils.XmlDataLoader.LoadXmlFileForLeasingDepositsTest;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
@@ -37,27 +38,39 @@ import java.util.stream.Collectors;
 
 import static Utils.Builders.getDate;
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
-@ExtendWith(MockitoExtension.class)
-public class EntryCalculatorTest {
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@ContextConfiguration(classes = {EntryCalculatorImpl.class, EntryCalculatorImplTest.TestBeansFactory.class})
+public class EntryCalculatorImplTest {
+
+    @Autowired
+    EntryCalculatorImplTest.TestBeansFactory testBeansFactory;
+
+    @Configuration
+    static class TestBeansFactory {
+
+        @Bean
+        @Scope("prototype")
+        EntryCalculatorImpl getEntryCalculatorImpl(LeasingDeposit leasingDepositToCalculate,
+                                                   CalculationParametersSource calculationParametersSource) {
+            return new EntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
+        }
+    }
 
     TestEntitiesKeeper testEntitiesKeeper;
-    @Mock
+    @MockBean
     CalculationParametersSource calculationParametersSource;
-    @Mock
+    @MockBean
     ExchangeRateRepository exchangeRateRepository;
-    @Mock
+    @MockBean
     PeriodRepository periodRepository;
-    @Mock
+    @MockBean
     DepositRatesRepository depositRatesRepository;
-    @InjectMocks
-    DaoKeeper daoKeeper = new DaoKeeperImpl();
 
-    EntryCalculator lec;
+    EntryCalculatorImpl lec;
     ExecutorService threadExecutor;
     List<Entry> calculatedEntries = new ArrayList<>();
     LeasingDeposit leasingDepositToCalculate;
@@ -88,7 +101,7 @@ public class EntryCalculatorTest {
 
         for (int i = 0; i < 10; i++) {
             assertDoesNotThrow(() -> {
-                lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+                lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
                 Future<List<Entry>> entries = threadExecutor.submit(lec);
                 calculatedEntries.addAll(entries.get());
 
@@ -120,7 +133,7 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -129,8 +142,8 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
         assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(30, 4, 2017), lec.getFirstNotCalculatedPeriod());
-        assertEquals(32, lec.getCalculatedStornoDeletedEntries().size());
+        assertEquals(getDate(30, 4, 2017), lec.getFirstNotCalculatedPeriod());
+        assertEquals(32, calculatedEntries.size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
 
@@ -153,7 +166,7 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -191,14 +204,14 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
 
         threadExecutor.shutdown();
 
-        assertEquals(Builders.getDate(31, 12, 2019), lec.getFirstNotCalculatedPeriod());
+        assertEquals(getDate(31, 12, 2019), lec.getFirstNotCalculatedPeriod());
         assertEquals(0, lec.getCalculatedStornoDeletedEntries().size());
     }
 
@@ -230,7 +243,7 @@ public class EntryCalculatorTest {
 
         threadExecutor = Executors.newFixedThreadPool(10);
 
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -274,7 +287,7 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -283,7 +296,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
         assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstNotCalculatedPeriod());
+        assertEquals(getDate(31, 3, 2017), lec.getFirstNotCalculatedPeriod());
         assertEquals(33, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -311,7 +324,7 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -320,7 +333,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000.0), leasingDepositToCalculate.getDeposit_sum_not_disc());
         assertEquals(BigDecimal.valueOf(88027.34), lec.getDepositSumDiscountedOnFirstEndDate().setScale(2, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(31, 3, 2017), lec.getFirstNotCalculatedPeriod());
+        assertEquals(getDate(31, 3, 2017), lec.getFirstNotCalculatedPeriod());
         assertEquals(30, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -348,7 +361,7 @@ public class EntryCalculatorTest {
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
 
-        EntryCalculator calculatorTestForScenarioSourceDestination = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        EntryCalculatorImpl calculatorTestForScenarioSourceDestination = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
         Future<List<Entry>> entries = threadExecutor.submit(calculatorTestForScenarioSourceDestination);
         calculatedEntries.addAll(entries.get());
@@ -389,7 +402,7 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
         Future<List<Entry>> entries = threadExecutor.submit(lec);
         calculatedEntries.addAll(entries.get());
@@ -398,7 +411,7 @@ public class EntryCalculatorTest {
 
         assertEquals(BigDecimal.valueOf(100000).setScale(0, RoundingMode.HALF_UP), leasingDepositToCalculate.getDeposit_sum_not_disc().setScale(0, RoundingMode.HALF_UP));
         assertEquals(BigDecimal.valueOf(100000).setScale(0, RoundingMode.HALF_UP), lec.getDepositSumDiscountedOnFirstEndDate().setScale(0, RoundingMode.HALF_UP));
-        assertEquals(Builders.getDate(31, 1, 2019), lec.getFirstNotCalculatedPeriod());
+        assertEquals(getDate(31, 1, 2019), lec.getFirstNotCalculatedPeriod());
         assertEquals(2, lec.getCalculatedStornoDeletedEntries().size());
         EntryComparator.compare(testEntitiesKeeper.getEntries_expected(), calculatedEntries, 0);
     }
@@ -426,9 +439,9 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
-        Throwable e = Assertions.assertThrows(ExecutionException.class, () -> {
+        Throwable e = assertThrows(ExecutionException.class, () -> {
             Future<List<Entry>> entries = threadExecutor.submit(lec);
             calculatedEntries.addAll(entries.get());
 
@@ -465,9 +478,9 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
-        Assertions.assertDoesNotThrow(() -> {
+        assertDoesNotThrow(() -> {
             Future<List<Entry>> entries = threadExecutor.submit(lec);
             calculatedEntries.addAll(entries.get());
 
@@ -499,9 +512,9 @@ public class EntryCalculatorTest {
         threadExecutor = Executors.newFixedThreadPool(10);
 
         leasingDepositToCalculate = testEntitiesKeeper.getLeasingDeposits().get(0);
-        lec = new EntryCalculator(leasingDepositToCalculate, calculationParametersSource, daoKeeper);
+        lec = testBeansFactory.getEntryCalculatorImpl(leasingDepositToCalculate, calculationParametersSource);
 
-        Assertions.assertDoesNotThrow(() -> {
+        assertDoesNotThrow(() -> {
             Future<List<Entry>> entries = threadExecutor.submit(lec);
             calculatedEntries.addAll(entries.get());
 
