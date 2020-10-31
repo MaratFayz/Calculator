@@ -19,6 +19,6 @@ public class MvcConfig implements WebMvcConfigurer {
     @Override
     @ConditionalOnProperty(value = "enable.security.in.project", havingValue = "false")
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**");
+        registry.addMapping("/**").allowedMethods("GET", "POST", "DELETE", "PUT");
     }
 }
