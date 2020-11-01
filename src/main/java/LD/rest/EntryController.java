@@ -1,6 +1,5 @@
 package LD.rest;
 
-import LD.config.DateFormat;
 import LD.model.Entry.*;
 import LD.service.EntryService;
 import io.swagger.annotations.Api;
@@ -16,11 +15,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+
+import static java.util.Objects.isNull;
 
 @Api(value = "Контроллер для транзакций по лизинговым депозитам")
 @RestController
@@ -121,32 +118,23 @@ public class EntryController {
             @ApiResponse(code = 500, message = "Произошла ошибка при расчете")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CALCULATE)")
-    public ResponseEntity calculateAllEntries(
-            @RequestParam(name = "scenario_from") Long scenarioFrom,
-            @RequestParam(name = "scenario_to") Long scenarioTo,
-            @RequestParam(name = "dateCopyStart", required = false) String dateCopyStart)
-            throws ExecutionException, InterruptedException {
+    public ResponseEntity calculateAllEntries(@RequestBody CalculateEntriesRequestDto calculateEntriesRequestDto) {
         LocalDate parsedCopyDate;
 
-        try {
-            parsedCopyDate = DateFormat.parsingDate(dateCopyStart)
-                    .plusMonths(1)
-                    .withDayOfMonth(1)
-                    .minusDays(1);
-        }
-        catch (Exception e) {
+        if (isNull(calculateEntriesRequestDto.getDateCopyStart())) {
             parsedCopyDate = LocalDate.MIN;
-		}
+        } else {
+            parsedCopyDate = calculateEntriesRequestDto.getDateCopyStart();
+        }
 
         log.info("Дата начала копирования была запарсена в {}", parsedCopyDate);
         try {
             log.info("Расчет транзакций начался. Значения параметров: From = {}, To = {}",
-                    scenarioFrom, scenarioTo);
-            entryService.calculateEntries(parsedCopyDate, scenarioFrom, scenarioTo);
+                    calculateEntriesRequestDto.getScenarioFrom(), calculateEntriesRequestDto.getScenarioTo());
+            entryService.calculateEntries(parsedCopyDate, calculateEntriesRequestDto.getScenarioFrom(), calculateEntriesRequestDto.getScenarioTo());
             log.info("Расчет транзакций окончен. Значения параметров: From = {}, To = {}",
-                    scenarioFrom, scenarioTo);
-        }
-        catch (Exception any) {
+                    calculateEntriesRequestDto.getScenarioFrom(), calculateEntriesRequestDto.getScenarioTo());
+        } catch (Exception any) {
             log.info("Возникло исключение при расчете транзакций: {}", any.toString());
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
