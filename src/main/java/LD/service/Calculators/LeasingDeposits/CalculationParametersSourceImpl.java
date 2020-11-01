@@ -1,7 +1,7 @@
 package LD.service.Calculators.LeasingDeposits;
 
-import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.User.User;
+import LD.config.UserSource;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.IFRSAccount.IFRSAccount;
 import LD.model.Scenario.Scenario;
@@ -14,9 +14,6 @@ import lombok.ToString;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -53,7 +50,7 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
     @Autowired
     private PeriodsClosedRepository periodsClosedRepository;
     @Autowired
-    private UserRepository userRepository;
+    private UserSource userSource;
 
     public CalculationParametersSourceImpl(LocalDate copyDate, Long scenarioFrom_id, Long scenarioTo_id) {
         this.copyDate = copyDate;
@@ -84,10 +81,7 @@ public class CalculationParametersSourceImpl implements CalculationParametersSou
     }
 
     private void getCalculatingUser() {
-        SecurityContext context = SecurityContextHolder.getContext();
-        Authentication authentication = context.getAuthentication();
-        String username = authentication.getName();
-        this.user = userRepository.findByUsername(username);
+        this.user = userSource.getAuthenticatedUser();
     }
 
     private void checkIfCopyDateNonNullOrThrowException(LocalDate copyDate) {
