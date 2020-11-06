@@ -8,7 +8,6 @@ import LD.model.EndDate.EndDate;
 import LD.model.EndDate.EndDateID;
 import LD.model.EndDate.EndDateID_;
 import LD.model.EndDate.EndDate_;
-import LD.model.Enums.STATUS_X;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out_onPeriodFor2Scenarios;
 import LD.model.LeasingDeposit.LeasingDeposit_;
@@ -49,7 +48,7 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
         criteriaQuery.select(root)
                 .where(
                         cb.and(
-                                cb.equal(root.get(LeasingDeposit_.IS_CREATED), STATUS_X.X),
+                                cb.isNotNull(root.get(LeasingDeposit_.IS_CREATED)),
                                 cb.equal(root.get(LeasingDeposit_.SCENARIO).get(Scenario_.ID), scenarioId)
                         )
                 );
@@ -94,7 +93,7 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
         )
                 .where(
                         cb.and(
-                                cb.equal(rootEndDate.get(EndDate_.leasingDeposit).get(LeasingDeposit_.is_created), STATUS_X.X),
+                                cb.isNotNull(rootEndDate.get(EndDate_.leasingDeposit).get(LeasingDeposit_.is_created)),
                                 cb.or(cb.equal(joinLd.get(LeasingDeposit_.scenario).get(Scenario_.id), scenarioIdFrom),
                                         cb.equal(joinLd.get(LeasingDeposit_.scenario).get(Scenario_.id), scenarioIdTo)
                                 ),
@@ -125,7 +124,9 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
         }
     }
 
-    private Subquery<LocalDate> getMaxDateWithEndDateForScenarioFrom(Long scenarioFromId, CriteriaQuery<LeasingDepositDTO_out_onPeriodFor2Scenarios> criteriaQuery, Root<EndDate> root) {
+    private Subquery<LocalDate> getMaxDateWithEndDateForScenarioFrom(Long scenarioFromId,
+                                                                     CriteriaQuery<LeasingDepositDTO_out_onPeriodFor2Scenarios> criteriaQuery,
+                                                                     Root<EndDate> root) {
         Subquery<LocalDate> subQMaxDateWithEndDate = criteriaQuery.subquery(LocalDate.class);
         Root<EndDate> subRootEndDate = subQMaxDateWithEndDate.from(EndDate.class);
         Join<EndDateID, Period> subJoinPeriod = subRootEndDate.join(EndDate_.endDateID).join(EndDateID_.period);

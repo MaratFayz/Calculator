@@ -22,87 +22,81 @@ import java.util.List;
 @Api(value = "Контроллер для работы с пользователями")
 @Log4j2
 @RequestMapping("/users")
-public class UserController
-{
-	@Autowired
-	UserService userService;
-	@Autowired
-	UserTransform userTransform;
+public class UserController {
 
-	@GetMapping
-	@ApiOperation(value = "Получение всех пользователей", response = ResponseEntity.class)
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_READER)")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Все пользователи возвращаются в ответе."),
-			@ApiResponse(code = 403, message = "Доступ запрещён")
-	})
-	public List<UserDTO_out> getUsers()
-	{
-		return userService.getUsers();
-	}
+    @Autowired
+    UserService userService;
+    @Autowired
+    UserTransform userTransform;
 
-	@GetMapping("{id}")
-	@ApiOperation(value = "Получение пользователя с определённым id", response = ResponseEntity.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Пользователь существует, возвращается в ответе."),
-			@ApiResponse(code = 403, message = "Доступ запрещён"),
-			@ApiResponse(code = 404, message = "Таковй пользователь отсутствует")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_READER)")
-	public ResponseEntity getUser(@PathVariable Long id)
-	{
-		User user = userService.findById(id);
-		log.info("(getUser): user was taken: " + user);
-		return new ResponseEntity(userTransform.User_to_UserDTO_out(user), HttpStatus.OK);
-	}
+    @GetMapping
+    @ApiOperation(value = "Получение всех пользователей", response = ResponseEntity.class)
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_READER)")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Все пользователи возвращаются в ответе."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    public List<UserDTO_out> getUsers() {
+        return userService.getUsers();
+    }
 
-	@PostMapping
-	@ApiOperation(value = "Сохранение нового пользователя", response = ResponseEntity.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Новый пользователь был сохранен."),
-			@ApiResponse(code = 403, message = "Доступ запрещён")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_ADDER)")
-	public ResponseEntity saveNewUser(@RequestBody UserDTO_in userDTO_in)
-	{
-		User newUserToSave = userTransform.UserDTO_in_to_User(userDTO_in);
-		userService.saveNewUser(newUserToSave);
-		return new ResponseEntity(userTransform.User_to_UserDTO_out(newUserToSave), HttpStatus.OK);
-	}
+    @GetMapping("{id}")
+    @ApiOperation(value = "Получение пользователя с определённым id", response = ResponseEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Пользователь существует, возвращается в ответе."),
+            @ApiResponse(code = 403, message = "Доступ запрещён"),
+            @ApiResponse(code = 404, message = "Таковй пользователь отсутствует")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_READER)")
+    public ResponseEntity getUser(@PathVariable Long id) {
+        User user = userService.findById(id);
+        log.info("(getUser): user was taken: " + user);
+        return new ResponseEntity(userTransform.User_to_UserDTO_out(user), HttpStatus.OK);
+    }
 
-	@PutMapping("{id}")
-	@ApiOperation(value = "Изменение значений пользователя", response = ResponseEntity.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Пользователь был изменен."),
-			@ApiResponse(code = 403, message = "Доступ запрещён")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_EDITOR)")
-	public ResponseEntity update(@PathVariable Long id, @RequestBody UserDTO_in userDTO_in)
-	{
-		log.info("(update): Поступил объект userDTO_in", userDTO_in);
+    @PostMapping
+    @ApiOperation(value = "Сохранение нового пользователя", response = ResponseEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Новый пользователь был сохранен."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_ADDER)")
+    public ResponseEntity saveNewUser(@RequestBody UserDTO_in userDTO_in) {
+        User newUserToSave = userTransform.UserDTO_in_to_User(userDTO_in);
+        userService.saveNewUser(newUserToSave);
+        return new ResponseEntity(userTransform.User_to_UserDTO_out(newUserToSave), HttpStatus.OK);
+    }
 
-		User user = userTransform.UserDTO_in_to_User(userDTO_in);
-		User updatedUser = userService.updateUser(id, user);
-		return new ResponseEntity(userTransform.User_to_UserDTO_out(updatedUser), HttpStatus.OK);
-	}
+    @PutMapping("{id}")
+    @ApiOperation(value = "Изменение значений пользователя", response = ResponseEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Пользователь был изменен."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_EDITOR)")
+    public ResponseEntity update(@PathVariable Long id, @RequestBody UserDTO_in userDTO_in) {
+        log.info("(update): Поступил объект userDTO_in", userDTO_in);
 
-	@DeleteMapping("{id}")
-	@ApiOperation(value = "Удаление значения")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Пользователь был успешно удален"),
-			@ApiResponse(code = 403, message = "Доступ запрещён"),
-			@ApiResponse(code = 404, message = "Пользователь не был обнаружен")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_DELETER)")
-	public boolean deleteUser(@RequestParam Long userId)
-	{
-		User userToDelete = userService.findById(userId);
+        User user = userTransform.UserDTO_in_to_User(userDTO_in);
+        User updatedUser = userService.updateUser(id, user);
+        return new ResponseEntity(userTransform.User_to_UserDTO_out(updatedUser), HttpStatus.OK);
+    }
 
-		if(userToDelete != null)
-		{
-			userService.delete(userToDelete);
-		}
+    @DeleteMapping("{id}")
+    @ApiOperation(value = "Удаление значения")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Пользователь был успешно удален"),
+            @ApiResponse(code = 403, message = "Доступ запрещён"),
+            @ApiResponse(code = 404, message = "Пользователь не был обнаружен")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).USER_DELETER)")
+    public boolean deleteUser(@RequestParam Long userId) {
+        User userToDelete = userService.findById(userId);
 
-		return false;
-	}
+        if (userToDelete != null) {
+            userService.delete(userToDelete);
+        }
+
+        return false;
+    }
 }
