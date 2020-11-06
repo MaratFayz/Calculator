@@ -1,8 +1,9 @@
 package LD.service;
 
 import LD.config.DateFormat;
-import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.User.User;
+import LD.config.UserSource;
+import LD.model.AbstractModelClass_;
 import LD.model.Enums.STATUS_X;
 import LD.model.Period.Period;
 import LD.model.PeriodsClosed.PeriodsClosed;
@@ -17,7 +18,6 @@ import LD.rest.exceptions.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -39,9 +39,9 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
     @Autowired
     PeriodsClosedTransform periodsClosedTransform;
     @Autowired
-    UserRepository userRepository;
-    @Autowired
     PeriodRepository periodRepository;
+    @Autowired
+    UserSource userSource;
 
     @Override
     public List<PeriodsClosedDTO_out> getAllPeriodsClosed() {
@@ -74,8 +74,7 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
 
     @Override
     public PeriodsClosed saveNewPeriodsClosed(PeriodsClosed periodClosed) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        periodClosed.setUserLastChanged(userRepository.findByUsername(username));
+        periodClosed.setUserLastChanged(userSource.getAuthenticatedUser());
 
         periodClosed.setLastChange(ZonedDateTime.now());
 
@@ -86,39 +85,29 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
 
     @Override
     public PeriodsClosed updatePeriodsClosed(PeriodsClosedID id, PeriodsClosed periodClosed) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        periodClosed.setUserLastChanged(userRepository.findByUsername(username));
-
-        periodClosed.setLastChange(ZonedDateTime.now());
-
         PeriodsClosed periodsClosedToUpdate = getPeriodsClosed(id);
-        BeanUtils.copyProperties(periodClosed, periodsClosedToUpdate);
+        BeanUtils.copyProperties(periodClosed, periodsClosedToUpdate, AbstractModelClass_.LAST_CHANGE, AbstractModelClass_.USER_LAST_CHANGED);
+
         periodsClosedRepository.saveAndFlush(periodsClosedToUpdate);
 
         return periodsClosedToUpdate;
     }
 
     @Override
-    public boolean delete(PeriodsClosedID id) {
-        try {
-            periodsClosedRepository.deleteById(id);
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+    public void delete(PeriodsClosedID id) {
+        periodsClosedRepository.deleteById(id);
     }
 
     @Override
     public void autoClosePeriods(String dateBeforeToClose, long scenario_id) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User userChanging = userRepository.findByUsername(username);
+        User userChanging = userSource.getAuthenticatedUser();
 
+        dateBeforeToClose = dateBeforeToClose.concat("-01");
         LocalDate endDateToClose = DateFormat.parsingDate(dateBeforeToClose).withDayOfMonth(1).plusMonths(1).minusDays(1);
         Scenario scenarioWhereClose = scenarioRepository.findById(scenario_id).get();
 
         //периоды до даты включительно будем закрывать
-        TreeSet<Period> periods = new TreeSet(Comparator.comparing(Period::getDate));
+        TreeSet<Period> periods = new TreeSet<>(Comparator.comparing(Period::getDate));
         periods.addAll(periodRepository.findByDateLessThanEqual(endDateToClose));
 
         periods.stream().forEach(p -> {
@@ -152,11 +141,10 @@ public class PeriodsClosedServiceImpl implements PeriodsClosedService {
 
                 periodsClosedRepository.saveAndFlush(pcToUpdate);
             }
-
         });
 
         //периоды после даты будем открывать
-        periods = new TreeSet(Comparator.comparing(Period::getDate));
+        periods = new TreeSet<>(Comparator.comparing(Period::getDate));
         periods.addAll(periodRepository.findByDateGreaterThan(endDateToClose));
 
         periods.stream().forEach(p -> {

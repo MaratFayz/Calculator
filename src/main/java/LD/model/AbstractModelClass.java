@@ -11,12 +11,9 @@ import java.time.ZonedDateTime;
 @Setter
 public abstract class AbstractModelClass {
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne
     protected User userLastChanged;
 
     @Column(name = "DateTime_lastChange", nullable = false)
     protected ZonedDateTime lastChange;
-
-//    @Column(name = "enabledforusing")
-//    private boolean enabledForUsing;
 }

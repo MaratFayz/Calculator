@@ -2,6 +2,7 @@ package LD.service.Calculators.LeasingDeposits;
 
 import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.User.User;
+import LD.config.UserSource;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.Scenario.Scenario;
 import LD.repository.IFRSAccountRepository;
@@ -59,19 +60,13 @@ public class CalculationParametersSourceImplTest {
     private IFRSAccountRepository ifrsAccountRepository;
 
     @MockBean
-    SecurityContext securityContext;
-    @MockBean
-    Authentication authentication;
+    UserSource userSource;
 
     static User user = getAnyUser();
 
     @BeforeEach
     public void setUp() {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-        String user = "User-1";
-        when(authentication.getName()).thenReturn(user);
-        when(userRepository.findByUsername(eq(user))).thenReturn(new User());
+        when(userSource.getAuthenticatedUser()).thenReturn(new User());
     }
 
     @Test

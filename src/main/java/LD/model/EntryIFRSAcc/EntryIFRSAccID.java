@@ -22,9 +22,9 @@ public class EntryIFRSAccID implements Serializable
 {
 	static final Long serialVersionUID = 10L;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@ManyToOne
 	private Entry entry;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@ManyToOne
 	private IFRSAccount ifrsAccount;
 }

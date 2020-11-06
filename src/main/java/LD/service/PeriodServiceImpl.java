@@ -1,8 +1,9 @@
 package LD.service;
 
 import LD.config.DateFormat;
-import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.User.User;
+import LD.config.UserSource;
+import LD.model.AbstractModelClass_;
 import LD.model.Period.Period;
 import LD.model.Period.PeriodDTO_out;
 import LD.repository.PeriodRepository;
@@ -10,7 +11,6 @@ import LD.rest.exceptions.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,7 +26,7 @@ public class PeriodServiceImpl implements PeriodService {
     @Autowired
     PeriodRepository periodRepository;
     @Autowired
-    UserRepository userRepository;
+    UserSource userSource;
 
     @Override
     public List<PeriodDTO_out> getAllPeriods() {
@@ -37,7 +37,7 @@ public class PeriodServiceImpl implements PeriodService {
             resultFormDB_out.add(new PeriodDTO_out());
         } else {
             resultFormDB_out = resultFormDB.stream()
-                    .map(per -> PeriodDTO_out.Period_to_PeriodDTO_out(per))
+                    .map(PeriodDTO_out::Period_to_PeriodDTO_out)
                     .collect(Collectors.toList());
         }
 
@@ -51,8 +51,7 @@ public class PeriodServiceImpl implements PeriodService {
 
     @Override
     public Period saveNewPeriod(Period period) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        period.setUserLastChanged(userRepository.findByUsername(username));
+        period.setUserLastChanged(userSource.getAuthenticatedUser());
 
         period.setLastChange(ZonedDateTime.now());
 
@@ -65,14 +64,9 @@ public class PeriodServiceImpl implements PeriodService {
     public Period updatePeriod(Long id, Period period) {
         period.setId(id);
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        period.setUserLastChanged(userRepository.findByUsername(username));
-
-        period.setLastChange(ZonedDateTime.now());
-
         Period periodToUpdate = getPeriod(id);
 
-        BeanUtils.copyProperties(period, periodToUpdate);
+        BeanUtils.copyProperties(period, periodToUpdate, AbstractModelClass_.LAST_CHANGE, AbstractModelClass_.USER_LAST_CHANGED);
 
         periodRepository.saveAndFlush(periodToUpdate);
 
@@ -80,21 +74,13 @@ public class PeriodServiceImpl implements PeriodService {
     }
 
     @Override
-    public boolean delete(Long id) {
-        try {
-            periodRepository.deleteById(id);
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+    public void delete(Long id) {
+        periodRepository.deleteById(id);
     }
 
     @Override
     public void autoCreatePeriods(String dateFrom, String dateTo) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User userCreated = userRepository.findByUsername(username);
-
+        User userCreated = userSource.getAuthenticatedUser();
         ArrayList<Period> generatedPeriods = generatePeriods(dateFrom, dateTo, userCreated, periodRepository);
 
         periodRepository.saveAll(generatedPeriods);
@@ -103,8 +89,8 @@ public class PeriodServiceImpl implements PeriodService {
     public static ArrayList<Period> generatePeriods(String dateFrom, String dateTo, User userCreated, PeriodRepository periodRepository) {
         ArrayList<Period> periods = new ArrayList<>();
 
-        LocalDate LDdateFrom = DateFormat.parsingDate(dateFrom);
-        LocalDate LDdateTo = DateFormat.parsingDate(dateTo);
+        LocalDate LDdateFrom = DateFormat.parsingDate(dateFrom.concat("-01"));
+        LocalDate LDdateTo = DateFormat.parsingDate(dateTo.concat("-01"));
 
         if (LDdateFrom.isAfter(LDdateTo)) {
             LocalDate now = LocalDate.now();

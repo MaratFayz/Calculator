@@ -1,6 +1,7 @@
 package LD.service;
 
-import LD.config.Security.Repository.UserRepository;
+import LD.config.UserSource;
+import LD.model.AbstractModelClass_;
 import LD.model.EndDate.EndDate;
 import LD.model.EndDate.EndDateDTO_out;
 import LD.model.EndDate.EndDateID;
@@ -10,7 +11,6 @@ import LD.rest.exceptions.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -20,85 +20,61 @@ import java.util.stream.Collectors;
 
 @Service
 @Log4j2
-public class EndDateServiceImpl implements EndDateService
-{
-	@Autowired
-	EndDatesRepository endDatesRepository;
-	@Autowired
-	EndDateTransform endDateTransform;
-	@Autowired
-	UserRepository userRepository;
+public class EndDateServiceImpl implements EndDateService {
 
-	@Override
-	public List<EndDateDTO_out> getAllEndDates()
-	{
-		List<EndDate> resultFormDB = endDatesRepository.findAll();
-		List<EndDateDTO_out> resultFormDB_out = new ArrayList<>();
+    @Autowired
+    EndDatesRepository endDatesRepository;
+    @Autowired
+    EndDateTransform endDateTransform;
+    @Autowired
+    UserSource userSource;
 
-		if(resultFormDB.size() == 0)
-		{
-			resultFormDB_out.add(new EndDateDTO_out());
-		}
-		else
-		{
-			resultFormDB_out = resultFormDB.stream()
-					.map(c -> endDateTransform.EndDates_to_EndDatesDTO_out(c))
-					.collect(Collectors.toList());
-		}
+    @Override
+    public List<EndDateDTO_out> getAllEndDates() {
+        List<EndDate> resultFormDB = endDatesRepository.findAll();
+        List<EndDateDTO_out> resultFormDB_out = new ArrayList<>();
 
-		return resultFormDB_out;
-	}
+        if (resultFormDB.size() == 0) {
+            resultFormDB_out.add(new EndDateDTO_out());
+        } else {
+            resultFormDB_out = resultFormDB.stream()
+                    .map(c -> endDateTransform.EndDates_to_EndDatesDTO_out(c))
+                    .collect(Collectors.toList());
+        }
 
-	@Override
-	public EndDate getEndDate(EndDateID id)
-	{
-		return endDatesRepository.findById(id).orElseThrow(NotFoundException::new);
-	}
+        return resultFormDB_out;
+    }
 
-	@Override
-	public EndDate saveEndDate(EndDate endDate)
-	{
-		log.info("Конечная дата для сохранения = {}", endDate);
+    @Override
+    public EndDate getEndDate(EndDateID id) {
+        return endDatesRepository.findById(id).orElseThrow(NotFoundException::new);
+    }
 
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		endDate.setUserLastChanged(userRepository.findByUsername(username));
+    @Override
+    public EndDate saveEndDate(EndDate endDate) {
+        log.info("Конечная дата для сохранения = {}", endDate);
 
-		endDate.setLastChange(ZonedDateTime.now());
+        endDate.setUserLastChanged(userSource.getAuthenticatedUser());
+        endDate.setLastChange(ZonedDateTime.now());
 
-		log.info("Конечная дата для сохранения = {}", endDate);
+        log.info("Конечная дата для сохранения = {}", endDate);
 
-		return endDatesRepository.saveAndFlush(endDate);
-	}
+        return endDatesRepository.saveAndFlush(endDate);
+    }
 
-	@Override
-	public EndDate update(EndDateID id, EndDate endDate)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		endDate.setUserLastChanged(userRepository.findByUsername(username));
+    @Override
+    public EndDate update(EndDateID id, EndDate endDate) {
+        EndDate endDateToUpdate = getEndDate(id);
 
-		endDate.setLastChange(ZonedDateTime.now());
+        BeanUtils.copyProperties(endDate, endDateToUpdate, AbstractModelClass_.LAST_CHANGE, AbstractModelClass_.USER_LAST_CHANGED);
 
-		EndDate endDateToUpdate = getEndDate(id);
+        endDatesRepository.saveAndFlush(endDateToUpdate);
 
-		BeanUtils.copyProperties(endDate, endDateToUpdate);
+        return endDateToUpdate;
+    }
 
-		endDatesRepository.saveAndFlush(endDateToUpdate);
-
-		return endDateToUpdate;
-	}
-
-	@Override
-	public boolean delete(EndDateID id)
-	{
-		try
-		{
-			endDatesRepository.deleteById(id);
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
-
-		return true;
-	}
+    @Override
+    public void delete(EndDateID id) {
+        endDatesRepository.deleteById(id);
+    }
 }

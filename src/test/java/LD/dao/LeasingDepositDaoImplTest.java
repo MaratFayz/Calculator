@@ -62,8 +62,8 @@ public class LeasingDepositDaoImplTest {
     @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/LeasingDepositDaoImplTest/leasingDepositDaoImplTest1.xml")
     @SaveEntitiesIntoDatabase
     public void getActualDepositsWithEndDatesForScenarios_shouldReturn5ItemsDepositEndDatesFor2ScenariosGreaterFirstOpenDatesOfScenarios_whenExistsData() {
-        Scenario scenarioFrom = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getId() == 1L).collect(Collectors.toList()).get(0);
-        Scenario scenarioTo = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getId() == 2L).collect(Collectors.toList()).get(0);
+        Scenario scenarioFrom = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("FACT")).collect(Collectors.toList()).get(0);
+        Scenario scenarioTo = testEntitiesKeeper.getScenarios().stream().filter(s -> s.getName().equals("PLAN")).collect(Collectors.toList()).get(0);
 
         when(scenarioRepository.findById(eq(scenarioFrom.getId()))).thenReturn(java.util.Optional.of(scenarioFrom));
         when(scenarioRepository.findById(eq(scenarioTo.getId()))).thenReturn(java.util.Optional.of(scenarioTo));

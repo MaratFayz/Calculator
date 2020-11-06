@@ -1,13 +1,13 @@
 package LD.service;
 
-import LD.config.Security.Repository.UserRepository;
+import LD.config.UserSource;
+import LD.model.AbstractModelClass_;
 import LD.model.EntryIFRSAcc.*;
 import LD.repository.EntryIFRSAccRepository;
 import LD.rest.exceptions.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -24,7 +24,7 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
     @Autowired
     EntryIFRSAccTransform entryIFRSAccTransform;
     @Autowired
-    UserRepository userRepository;
+    UserSource userSource;
 
     @Override
     public List<EntryIFRSAccDTO_out> getAllEntriesIFRSAcc() {
@@ -54,8 +54,7 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
 
     @Override
     public EntryIFRSAcc saveNewEntryIFRSAcc(EntryIFRSAcc entryIFRSAcc) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        entryIFRSAcc.setUserLastChanged(userRepository.findByUsername(username));
+        entryIFRSAcc.setUserLastChanged(userSource.getAuthenticatedUser());
 
         entryIFRSAcc.setLastChange(ZonedDateTime.now());
 
@@ -66,14 +65,9 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
 
     @Override
     public EntryIFRSAcc updateEntryIFRSAcc(EntryIFRSAccID id, EntryIFRSAcc entryIFRSAcc) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        entryIFRSAcc.setUserLastChanged(userRepository.findByUsername(username));
-
-        entryIFRSAcc.setLastChange(ZonedDateTime.now());
-
         EntryIFRSAcc entryIFRSAccToUpdate = getEntryIFRSAcc(id);
 
-        BeanUtils.copyProperties(entryIFRSAcc, entryIFRSAccToUpdate);
+        BeanUtils.copyProperties(entryIFRSAcc, entryIFRSAccToUpdate, AbstractModelClass_.LAST_CHANGE, AbstractModelClass_.USER_LAST_CHANGED);
 
         entryIFRSAccRepository.saveAndFlush(entryIFRSAccToUpdate);
 
@@ -81,13 +75,7 @@ public class EntryIFRSAccServiceImpl implements EntryIFRSAccService {
     }
 
     @Override
-    public boolean delete(EntryIFRSAccID id) {
-        try {
-            entryIFRSAccRepository.deleteById(id);
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+    public void delete(EntryIFRSAccID id) {
+        entryIFRSAccRepository.deleteById(id);
     }
 }

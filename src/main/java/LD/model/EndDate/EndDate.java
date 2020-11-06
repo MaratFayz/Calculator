@@ -25,7 +25,7 @@ public class EndDate extends AbstractModelClass {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @MapsId(value = "leasingDeposit_id")
     @JsonIgnore
     private LeasingDeposit leasingDeposit;

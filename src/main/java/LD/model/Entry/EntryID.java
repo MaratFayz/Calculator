@@ -22,11 +22,11 @@ public class EntryID implements Serializable
 
 	private Long leasingDeposit_id;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name = "scenario_id")
 	private Scenario scenario;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name = "period_id", nullable = false)
 	private Period period;
 

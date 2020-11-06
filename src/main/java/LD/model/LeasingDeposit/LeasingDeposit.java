@@ -50,7 +50,7 @@ public class LeasingDeposit extends AbstractModelClass {
     @Column(name = "deposit_sum_not_disc", nullable = false)
     private BigDecimal deposit_sum_not_disc;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "scenario_id", nullable = false)
     private Scenario scenario;
 

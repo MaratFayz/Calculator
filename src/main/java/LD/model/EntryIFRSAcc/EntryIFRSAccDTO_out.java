@@ -11,16 +11,16 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class EntryIFRSAccDTO_out
-{
-	private Long leasingDeposit;
-	private Long scenario;
-	private Long period;
-	private String CALCULATION_TIME;
+public class EntryIFRSAccDTO_out {
 
-	private String user;
-	private String lastChange;
+    private Long leasingDeposit;
+    private Long scenario;
+    private Long period;
+    private String CALCULATION_TIME;
 
-	private Long ifrsAccount;
-	private BigDecimal sum;
+    private String user;
+    private String lastChange;
+
+    private Long ifrsAccount;
+    private BigDecimal sum;
 }

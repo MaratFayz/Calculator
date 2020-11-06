@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Component
@@ -14,17 +15,20 @@ public class UserSource {
 
     @Autowired
     private UserRepository userRepository;
+    private User user;
 
     public User getAuthenticatedUser() {
-        User user;
+        if (isNull(user)) {
+            synchronized (this) {
+                Authentication authentication = getAuthentication();
 
-        Authentication authentication = getAuthentication();
-
-        if (nonNull(authentication)) {
-            String userName = authentication.getName();
-            user = userRepository.findByUsername(userName);
-        } else {
-            user = userRepository.getOne(1L);
+                if (nonNull(authentication)) {
+                    String userName = authentication.getName();
+                    user = userRepository.findByUsername(userName);
+                } else {
+                    user = userRepository.getOne(1L);
+                }
+            }
         }
 
         return user;

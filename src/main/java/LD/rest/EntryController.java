@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -118,7 +119,7 @@ public class EntryController {
             @ApiResponse(code = 500, message = "Произошла ошибка при расчете")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CALCULATE)")
-    public ResponseEntity calculateAllEntries(@RequestBody CalculateEntriesRequestDto calculateEntriesRequestDto) {
+    public ResponseEntity calculateAllEntries(@RequestBody @Valid CalculateEntriesRequestDto calculateEntriesRequestDto) {
         LocalDate parsedCopyDate;
 
         if (isNull(calculateEntriesRequestDto.getDateCopyStart())) {
@@ -172,7 +173,7 @@ public class EntryController {
             @ApiResponse(code = 404, message = "Транзакция не была обнаружена")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_DELETER)")
-    public ResponseEntity delete(@RequestBody EntryDTO_in entryDTO_in) {
+    public void delete(@RequestBody EntryDTO_in entryDTO_in) {
         log.info("Поступил такой DTO = {}", entryDTO_in);
         EntryID id = entryTransform.getEntryID(entryDTO_in.getScenario(),
                 entryDTO_in.getLeasingDeposit(),
@@ -181,8 +182,6 @@ public class EntryController {
 
         log.info("id стал равен = {}", id);
 
-        return entryService.delete(id) ? ResponseEntity.ok()
-                .build() : ResponseEntity.status(404)
-                .build();
+        entryService.delete(id);
     }
 }

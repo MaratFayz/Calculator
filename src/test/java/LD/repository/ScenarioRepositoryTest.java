@@ -3,7 +3,6 @@ package LD.repository;
 import LD.config.Security.model.User.User;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.Scenario.Scenario;
-import LD.service.Calculators.LeasingDeposits.CalculationParametersSourceImpl;
 import Utils.Builders;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +31,7 @@ public class ScenarioRepositoryTest {
     @Test
     public void test1_GDK_chooseScenarios() {
         User user = Builders.getAnyUser();
+        user = testEntityManager.persist(user);
 
         Scenario fact = Builders.getSC("FACT", ScenarioStornoStatus.ADDITION, user);
         Scenario plan2020 = Builders.getSC("PLAN2020", ScenarioStornoStatus.ADDITION, user);

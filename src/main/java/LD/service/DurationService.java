@@ -15,5 +15,5 @@ public interface DurationService
 
 	Duration updateDuration(Long id, Duration duration);
 
-	boolean delete(Long id);
+	void delete(Long id);
 }

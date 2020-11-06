@@ -1,7 +1,8 @@
 package LD.service.ExchangeRate;
 
-import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.User.User;
+import LD.config.UserSource;
+import LD.model.AbstractModelClass_;
 import LD.model.Currency.Currency;
 import LD.model.ExchangeRate.ExchangeRate;
 import LD.model.ExchangeRate.ExchangeRateDTO_out;
@@ -19,7 +20,6 @@ import org.jsoup.nodes.Document;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Lookup;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
@@ -43,13 +43,13 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     @Autowired
     ExchangeRateTransform exchangeRateTransform;
     @Autowired
-    UserRepository userRepository;
-    @Autowired
     CurrencyRepository currencyRepository;
     @Autowired
     PeriodRepository periodRepository;
     @Autowired
     ScenarioRepository scenarioRepository;
+    @Autowired
+    UserSource userSource;
 
     @Override
     public List<ExchangeRateDTO_out> getAllExchangeRates() {
@@ -74,8 +74,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 
     @Override
     public ExchangeRate saveNewExchangeRate(ExchangeRate exchangeRate) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        exchangeRate.setUserLastChanged(userRepository.findByUsername(username));
+        exchangeRate.setUserLastChanged(userSource.getAuthenticatedUser());
 
         exchangeRate.setLastChange(ZonedDateTime.now());
 
@@ -86,14 +85,9 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 
     @Override
     public ExchangeRate updateExchangeRate(ExchangeRateID id, ExchangeRate exchangeRate) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        exchangeRate.setUserLastChanged(userRepository.findByUsername(username));
-
-        exchangeRate.setLastChange(ZonedDateTime.now());
-
         ExchangeRate exchangeRateToUpdate = getExchangeRate(id);
 
-        BeanUtils.copyProperties(exchangeRate, exchangeRateToUpdate);
+        BeanUtils.copyProperties(exchangeRate, exchangeRateToUpdate, AbstractModelClass_.LAST_CHANGE, AbstractModelClass_.USER_LAST_CHANGED);
 
         exchangeRateRepository.saveAndFlush(exchangeRateToUpdate);
 
@@ -101,14 +95,8 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     }
 
     @Override
-    public boolean delete(ExchangeRateID id) {
-        try {
-            exchangeRateRepository.deleteById(id);
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+    public void delete(ExchangeRateID id) {
+        exchangeRateRepository.deleteById(id);
     }
 
     @Override
@@ -126,8 +114,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         LocalDate maxPeriodDate = periodRepository.findMaxPeriodDateInDatabase();
         log.info("Наибольшая дата в справочнике периодов => {}", maxPeriodDate);
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User loadingUser = userRepository.findByUsername(username);
+        User loadingUser = userSource.getAuthenticatedUser();
         Scenario loadingScenario = scenarioRepository.findById(scenario_id).get();
 
         currenciesWithCBRCode.stream().forEach(currency ->

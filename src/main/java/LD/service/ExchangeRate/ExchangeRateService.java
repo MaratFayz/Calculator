@@ -16,7 +16,7 @@ public interface ExchangeRateService {
 
     ExchangeRate updateExchangeRate(ExchangeRateID id, ExchangeRate period);
 
-    boolean delete(ExchangeRateID id);
+    void delete(ExchangeRateID id);
 
     void importExchangeRatesFormCBR(long scenario_id, boolean isAddOnlyNewestRates);
 }

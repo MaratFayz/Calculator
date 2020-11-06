@@ -23,7 +23,7 @@ public class DepositRateID implements Serializable
 {
 	static final Long serialVersionUID = 7L;
 
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "company_id", nullable = false)
 	private Company company;
 
@@ -33,15 +33,15 @@ public class DepositRateID implements Serializable
 	@Column(name = "END_PERIOD", nullable = false, columnDefinition = "DATE")
 	private LocalDate END_PERIOD;
 
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "currency_id", nullable = false)
 	private Currency currency;
 
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "duration_id", nullable = false)
 	private Duration duration;
 
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "scenario_id", nullable = false)
 	private Scenario scenario;
 }

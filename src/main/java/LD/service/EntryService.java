@@ -26,5 +26,5 @@ public interface EntryService {
 
     Entry saveEntry(Entry entry);
 
-    boolean delete(EntryID id);
+    void delete(EntryID id);
 }

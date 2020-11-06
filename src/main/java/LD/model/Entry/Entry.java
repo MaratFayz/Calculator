@@ -163,7 +163,7 @@ public class Entry extends AbstractModelClass {
     private BigDecimal ADVANCE_PREVPERIOD_REG_LD_3_AF;
 
     @MapsId(value = "leasingDeposit_id")
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JsonIgnore
     private LeasingDeposit leasingDeposit;
 }

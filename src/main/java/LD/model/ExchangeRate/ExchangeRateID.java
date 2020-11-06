@@ -23,10 +23,10 @@ public class ExchangeRateID implements Serializable {
 
     static final Long serialVersionUID = 4L;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne
     private Currency currency;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne
     private Scenario scenario;
 
     private LocalDate date;

@@ -13,7 +13,7 @@ public interface CounterpartnerService
 
 	Counterpartner updateCounterpartner(Long id, Counterpartner counterpartner);
 
-	boolean delete(Long id);
+	void delete(Long id);
 
 	List<Counterpartner_out> getAllCounterpartners();
 }

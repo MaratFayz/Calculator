@@ -17,5 +17,5 @@ public interface EndDateService
 
 	EndDate update(EndDateID id, EndDate endDate);
 
-	boolean delete(EndDateID id);
+	void delete(EndDateID id);
 }

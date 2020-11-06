@@ -1,6 +1,7 @@
 package LD.service;
 
-import LD.config.Security.Repository.UserRepository;
+import LD.config.UserSource;
+import LD.model.AbstractModelClass_;
 import LD.model.Entry.*;
 import LD.model.EntryIFRSAcc.EntryIFRSAcc;
 import LD.model.LeasingDeposit.LeasingDeposit;
@@ -15,8 +16,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Lookup;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -41,9 +42,9 @@ public class EntryServiceImpl implements EntryService {
     private LeasingDepositRepository leasingDepositRepository;
     @Autowired
     private EntryTransform entryTransform;
-    @Autowired
-    private UserRepository userRepository;
     private ReentrantLock reentrantLock;
+    @Autowired
+    UserSource userSource;
 
     public EntryServiceImpl(EntryRepository entryRepository,
                             EntryIFRSAccRepository entry_ifrs_acc_repository) {
@@ -53,7 +54,7 @@ public class EntryServiceImpl implements EntryService {
     }
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE, rollbackFor = Exception.class)
     public void calculateEntries(LocalDate copyDate, Long scenarioFrom, Long scenarioTo) throws ExecutionException, InterruptedException {
         this.reentrantLock.lock();
         try {
@@ -132,7 +133,7 @@ public class EntryServiceImpl implements EntryService {
 
     @Lookup
     EntryCalculator getEntryCalculator(LeasingDeposit leasingDepositToCalculate,
-                                               CalculationParametersSource calculationParametersSource) {
+                                       CalculationParametersSource calculationParametersSource) {
         return null;
     }
 
@@ -202,14 +203,9 @@ public class EntryServiceImpl implements EntryService {
 
     @Override
     public Entry update(EntryID id, Entry entry) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        entry.setUserLastChanged(userRepository.findByUsername(username));
-
-        entry.setLastChange(ZonedDateTime.now());
-
         Entry updatingEntry = getEntry(id);
 
-        BeanUtils.copyProperties(entry, updatingEntry);
+        BeanUtils.copyProperties(entry, updatingEntry, AbstractModelClass_.LAST_CHANGE, AbstractModelClass_.USER_LAST_CHANGED);
 
         entryRepository.saveAndFlush(updatingEntry);
 
@@ -218,9 +214,7 @@ public class EntryServiceImpl implements EntryService {
 
     @Override
     public Entry saveEntry(Entry entry) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        entry.setUserLastChanged(userRepository.findByUsername(username));
-
+        entry.setUserLastChanged(userSource.getAuthenticatedUser());
         entry.setLastChange(ZonedDateTime.now());
 
         log.info("Проводка для сохранения = {}", entry);
@@ -229,14 +223,7 @@ public class EntryServiceImpl implements EntryService {
     }
 
     @Override
-    public boolean delete(EntryID id) {
-        try {
-            entryRepository.deleteById(id);
-        } catch (Exception e) {
-            log.info("При попытке удаления проводки произошло исключение {}", e);
-            return false;
-        }
-
-        return true;
+    public void delete(EntryID id) {
+        entryRepository.deleteById(id);
     }
 }

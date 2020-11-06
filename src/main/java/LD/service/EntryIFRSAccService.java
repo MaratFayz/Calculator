@@ -19,5 +19,5 @@ public interface EntryIFRSAccService
 
 	EntryIFRSAcc updateEntryIFRSAcc(EntryIFRSAccID id, EntryIFRSAcc entryIFRSAcc);
 
-	boolean delete(EntryIFRSAccID id);
+	void delete(EntryIFRSAccID id);
 }

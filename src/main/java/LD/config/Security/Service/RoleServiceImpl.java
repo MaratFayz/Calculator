@@ -1,14 +1,14 @@
 package LD.config.Security.Service;
 
 import LD.config.Security.Repository.RoleRepository;
-import LD.config.Security.Repository.UserRepository;
 import LD.config.Security.model.Role.Role;
 import LD.config.Security.model.Role.RoleDTO_out;
 import LD.config.Security.model.Role.RoleTransform;
+import LD.config.UserSource;
+import LD.model.AbstractModelClass_;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -18,86 +18,62 @@ import java.util.stream.Collectors;
 
 @Log4j2
 @Service
-public class RoleServiceImpl implements RoleService
-{
-	@Autowired
-	RoleRepository roleRepository;
-	@Autowired
-	UserRepository userRepository;
-	@Autowired
-	RoleTransform roleTransform;
+public class RoleServiceImpl implements RoleService {
 
-	@Override
-	public Role saveNewRole(Role role)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		role.setUserLastChanged(userRepository.findByUsername(username));
+    @Autowired
+    RoleRepository roleRepository;
+    @Autowired
+    RoleTransform roleTransform;
+    @Autowired
+    UserSource userSource;
 
-		role.setLastChange(ZonedDateTime.now());
+    @Override
+    public Role saveNewRole(Role role) {
+        role.setUserLastChanged(userSource.getAuthenticatedUser());
 
-		log.info("Роль для сохранения = {}", role);
+        role.setLastChange(ZonedDateTime.now());
 
-		return roleRepository.save(role);
-	}
+        log.info("Роль для сохранения = {}", role);
 
-	@Override
-	public List<RoleDTO_out> getRoles()
-	{
-		List<Role> resultFormDB = roleRepository.findAll();
-		List<RoleDTO_out> resultFormDB_out = new ArrayList<>();
+        return roleRepository.save(role);
+    }
 
-		if(resultFormDB.size() == 0)
-		{
-			resultFormDB_out.add(new RoleDTO_out());
-		}
-		else
-		{
-			resultFormDB_out = resultFormDB.stream()
-					.map(c -> roleTransform.Role_to_RoleDTO_out(c))
-					.collect(Collectors.toList());
-		}
+    @Override
+    public List<RoleDTO_out> getRoles() {
+        List<Role> resultFormDB = roleRepository.findAll();
+        List<RoleDTO_out> resultFormDB_out = new ArrayList<>();
 
-		return resultFormDB_out;
-	}
+        if (resultFormDB.size() == 0) {
+            resultFormDB_out.add(new RoleDTO_out());
+        } else {
+            resultFormDB_out = resultFormDB.stream()
+                    .map(c -> roleTransform.Role_to_RoleDTO_out(c))
+                    .collect(Collectors.toList());
+        }
 
-	@Override
-	public Role findById(Long id)
-	{
-		return roleRepository.findById(id).orElse(null);
-	}
+        return resultFormDB_out;
+    }
 
-	@Override
-	public boolean delete(Role role)
-	{
-		try
-		{
-			roleRepository.delete(role);
-		}
-		catch (Exception e)
-		{
-			log.info("Не получилось удалить пользователя: {}", e);
-			return false;
-		}
+    @Override
+    public Role findById(Long id) {
+        return roleRepository.findById(id).orElse(null);
+    }
 
-		return true;
-	}
+    @Override
+    public void delete(Role role) {
+        roleRepository.delete(role);
+    }
 
-	@Override
-	public Role updateRole(Long id, Role role)
-	{
-		role.setId(id);
+    @Override
+    public Role updateRole(Long id, Role role) {
+        role.setId(id);
 
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		role.setUserLastChanged(userRepository.findByUsername(username));
+        Role roleToUpdate = findById(id);
 
-		role.setLastChange(ZonedDateTime.now());
+        BeanUtils.copyProperties(role, roleToUpdate, AbstractModelClass_.LAST_CHANGE, AbstractModelClass_.USER_LAST_CHANGED);
 
-		Role roleToUpdate = findById(id);
+        roleRepository.saveAndFlush(roleToUpdate);
 
-		BeanUtils.copyProperties(role, roleToUpdate);
-
-		roleRepository.saveAndFlush(roleToUpdate);
-
-		return roleToUpdate;
-	}
+        return roleToUpdate;
+    }
 }

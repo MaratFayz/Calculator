@@ -1,6 +1,7 @@
 package LD.service;
 
-import LD.config.Security.Repository.UserRepository;
+import LD.config.UserSource;
+import LD.model.AbstractModelClass_;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out_onPeriodFor2Scenarios;
@@ -10,7 +11,6 @@ import LD.rest.exceptions.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -27,7 +27,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
     @Autowired
     LeasingDepositTransform leasingDepositTransform;
     @Autowired
-    UserRepository userRepository;
+    UserSource userSource;
 
     @Override
     public List<LeasingDepositDTO_out> getAllLeasingDeposits() {
@@ -58,9 +58,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
 
     @Override
     public LeasingDeposit saveNewLeasingDeposit(LeasingDeposit leasingDeposit) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        leasingDeposit.setUserLastChanged(userRepository.findByUsername(username));
-
+        leasingDeposit.setUserLastChanged(userSource.getAuthenticatedUser());
         leasingDeposit.setLastChange(ZonedDateTime.now());
 
         log.info("Лизинговый депозит для сохранения = {}", leasingDeposit);
@@ -72,14 +70,9 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
     public LeasingDeposit updateLeasingDeposit(Long id, LeasingDeposit leasingDeposit) {
         leasingDeposit.setId(id);
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        leasingDeposit.setUserLastChanged(userRepository.findByUsername(username));
-
-        leasingDeposit.setLastChange(ZonedDateTime.now());
-
         LeasingDeposit leasingDepositToUpdate = getLeasingDeposit(id);
 
-        BeanUtils.copyProperties(leasingDeposit, leasingDepositToUpdate);
+        BeanUtils.copyProperties(leasingDeposit, leasingDepositToUpdate, AbstractModelClass_.LAST_CHANGE, AbstractModelClass_.USER_LAST_CHANGED);
 
         leasingDepositRepository.saveAndFlush(leasingDepositToUpdate);
 
@@ -87,13 +80,7 @@ public class LeasingDepositsServiceImpl implements LeasingDepositService {
     }
 
     @Override
-    public boolean delete(Long id) {
-        try {
-            leasingDepositRepository.deleteById(id);
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+    public void delete(Long id) {
+        leasingDepositRepository.deleteById(id);
     }
 }

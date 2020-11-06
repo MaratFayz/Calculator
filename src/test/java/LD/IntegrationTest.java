@@ -9,6 +9,7 @@ import LD.model.Entry.EntryTransform;
 import LD.model.Enums.STATUS_X;
 import LD.model.LeasingDeposit.LeasingDepositDTO_in;
 import LD.model.PeriodsClosed.PeriodsClosedDTO_in;
+import LD.rest.CalculateEntriesRequestDto;
 import Utils.TestEntitiesKeeper;
 import Utils.XmlDataLoader.LoadXmlFileForLeasingDepositsTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -207,9 +208,18 @@ public class IntegrationTest {
     }
 
     private void calculate() throws Exception {
+        CalculateEntriesRequestDto calculateEntriesRequestDto = CalculateEntriesRequestDto.builder()
+                .dateCopyStart(null)
+                .scenarioFrom(1L)
+                .scenarioTo(1L)
+                .build();
+
+        JsonMapper jsonMapper = new JsonMapper();
+        String dr = jsonMapper.writeValueAsString(calculateEntriesRequestDto);
+
         MvcResult entryResponse = this.mockMvc.perform(post("/entries/calculator")
-                .queryParam("scenario_from", "1")
-                .queryParam("scenario_to", "1"))
+                .content(dr)
+                .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print()).andExpect(status().isOk())
                 .andReturn();
     }
