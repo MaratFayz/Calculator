@@ -10,13 +10,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class MvcConfig implements WebMvcConfigurer {
 
     @Override
-    @ConditionalOnProperty(value = "enable.security.in.project", havingValue = "true")
-    public void addViewControllers(ViewControllerRegistry viewControllerRegistry) {
-        viewControllerRegistry.addViewController("/admin").setViewName("admin.html");
-        viewControllerRegistry.addViewController("/login").setViewName("login.html");
-    }
-
-    @Override
     @ConditionalOnProperty(value = "enable.security.in.project", havingValue = "false")
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**").allowedMethods("GET", "POST", "DELETE", "PUT");
