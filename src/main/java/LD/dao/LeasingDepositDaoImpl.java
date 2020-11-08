@@ -110,9 +110,18 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
                 );
 
         criteriaQuery.groupBy(
-                rootEndDate.get(EndDate_.leasingDeposit).get(LeasingDeposit_.id),
-                rootEndDate.get(EndDate_.endDateID).get(EndDateID_.scenario).get(Scenario_.id),
-                rootEndDate.get(EndDate_.endDateID).get(EndDateID_.period).get(Period_.date));
+                joinLd.get(LeasingDeposit_.id),
+                rootEndDate.get(EndDate_.endDateID).get(EndDateID_.scenario).get(Scenario_.name),
+                joinPeriod.get(Period_.date),
+                joinLd.get(LeasingDeposit_.currency).get(Currency_.name),
+                rootEndDate.get(EndDate_.endDate),
+                joinLd.get(LeasingDeposit_.company).get(Company_.name),
+                joinLd.get(LeasingDeposit_.counterpartner).get(Counterpartner_.name),
+                joinLd.get(LeasingDeposit_.is_created),
+                joinLd.get(LeasingDeposit_.is_deleted),
+                joinLd.get(LeasingDeposit_.userLastChanged).get(User_.username),
+                joinLd.get(LeasingDeposit_.lastChange)
+        );
 
         TypedQuery<LeasingDepositDTO_out_onPeriodFor2Scenarios> query = entityManager.createQuery(criteriaQuery);
         List<LeasingDepositDTO_out_onPeriodFor2Scenarios> resultList = query.getResultList();
@@ -123,6 +132,7 @@ public class LeasingDepositDaoImpl implements LeasingDepositDao {
             return resultList;
         }
     }
+
 
     private Subquery<LocalDate> getMaxDateWithEndDateForScenarioFrom(Long scenarioFromId,
                                                                      CriteriaQuery<LeasingDepositDTO_out_onPeriodFor2Scenarios> criteriaQuery,
