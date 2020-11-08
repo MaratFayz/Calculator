@@ -36,7 +36,7 @@ public class PeriodsRepositoryTest {
     public void generatePeriods_shouldGeneratePeriods_whenNoPeriodsDateFromLessThanDateTo() {
         //нет вообще периодов
         ArrayList<Period> result =
-                PeriodServiceImpl.generatePeriods(LocalDate.of(1993, 9, 8), LocalDate.of(2020, 5, 20), user, periodRepository);
+                PeriodServiceImpl.generatePeriods("1993-09", "2020-05", user, periodRepository);
 
         System.out.println("Всего сгенерировано периодов = " + result.size());
 
@@ -47,7 +47,7 @@ public class PeriodsRepositoryTest {
     public void generatePeriods_shouldGeneratePeriods_whenNoPeriodsDateFromBiggerThanDateTo() {
         //нет вообще периодов
         ArrayList<Period> result =
-                PeriodServiceImpl.generatePeriods(LocalDate.of(2020, 5, 20), LocalDate.of(1993, 9, 8), user, periodRepository);
+                PeriodServiceImpl.generatePeriods("2020-05", "1993-09", user, periodRepository);
 
         System.out.println("Всего сгенерировано периодов = " + result.size());
 
@@ -63,7 +63,7 @@ public class PeriodsRepositoryTest {
     public void generatePeriods_shouldGenerateOnePeriod_whenNoPeriodsDateFromEqualsDateTo() {
         //нет вообще периодов
         ArrayList<Period> result =
-                PeriodServiceImpl.generatePeriods(LocalDate.of(2020, 5, 20), LocalDate.of(2020, 5, 20), user, periodRepository);
+                PeriodServiceImpl.generatePeriods("2020-05", "2020-05", user, periodRepository);
 
         System.out.println("Всего сгенерировано периодов = " + result.size());
 
@@ -77,7 +77,7 @@ public class PeriodsRepositoryTest {
         when(periodRepository.findByDate(Mockito.any())).thenReturn(anyDate);
 
         ArrayList<Period> result =
-                PeriodServiceImpl.generatePeriods(LocalDate.of(1993, 9, 8), LocalDate.of(2020, 5, 20), user, periodRepository);
+                PeriodServiceImpl.generatePeriods("1993-09", "2020-05", user, periodRepository);
 
         System.out.println("Всего сгенерировано периодов = " + result.size());
 

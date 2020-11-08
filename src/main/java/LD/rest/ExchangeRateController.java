@@ -107,11 +107,11 @@ public class ExchangeRateController {
             @ApiResponse(code = 404, message = "Курс валют не был обнаружен")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).EXCHANGE_RATE_DELETER)")
-    public ResponseEntity delete(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in) {
+    public void delete(@RequestBody ExchangeRateDTO_in exchangeRateDTO_in) {
         ExchangeRateID id = exchangeRateTransform.ExchangeRateDTO_to_ExchangeRateKeyInER(exchangeRateDTO_in.getScenario(),
                 exchangeRateDTO_in.getCurrency(),
                 exchangeRateDTO_in.getDate());
 
-        return exchangeRateService.delete(id) ? ResponseEntity.ok().build() : ResponseEntity.status(404).build();
+        exchangeRateService.delete(id);
     }
 }

@@ -122,7 +122,7 @@ public class PeriodsClosedController {
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).AUTO_CLOSING_PERIODS)")
     public void autoClosingPeriods(@RequestParam String monthBeforeToClose, @RequestParam long scenario_id) {
-        log.info("Для автоматического закрытия поступила следующая дата = {} по сценарию = {}", dateBeforeToClose, scenario_id);
+        log.info("Для автоматического закрытия поступила следующая дата = {} по сценарию = {}", monthBeforeToClose, scenario_id);
 
         periodsClosedService.autoClosePeriods(monthBeforeToClose, scenario_id);
     }
