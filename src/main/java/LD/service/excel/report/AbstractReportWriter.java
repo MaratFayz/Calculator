@@ -1,11 +1,14 @@
 package LD.service.excel.report;
 
 import LD.model.Scenario.Scenario;
+import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.lang.reflect.Field;
 import java.time.ZonedDateTime;
@@ -15,7 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
+@Log4j2
 public abstract class AbstractReportWriter {
 
     private final String titleRowName = "Наименование отчета:";
@@ -23,6 +28,7 @@ public abstract class AbstractReportWriter {
     private final String scenarioFromRowName = "Сценарий с:";
     private final String scenarioToRowName = "Сценарий на:";
 
+    private XSSFWorkbook workbook;
     private XSSFSheet sheet;
     private XSSFRow row;
     private XSSFCell cell;
@@ -36,19 +42,26 @@ public abstract class AbstractReportWriter {
     private final int startCellIndexToWrite = 0;
     private CellStyle headerStyle;
 
-    protected AbstractReportWriter(XSSFSheet sheet, Scenario scenarioFrom, Scenario scenarioTo) {
-        this.sheet = sheet;
+    protected AbstractReportWriter(XSSFWorkbook workbook, Scenario scenarioFrom, Scenario scenarioTo) {
+        this.workbook = workbook;
+
+        String sheetName = getSheetName();
+        this.sheet = workbook.createSheet(sheetName);
+
         this.scenarioFrom = scenarioFrom;
         this.scenarioTo = scenarioTo;
-        this.reportRowsToWrite = getDataForWriting();
-        this.mappingForColumnNames = createMappingForColumnNames();
+        this.mappingForColumnNames = getMappingForColumnNames();
     }
 
-    protected abstract Map<String, String> createMappingForColumnNames();
+    protected abstract String getSheetName();
 
-    protected abstract List<Object> getDataForWriting();
+    protected abstract Map<String, String> getMappingForColumnNames();
 
-    final public void writeReport() throws IllegalAccessException {
+    final public void writeReport() {
+        this.reportRowsToWrite = getDataForWriting();
+
+        log.info("reportRowsToWrite => {}", reportRowsToWrite);
+
         createStyleForTableFirstRow();
         writeHeader();
         createEmptyRow();
@@ -57,6 +70,8 @@ public abstract class AbstractReportWriter {
         setAutoSizeInColumn(0);
         setAutoFilterForTable();
     }
+
+    protected abstract List<Object> getDataForWriting();
 
     private void createStyleForTableFirstRow() {
         headerStyle = sheet.getWorkbook().createCellStyle();
@@ -167,9 +182,7 @@ public abstract class AbstractReportWriter {
         cell.setCellValue(scenarioTo.getName());
     }
 
-    private void
-
-    createEmptyRow() {
+    private void createEmptyRow() {
         incrementWritingRowIndex();
     }
 
@@ -177,7 +190,7 @@ public abstract class AbstractReportWriter {
         this.firstTableRow = writingRowIndex;
     }
 
-    private void writeBody() throws IllegalAccessException {
+    private void writeBody() {
         getColumnsOfFutureTable();
         writeColumnsOfTable();
         writeDataIntoTable();
@@ -188,6 +201,8 @@ public abstract class AbstractReportWriter {
 
         Class<?> dataClass = object.getClass();
         fields = new LinkedList<>(Arrays.asList(dataClass.getDeclaredFields()));
+
+        log.info("fields => {}", fields);
     }
 
     private void writeColumnsOfTable() {
@@ -221,17 +236,27 @@ public abstract class AbstractReportWriter {
         return mappingForColumnNames.get(field.getName());
     }
 
-    private void writeDataIntoTable() throws IllegalAccessException {
+    @SneakyThrows
+    private void writeDataIntoTable() {
         for (Object reportRow : reportRowsToWrite) {
+            log.info("reportRow => {}", reportRow);
+
             createNextRow();
             int columnIndex = startCellIndexToWrite;
 
             for (Field field : fields) {
+                log.info("field => {}", field);
+
                 createNewCell(columnIndex);
 
                 field.setAccessible(true);
-                String fieldValue = field.get(reportRow).toString();
-                cell.setCellValue(fieldValue);
+
+                Object value = field.get(reportRow);
+
+                if (nonNull(value)) {
+                    String fieldValue = value.toString();
+                    cell.setCellValue(fieldValue);
+                }
 
                 columnIndex++;
             }

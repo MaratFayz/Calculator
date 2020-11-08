@@ -5,6 +5,7 @@ import LD.repository.ScenarioRepository;
 import LD.service.excel.report.ReportDepositsForCalculationWriter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,14 +16,21 @@ public class ExcelReportsServiceImpl implements ExcelReportsService {
 
     @Override
     public XSSFWorkbook getExcelReportForDepositsAndEntries(Long scenarioFromId,
-                                                            Long scenarioToId) throws IllegalAccessException {
+                                                            Long scenarioToId) {
 
         Scenario scenarioFrom = scenarioRepository.findById(scenarioFromId).get();
         Scenario scenarioTo = scenarioRepository.findById(scenarioToId).get();
 
         XSSFWorkbook workbook = new XSSFWorkbook();
-        ReportDepositsForCalculationWriter.write(workbook, scenarioFrom, scenarioTo);
+        ReportDepositsForCalculationWriter reportDepositsForCalculationWriter =
+                getReportDepositsForCalculationWriter(workbook, scenarioFrom, scenarioTo);
+        reportDepositsForCalculationWriter.writeReport();
 
         return workbook;
+    }
+
+    @Lookup
+    ReportDepositsForCalculationWriter getReportDepositsForCalculationWriter(XSSFWorkbook workbook, Scenario scenarioFrom, Scenario scenarioTo) {
+        return null;
     }
 }

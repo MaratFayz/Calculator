@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Api(value = "Контроллер для получения отчетов в формате Excel")
 @RestController
@@ -43,15 +44,16 @@ public class ExcelReportsController {
 
         XSSFWorkbook report = excelReportsService.getExcelReportForDepositsAndEntries(scenarioFromId, scenarioToId);
 
-        response.setHeader("Content-Disposition", "inline;filename=\"" + URLEncoder.encode("Report.xlsx", "UTF-8") + "\"");
-        response.setContentType("application/xlsx");
+        response.addHeader("Access-Control-Expose-Headers", "*");
+        response.addHeader("Content-Disposition", "attachment; filename=\"" + URLEncoder.encode("Report.xlsx", StandardCharsets.UTF_8) + "\"");
+        response.addHeader("FileName", URLEncoder.encode("Report.xlsx", StandardCharsets.UTF_8));
+        response.setContentType("application/vnd.ms-excel");
 
         OutputStream outputStream = response.getOutputStream();
 
         report.write(outputStream);
-
-        outputStream.flush();
-        outputStream.close();
         report.close();
+
+        response.flushBuffer();
     }
 }
