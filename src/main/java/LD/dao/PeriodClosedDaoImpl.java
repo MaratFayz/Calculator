@@ -7,7 +7,6 @@ import LD.model.PeriodsClosed.PeriodsClosedID;
 import LD.model.PeriodsClosed.PeriodsClosedID_;
 import LD.model.PeriodsClosed.PeriodsClosed_;
 import LD.model.Scenario.Scenario;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -59,9 +58,11 @@ public class PeriodClosedDaoImpl implements PeriodClosedDao {
                                 cb.equal(root.get(PeriodsClosed_.periodsClosedID).get(PeriodsClosedID_.scenario), scenario),
                                 cb.isNull(root.get(PeriodsClosed_.ISCLOSED))
                         )
-                );
+                )
+                .orderBy(cb.asc(root.get(PeriodsClosed_.periodsClosedID).get(PeriodsClosedID_.period).get(Period_.date)));
 
         TypedQuery<Period> query = entityManager.createQuery(criteriaQuery);
+        query = query.setMaxResults(1);
         return query.getSingleResult();
     }
 }

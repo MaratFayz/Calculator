@@ -54,7 +54,7 @@ public class PeriodClosedRepositoryTest {
     }
 
     @Test
-    void findFirstOpenPeriodByScenario_shouldReturnFirstOpenPeriod_WhenValuesAreOneClosedAndOneOpenPeriod() {
+    void findFirstOpenPeriodDateByScenario_shouldReturnFirstOpenPeriod_WhenValuesAreOneClosedAndOneOpenPeriod() {
         prepareAndSaveDataIntoDatabase();
 
         Period period1 =
@@ -110,5 +110,65 @@ public class PeriodClosedRepositoryTest {
         log.info("expectedDate = {}", expectedDate);
 
         assertEquals(expectedDate, factDate);
+    }
+
+    @Test
+    void findFirstOpenPeriodByScenario_shouldReturnFirstOpenPeriod_WhenValuesAreOneClosedAndOneOpenPeriod() {
+        prepareAndSaveDataIntoDatabase();
+
+        Period period1 =
+                Period.builder()
+                        .date(LocalDate.of(2020, 8, 31)).build();
+        period1.setLastChange(ZonedDateTime.now());
+        period1.setUserLastChanged(user);
+
+        LocalDate expectedDate = LocalDate.of(2020, 9, 30);
+
+        Period period2 =
+                Period.builder().date(expectedDate).build();
+        period2.setLastChange(ZonedDateTime.now());
+        period2.setUserLastChanged(user);
+
+        Period period3 =
+                Period.builder().date(LocalDate.of(2020, 10, 31)).build();
+        period3.setLastChange(ZonedDateTime.now());
+        period3.setUserLastChanged(user);
+
+        PeriodsClosedID periodClosedID1 =
+                PeriodsClosedID.builder().scenario(fact).period(period1).build();
+        PeriodsClosedID periodClosedID2 =
+                PeriodsClosedID.builder().scenario(fact).period(period2).build();
+        PeriodsClosedID periodClosedID3 =
+                PeriodsClosedID.builder().scenario(fact).period(period3).build();
+
+        PeriodsClosed periodsClosed1 =
+                PeriodsClosed.builder().periodsClosedID(periodClosedID1).ISCLOSED(STATUS_X.X).build();
+        periodsClosed1.setLastChange(ZonedDateTime.now());
+        periodsClosed1.setUserLastChanged(user);
+
+        PeriodsClosed periodsClosed2 =
+                PeriodsClosed.builder().periodsClosedID(periodClosedID2).build();
+        periodsClosed2.setLastChange(ZonedDateTime.now());
+        periodsClosed2.setUserLastChanged(user);
+
+        PeriodsClosed periodsClosed3 =
+                PeriodsClosed.builder().periodsClosedID(periodClosedID3).build();
+        periodsClosed3.setLastChange(ZonedDateTime.now());
+        periodsClosed3.setUserLastChanged(user);
+
+        testEntityManager.persist(fact);
+        testEntityManager.persist(period1);
+        testEntityManager.persist(period2);
+        testEntityManager.persist(period3);
+        testEntityManager.persist(periodsClosed1);
+        testEntityManager.persist(periodsClosed2);
+        testEntityManager.persist(periodsClosed3);
+
+        Period factPeriod = periodsClosedRepository.findFirstOpenPeriodByScenario(fact);
+
+        log.info("factPeriod = {}", factPeriod);
+        log.info("expectedDate = {}", expectedDate);
+
+        assertEquals(expectedDate, factPeriod.getDate());
     }
 }
