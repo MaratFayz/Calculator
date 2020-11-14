@@ -549,8 +549,8 @@
             <discountedsum_at_current_end_date_cur_reg_ld_3_g>82666.2113947171
             </discountedsum_at_current_end_date_cur_reg_ld_3_g>
             <incoming_ld_body_rub_reg_ld_3_l>5239310.0786069146</incoming_ld_body_rub_reg_ld_3_l>
-            <outcoming_ld_body_reg_ld_3_m>15244.8831288064</outcoming_ld_body_reg_ld_3_m>
-            <reval_ld_body_plus_reg_ld_3_n>-272386.4002932134</reval_ld_body_plus_reg_ld_3_n>
+            <outcoming_ld_body_reg_ld_3_m>5496451.5957713216</outcoming_ld_body_reg_ld_3_m>
+            <reval_ld_body_plus_reg_ld_3_n>257141.5171644070</reval_ld_body_plus_reg_ld_3_n>
             <reval_ld_body_minus_reg_ld_3_o>0</reval_ld_body_minus_reg_ld_3_o>
             <accum_amort_discont_start_period_rub_reg_ld_3_r>296771.4373864573
             </accum_amort_discont_start_period_rub_reg_ld_3_r>
@@ -652,7 +652,7 @@
             <corr_new_date_higher_corr_acc_amort_disc_rub_reg_ld_1_v>0.0000000000
             </corr_new_date_higher_corr_acc_amort_disc_rub_reg_ld_1_v>
             <corr_new_date_less_discont_rub_reg_ld_1_w>0.0000000000</corr_new_date_less_discont_rub_reg_ld_1_w>
-            <accum_amort_discont_start_period_cur_reg_ld_2_h>6084.95922922643
+            <accum_amort_discont_start_period_cur_reg_ld_2_h>6084.9592292264
             </accum_amort_discont_start_period_cur_reg_ld_2_h>
             <amort_discont_current_period_cur_reg_ld_2_i>721.3419102755</amort_discont_current_period_cur_reg_ld_2_i>
             <accum_amort_discont_end_period_cur_reg_ld_2_j>6806.3011395019
@@ -952,7 +952,7 @@
             </accum_amort_discont_end_period_cur_reg_ld_2_j>
             <accum_amort_discont_start_period_rub_reg_ld_2_k>623522.5147009583
             </accum_amort_discont_start_period_rub_reg_ld_2_k>
-            <amort_discont_current_period_rub_reg_ld_2_m>55028.92818268909</amort_discont_current_period_rub_reg_ld_2_m>
+            <amort_discont_current_period_rub_reg_ld_2_m>55028.9281826890</amort_discont_current_period_rub_reg_ld_2_m>
             <accum_amort_discont_end_period_rub_reg_ld_2_n>678551.4428836473
             </accum_amort_discont_end_period_rub_reg_ld_2_n>
             <discountedsum_at_current_end_date_cur_reg_ld_3_g>82666.2113947171
@@ -1091,7 +1091,7 @@
             <disposal_discont_rub_reg_ld_3_y>0.0000000000</disposal_discont_rub_reg_ld_3_y>
             <ldterm_reg_ld_3_z>ST</ldterm_reg_ld_3_z>
             <termreclass_body_currentperiod_reg_ld_3_aa>5848799.7885990243</termreclass_body_currentperiod_reg_ld_3_aa>
-            <termreclass_percent_currentperiod_reg_ld_3_ab>843625.59089535135
+            <termreclass_percent_currentperiod_reg_ld_3_ab>843625.5908953513
             </termreclass_percent_currentperiod_reg_ld_3_ab>
             <termreclass_body_prevperiod_reg_ld_3_ac>6091623.5179498663</termreclass_body_prevperiod_reg_ld_3_ac>
             <termreclass_percent_prevperiod_reg_ld_3_ad>822454.7880041095</termreclass_percent_prevperiod_reg_ld_3_ad>

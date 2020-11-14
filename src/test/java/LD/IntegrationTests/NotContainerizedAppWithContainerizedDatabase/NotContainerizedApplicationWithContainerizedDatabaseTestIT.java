@@ -1,4 +1,4 @@
-package LD;
+package LD.IntegrationTests.NotContainerizedAppWithContainerizedDatabase;
 
 import LD.config.Security.model.User.User;
 import LD.model.DepositRate.DepositRateDTO_in;
@@ -44,15 +44,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
 @Testcontainers
 @Log4j2
 @TestPropertySource(properties = {"enable.security.in.project=true"})
-public class IntegrationTest {
+public class NotContainerizedApplicationWithContainerizedDatabaseTestIT {
 
     private MockMvc mockMvc;
     @Autowired
@@ -85,7 +84,8 @@ public class IntegrationTest {
     @Test
     @WithMockUser(username = "superadmin", authorities = {"DEPOSIT_RATES_ADDER",
             "END_DATE_ADDER", "LEASING_DEPOSIT_ADDER", "AUTO_ADDING_PERIODS",
-            "AUTO_CLOSING_PERIODS", "CALCULATE", "LOAD_EXCHANGE_RATE_FROM_CBR", "PERIODS_CLOSED_ADDER", "ENTRY_READER"})
+            "AUTO_CLOSING_PERIODS", "CALCULATE", "LOAD_EXCHANGE_RATE_FROM_CBR", "PERIODS_CLOSED_ADDER", "ENTRY_READER",
+            "LEASING_DEPOSIT_READER", "ENTRY_IFRS_READER"})
     @LoadXmlFileForLeasingDepositsTest(file = "src/test/resources/IntegrationTests/integrationTests.xml")
     public void application_shouldNotThrowExceptionAndCountOfEntriesEquals19_whenCalculating() {
         assertDoesNotThrow(() -> {
@@ -98,23 +98,31 @@ public class IntegrationTest {
             addDepositRate();
             calculate();
             checkIfCountOfCalculatedEntriesEquals19();
-            checkIfResponseContentEqualsToExpectedContent();
+            checkIfCalculationResponseContentEqualsToExpectedContent();
+            getCalculatingLeasingDepositsReport();
+            getRegLd1Report();
+            getRegLd2Report();
+            getRegLd3Report();
+            getEntryIfrsReport();
+            getExcelReportOnLeasingDepositsAndRegForms();
         });
     }
 
     private void generatePeriods() throws Exception {
         MvcResult periodsCreated = this.mockMvc.perform(post("/periods/autoCreatePeriods")
-                .queryParam("dateFrom", "01.01.2019")
-                .queryParam("dateTo", "31.12.2020"))
-                .andDo(print()).andExpect(status().isOk())
+                .queryParam("dateFrom", "2019-01")
+                .queryParam("dateTo", "2020-07"))
+                .andDo(print())
+                .andExpect(status().isOk())
                 .andReturn();
     }
 
     private void closePeriods() throws Exception {
         MvcResult closedPeriods = this.mockMvc.perform(put("/periodsClosed/autoClosingPeriods")
-                .queryParam("dateBeforeToClose", "30.06.2020")
+                .queryParam("monthBeforeToClose", "2020-06")
                 .queryParam("scenario_id", "1"))
-                .andDo(print()).andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(status().isOk())
                 .andReturn();
     }
 
@@ -127,12 +135,11 @@ public class IntegrationTest {
         JsonMapper jsonMapper = new JsonMapper();
         String pc = jsonMapper.writeValueAsString(periodsClosedDTO_in);
 
-        System.out.println(pc);
-
         MvcResult firstOpenPeriod = this.mockMvc.perform(post("/periodsClosed")
                 .content(pc)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print()).andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(status().isOk())
                 .andReturn();
     }
 
@@ -140,7 +147,8 @@ public class IntegrationTest {
         MvcResult exRates = this.mockMvc.perform(post("/exchangeRates/importERFromCBR")
                 .queryParam("scenario_id", "1")
                 .queryParam("isAddOnlyNewestRates", "0"))
-                .andDo(print()).andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(status().isOk())
                 .andReturn();
     }
 
@@ -158,7 +166,6 @@ public class IntegrationTest {
         JsonMapper jsonMapper = new JsonMapper();
         String ld = jsonMapper.writeValueAsString(leasingDepositDTO_in);
 
-        System.out.println(ld);
         MvcResult ldResponse = this.mockMvc.perform(post("/leasingDeposits")
                 .content(ld)
                 .contentType(MediaType.APPLICATION_JSON))
@@ -225,7 +232,6 @@ public class IntegrationTest {
     }
 
     private void checkIfCountOfCalculatedEntriesEquals19() throws Exception {
-
         entryResponse = this.mockMvc.perform(get("/entries"))
                 .andExpect(status().isOk())
                 .andDo(print())
@@ -234,7 +240,7 @@ public class IntegrationTest {
 
     }
 
-    private void checkIfResponseContentEqualsToExpectedContent() {
+    private void checkIfCalculationResponseContentEqualsToExpectedContent() {
         String expectedResult = prepareExpectedResult();
         String actualResult = prepareActualResult();
 
@@ -256,8 +262,9 @@ public class IntegrationTest {
             e.printStackTrace();
         }
 
-        expectedString = expectedString.replaceAll(",\"calculation_TIME\":.+\"", "");
+        expectedString = expectedString.replaceAll("\"calculation_TIME\":.+?,", "");
         expectedString = expectedString.replaceAll("0\\.0+", "0\\.0");
+        expectedString = expectedString.replaceAll("0E-10", "0");
         log.info("expected string => {}", expectedString);
         return expectedString;
     }
@@ -269,10 +276,71 @@ public class IntegrationTest {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        actualResult = actualResult.replaceAll(",\"calculation_TIME\":.+\"", "");
+        actualResult = actualResult.replaceAll("\"calculation_TIME\":.+?,", "");
         actualResult = actualResult.replaceAll("0\\.0+", "0\\.0");
+        actualResult = actualResult.replaceAll("0E-10", "0");
 
         log.info("actual string => {}", actualResult);
         return actualResult;
+    }
+
+    private void getCalculatingLeasingDepositsReport() throws Exception {
+        this.mockMvc.perform(get("/leasingDeposits/for2Scenarios")
+                .queryParam("scenarioFromId", "1")
+                .queryParam("scenarioToId", "1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andReturn();
+    }
+
+    private void getRegLd1Report() throws Exception {
+        this.mockMvc.perform(get("/entries/regld1")
+                .queryParam("scenarioFromId", "1")
+                .queryParam("scenarioToId", "1"))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andReturn();
+    }
+
+    private void getRegLd2Report() throws Exception {
+        this.mockMvc.perform(get("/entries/regld2")
+                .queryParam("scenarioFromId", "1")
+                .queryParam("scenarioToId", "1"))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andReturn();
+    }
+
+    private void getRegLd3Report() throws Exception {
+        this.mockMvc.perform(get("/entries/regld3")
+                .queryParam("scenarioFromId", "1")
+                .queryParam("scenarioToId", "1"))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andReturn();
+    }
+
+    private void getEntryIfrsReport() throws Exception {
+        this.mockMvc.perform(get("/entriesIFRS/forDate")
+                .queryParam("scenarioFromId", "1")
+                .queryParam("scenarioToId", "1"))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$", hasSize(37)))
+                .andReturn();
+    }
+
+    private void getExcelReportOnLeasingDepositsAndRegForms() throws Exception {
+        this.mockMvc.perform(get("/excelReports/ld_regld1_2_3")
+                .queryParam("scenarioFromId", "1")
+                .queryParam("scenarioToId", "1"))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(content().contentType("application/vnd.ms-excel"))
+                .andReturn();
     }
 }
