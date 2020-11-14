@@ -24,17 +24,17 @@ public class SaveOrUpdateEventsHandler implements SaveOrUpdateEventListener,
 
     @Override
     public void onSaveOrUpdate(SaveOrUpdateEvent event) throws HibernateException {
-        log.info("SaveOrUpdateEvent произошёл");
+        log.trace("SaveOrUpdateEvent произошёл");
 
         Object entity = event.getEntity();
         addDataTimeAndUser(entity);
     }
 
     private void addDataTimeAndUser(Object object) {
-        log.info("addDataTimeAndUser start");
+        log.trace("addDataTimeAndUser start");
         if (object instanceof AbstractModelClass) {
             User authenticatedUser = userSource.getAuthenticatedUser();
-            log.info("authenticatedUser => {}", authenticatedUser.getUsername());
+            log.trace("authenticatedUser => {}", authenticatedUser.getUsername());
 
             Field userField = ReflectionUtils.findField(object.getClass(), AbstractModelClass_.USER_LAST_CHANGED);
             ReflectionUtils.makeAccessible(userField);
@@ -44,27 +44,24 @@ public class SaveOrUpdateEventsHandler implements SaveOrUpdateEventListener,
             ReflectionUtils.makeAccessible(lastChangeField);
             ReflectionUtils.setField(lastChangeField, object, ZonedDateTime.now());
 
-            log.info("object: {}", object);
-
+            log.trace("object: {}", object);
         }
-        log.info("addDataTimeAndUser end");
+        log.trace("addDataTimeAndUser end");
     }
 
     @Override
     public void onPostInsert(PostInsertEvent event) {
-        log.info("PostInsertEvent произошёл");
-
+        log.trace("PostInsertEvent произошёл");
     }
 
     @Override
     public void onPostUpdate(PostUpdateEvent event) {
-        log.info("PostUpdateEvent произошёл");
-
+        log.trace("PostUpdateEvent произошёл");
     }
 
     @Override
     public boolean onPreInsert(PreInsertEvent event) {
-        log.info("PreInsertEvent произошёл");
+        log.trace("PreInsertEvent произошёл");
 
         Object entity = event.getEntity();
         addDataTimeAndUser(entity);
@@ -74,7 +71,7 @@ public class SaveOrUpdateEventsHandler implements SaveOrUpdateEventListener,
 
     @Override
     public boolean onPreUpdate(PreUpdateEvent event) {
-        log.info("PreUpdateEvent произошёл");
+        log.trace("PreUpdateEvent произошёл");
 
         Object entity = event.getEntity();
         addDataTimeAndUser(entity);
