@@ -1,9 +1,9 @@
 @echo off
 cd ..
 echo "Start building project..."
-echo "Build jar file"
-call mvn clean package -DskipTests
-echo "Building jar files finished"
+echo "Build docker image into local repo"
+call mvn clean deploy -P buildDockerImageIntoLocalRepo
+echo "Building docker image into local repo finished"
 
 echo "Build services"
 docker-compose build
