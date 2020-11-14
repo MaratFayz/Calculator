@@ -1,7 +1,7 @@
 package LD.service.excel.report;
 
 import LD.model.Scenario.Scenario;
-import LD.service.LeasingDepositService;
+import LD.service.EntryService;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -14,23 +14,23 @@ import java.util.Map;
 
 @Component
 @Scope(scopeName = "prototype")
-final public class ReportDepositsForCalculationWriter extends AbstractReportWriter {
+final public class ReportRegLd1ForCalculationWriter extends AbstractReportWriter {
 
     @Autowired
-    private LeasingDepositService leasingDepositService;
+    EntryService entryService;
 
-    ReportDepositsForCalculationWriter(XSSFWorkbook workbook, Scenario scenarioFrom, Scenario scenarioTo) {
+    ReportRegLd1ForCalculationWriter(XSSFWorkbook workbook, Scenario scenarioFrom, Scenario scenarioTo) {
         super(workbook, scenarioFrom, scenarioTo);
     }
 
     @Override
     protected String getSheetName() {
-        return "ReportDepositsForCalculation";
+        return "Reg.LD.1";
     }
 
     @Override
     protected String getTitle() {
-        return "Отчет о рассчитываемых депозитах";
+        return "Отчет о расчетах формы Reg.LD.1";
     }
 
     @Override
@@ -45,8 +45,7 @@ final public class ReportDepositsForCalculationWriter extends AbstractReportWrit
         List<Object> reportRowsToWrite = new ArrayList<>();
 
         reportRowsToWrite.addAll(
-                leasingDepositService
-                        .getAllLeasingDepositsOnPeriodFor2Scenarios(this.scenarioFrom.getId(), this.scenarioTo.getId()));
+                entryService.getAllLDEntries_RegLD1(this.scenarioTo.getId()));
 
         return reportRowsToWrite;
     }
