@@ -163,6 +163,7 @@ public class TestEntitiesKeeper {
         Currency cur = Currency.builder().id(testCurrencyToCurrency.getId())
                 .name(testCurrencyToCurrency.getName())
                 .short_name(testCurrencyToCurrency.getShort_name())
+                .CBRCurrencyCode(testCurrencyToCurrency.getCbrcurrencyCode())
                 .build();
 
         cur.setLastChange(DateFormat.parsingZonedDateTime(testCurrencyToCurrency.getLastChange()));

@@ -378,7 +378,7 @@ public class EntryCalculatorImpl implements EntryCalculator {
     }
 
     private void getExchangeRateAtStartDate() {
-        exchangeRateToRubAtStartDate = this.exchangeRateRepository.getRateAtDate(
+        exchangeRateToRubAtStartDate = this.exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(
                 this.leasingDepositToCalculate.getStart_date(),
                 this.leasingDepositToCalculate.getScenario(),
                 this.leasingDepositToCalculate.getCurrency());
@@ -712,7 +712,7 @@ public class EntryCalculatorImpl implements EntryCalculator {
             }
         }
 
-        BigDecimal ExRateOnClosingdate = this.exchangeRateRepository.getRateAtDate(calculationPeriod,
+        BigDecimal ExRateOnClosingdate = this.exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(calculationPeriod,
                 scenarioTo,
                 this.leasingDepositToCalculate.getCurrency());
 
@@ -861,7 +861,7 @@ public class EntryCalculatorImpl implements EntryCalculator {
         //Reg.LeasingDeposit.model.LeasingDeposit.2---------------------START
         log.info("Начинается поиск среднего курса на текущую отчетную дату");
 
-        BigDecimal avgExRateForPeriod = this.exchangeRateRepository.getAverageRateAtDate(finalClosingdate,
+        BigDecimal avgExRateForPeriod = this.exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(finalClosingdate,
                 scenarioTo,
                 this.leasingDepositToCalculate.getCurrency());
 
@@ -966,16 +966,16 @@ public class EntryCalculatorImpl implements EntryCalculator {
         BigDecimal curExOnPrevClosingDate;
         if (isCalculationScenariosDiffer()) {
             if (prevClosingDate.isBefore(firstOpenPeriodOfScenarioFrom)) {
-                curExOnPrevClosingDate = this.exchangeRateRepository.getRateAtDate(prevClosingDate,
+                curExOnPrevClosingDate = this.exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(prevClosingDate,
                         scenarioFrom,
                         this.leasingDepositToCalculate.getCurrency());
             } else {
-                curExOnPrevClosingDate = this.exchangeRateRepository.getRateAtDate(prevClosingDate,
+                curExOnPrevClosingDate = this.exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(prevClosingDate,
                         scenarioTo,
                         this.leasingDepositToCalculate.getCurrency());
             }
         } else {
-            curExOnPrevClosingDate = this.exchangeRateRepository.getRateAtDate(prevClosingDate,
+            curExOnPrevClosingDate = this.exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(prevClosingDate,
                     scenarioTo,
                     this.leasingDepositToCalculate.getCurrency());
         }
@@ -1128,7 +1128,7 @@ public class EntryCalculatorImpl implements EntryCalculator {
             LocalDate dateLastDayOfMonth = date.withDayOfMonth(date.lengthOfMonth());
 
             if (!dateLastDayOfMonth.isEqual(dateUntilCountExclusive)) {
-                BigDecimal avgExRateForCalculating = this.exchangeRateRepository.getAverageRateAtDate(dateLastDayOfMonth,
+                BigDecimal avgExRateForCalculating = this.exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(dateLastDayOfMonth,
                         whereCalculate,
                         this.leasingDepositToCalculate.getCurrency());
 

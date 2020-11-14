@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -22,7 +23,8 @@ import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
+
+import static java.util.Objects.isNull;
 
 @Component
 public class ExchangeRateDaoImpl implements ExchangeRateDao {
@@ -35,13 +37,37 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
     private CurrencyRepository currencyRepository;
 
     @Override
-    public BigDecimal getRateAtDate(LocalDate date, Scenario scenario, Currency currency) {
-        return getRateByDateScenarioCurrencyType(date, scenario, currency, ExchangeRate_.rate_at_date);
+    public BigDecimal getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(LocalDate date, Scenario scenario, Currency currency) {
+        BigDecimal rate = null;
+
+        try {
+            rate = getRateByDateScenarioCurrencyType(date, scenario, currency, ExchangeRate_.rate_at_date);
+        } catch (NoResultException e) {
+            if (isRub(currency)) {
+                rate = BigDecimal.ONE;
+            } else {
+                throw e;
+            }
+        }
+
+        return rate;
     }
 
     @Override
-    public BigDecimal getAverageRateAtDate(LocalDate date, Scenario scenario, Currency currency) {
-        return getRateByDateScenarioCurrencyType(date, scenario, currency, ExchangeRate_.average_rate_for_month);
+    public BigDecimal getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(LocalDate date, Scenario scenario, Currency currency) {
+        BigDecimal rate = null;
+
+        try {
+            rate = getRateByDateScenarioCurrencyType(date, scenario, currency, ExchangeRate_.average_rate_for_month);
+        } catch (NoResultException e) {
+            if (isRub(currency)) {
+                rate = BigDecimal.ONE;
+            } else {
+                throw e;
+            }
+        }
+
+        return rate;
     }
 
     private BigDecimal getRateByDateScenarioCurrencyType(LocalDate date, Scenario scenario, Currency currency,
@@ -61,6 +87,10 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
 
         TypedQuery<BigDecimal> query = entityManager.createQuery(criteriaQuery);
         return query.getSingleResult();
+    }
+
+    private boolean isRub(Currency currency) {
+        return isNull(currency.getCBRCurrencyCode());
     }
 
     @Override

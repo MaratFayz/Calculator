@@ -85,8 +85,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -122,8 +122,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -155,8 +155,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(calculationParametersSource.getScenarioFrom()).thenReturn(fact);
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -193,8 +193,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -232,8 +232,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -275,8 +275,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -312,8 +312,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -349,8 +349,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -391,8 +391,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -428,8 +428,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -467,8 +467,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
@@ -501,8 +501,8 @@ public class EntryCalculatorImplTest {
         Mockito.when(depositRatesRepository.getRateByCompanyMonthDurationCurrencyStartDateScenario(any(), any(), any(), any(), any())).thenReturn(testEntitiesKeeper.getDepositRates().get(0).getRATE());
 
         testEntitiesKeeper.getExRates().forEach(er -> {
-            Mockito.lenient().when(exchangeRateRepository.getRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
-            Mockito.lenient().when(exchangeRateRepository.getAverageRateAtDate(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
+            Mockito.lenient().when(exchangeRateRepository.getRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getRate_at_date());
+            Mockito.lenient().when(exchangeRateRepository.getAverageRateToRubByDateScenarioCurrencyOrThrowExceptionOrReturn1ForRub(eq(er.getExchangeRateID().getDate()), eq(er.getExchangeRateID().getScenario()), eq(er.getExchangeRateID().getCurrency()))).thenReturn(er.getAverage_rate_for_month());
         });
 
         testEntitiesKeeper.getPeriods().forEach(period -> {
