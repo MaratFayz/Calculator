@@ -79,8 +79,24 @@ public class EntryIfrsAccDaoImpl implements EntryIfrsAccDao {
                 )
         );
 
-        criteriaQuery.groupBy(entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.id));
-        criteriaQuery.orderBy(cb.asc(entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.id)));
+        criteriaQuery.groupBy(
+                entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.id),
+                entryIfrsToScenario.get(Scenario_.name),
+                entryIfrsToPeriod.get(Period_.date),
+                entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.account_code),
+                entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.account_name),
+                entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.flow_code),
+                entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.flow_name),
+                entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.sh),
+                entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.pa),
+                entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.ct),
+                entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.dr)
+        );
+        criteriaQuery.orderBy(
+                cb.asc(
+                        entryIFRSAccToIfrsAccountJoin.get(IFRSAccount_.id)
+                )
+        );
 
         TypedQuery<EntryIFRSAccDTO_out_form> query = entityManager.createQuery(criteriaQuery);
         return query.getResultList();
