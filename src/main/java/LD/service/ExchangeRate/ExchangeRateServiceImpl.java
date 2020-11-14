@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.NoResultException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,6 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.isNull;
 
 @Service
 @Log4j2
@@ -120,12 +121,13 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         currenciesWithCBRCode.stream().forEach(currency ->
         {
             if (isAddOnlyNewestRates) {
-                LocalDate maxCurExDate = LocalDate.MIN;
+                LocalDate maxCurExDate;
 
-                try {
-                    maxCurExDate = exchangeRateRepository.findMaxDateWithExchangeRateByCurrencyIdAndScenarioId(currency.getId(), scenario_id);
-                } catch (NoResultException e) {
+                maxCurExDate = exchangeRateRepository.findMaxDateWithExchangeRateByCurrencyIdAndScenarioId(currency.getId(), scenario_id);
+
+                if (isNull(maxCurExDate)) {
                     log.info("Курсов валют в базе не представлено, начинается загрузка с нуля");
+                    maxCurExDate = LocalDate.MIN;
                 }
 
                 LocalDate prevDayBeforeNow = LocalDate.now();
@@ -152,7 +154,8 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         });
     }
 
-    private void deleteDownloadSaveCurExFormCBR(LocalDate minPeriodDate, LocalDate maxPeriodDate, User loadingUser, Scenario loadingScenario, Currency currency) {
+    private void deleteDownloadSaveCurExFormCBR(LocalDate minPeriodDate, LocalDate maxPeriodDate, User loadingUser,
+                                                Scenario loadingScenario, Currency currency) {
         List<ExchangeRate> toDeleteExR = exchangeRateRepository.findAll((root, query, qb) -> qb.equal(root.get("exchangeRateID").get("currency"), currency));
         exchangeRateRepository.deleteAll(toDeleteExR);
 
