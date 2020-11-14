@@ -15,8 +15,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>14</maven.compiler.source>
         <maven.compiler.target>14</maven.compiler.target>
-        <maven.test.skip>true</maven.test.skip>
+        <maven.deploy.skip>true</maven.deploy.skip>
+
+        <skip.unit-tests>true</skip.unit-tests>
+        <skip.integration-tests>true</skip.integration-tests>
         <enable.security.in.project>false</enable.security.in.project>
+
+        <jib.isSkipJib>true</jib.isSkipJib>
+        <jib.dockerImagePath>maratfayzelgayanov/ld_calculator:${project.version}</jib.dockerImagePath>
+        <jib.targetBuild>build</jib.targetBuild>
 
         <junit>5.5.2</junit>
         <spring-boot.version>2.2.6.RELEASE</spring-boot.version>
@@ -46,13 +53,8 @@
         <profile>
             <id>unit-tests</id>
             <properties>
-                <maven.test.skip>false</maven.test.skip>
+                <skip.unit-tests>false</skip.unit-tests>
             </properties>
-            <!--            <plugins>-->
-            <!--                <plugin>-->
-            <!--                    <jacoco>-->
-            <!--                </plugin>-->
-            <!--            </plugins>-->
         </profile>
         <profile>
             <id>enableSecurity</id>
@@ -61,47 +63,51 @@
             </properties>
         </profile>
         <profile>
+            <id>integration-tests</id>
+            <properties>
+                <skip.integration-tests>false</skip.integration-tests>
+                <jib.isSkipJib>false</jib.isSkipJib>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>renameToBrokenImage</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>docker</executable>
+                                    <arguments>
+                                        <argument>image</argument>
+                                        <argument>tag</argument>
+                                        <argument>${jib.dockerImagePath}</argument>
+                                        <argument>broken</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>buildDockerImageIntoLocalRepo</id>
-            <!--            <build>-->
-            <!--                <plugins>-->
-            <!--                    <plugin>-->
-            <!--                        <groupId>com.google.cloud.tools</groupId>-->
-            <!--                        <artifactId>jib-maven-plugin</artifactId>-->
-            <!--                        <version>2.5.0</version>-->
-            <!--                        <configuration>-->
-            <!--                            <to>-->
-            <!--                                <image>${artifactId}:${version}:INTEGRATION-TEST</image>-->
-            <!--                            </to>-->
-            <!--                        </configuration>-->
-            <!--                    </plugin>-->
-            <!--                </plugins>-->
-            <!--            </build>-->
-            <!--            <execution>-->
-            <!--                <stage = deploy></stage>-->
-            <!--            </execution>-->
+            <properties>
+                <jib.isSkipJib>false</jib.isSkipJib>
+                <jib.targetBuild>dockerBuild</jib.targetBuild>
+            </properties>
         </profile>
         <profile>
             <id>buildDockerImageIntoRemoteRepo</id>
-            <!--            <build>-->
-            <!--                <plugins>-->
-            <!--                    <plugin>-->
-            <!--                        <groupId>com.google.cloud.tools</groupId>-->
-            <!--                        <artifactId>jib-maven-plugin</artifactId>-->
-            <!--                        <version>2.5.0</version>-->
-            <!--                        <configuration>-->
-            <!--                            <to>-->
-            <!--                                <image>${artifactId}:${version}:RELEASE</image>-->
-            <!--                            </to>-->
-            <!--                        </configuration>-->
-            <!--                    </plugin>-->
-            <!--                </plugins>-->
-            <!--            </build>-->
-            <!--            <execution>-->
-            <!--                <stage = deploy></stage>-->
-            <!--            </execution>-->
-        </profile>
-        <profile>
-            <id>sonar</id>
+            <properties>
+                <jib.isSkipJib>false</jib.isSkipJib>
+                <jib.targetBuild>build</jib.targetBuild>
+            </properties>
         </profile>
     </profiles>
 
@@ -113,15 +119,73 @@
                 <version>${spring-boot.version}</version>
             </plugin>
             <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>2.5.2</version>
+                <configuration>
+                    <skip>${jib.isSkipJib}</skip>
+                    <from>
+                        <image>openjdk:14.0.2-oraclelinux8</image>
+                    </from>
+                    <to>
+                        <image>${jib.dockerImagePath}</image>
+                    </to>
+                    <container>
+                        <ports>
+                            <port>8080</port>
+                        </ports>
+                        <volumes>
+                            <volume>/dist</volume>
+                        </volumes>
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                    </container>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>dockerBuild</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>deploying images</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>${jib.targetBuild}</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
+                    <skipTests>${skip.unit-tests}</skipTests>
                     <reuseForks>false</reuseForks>
                     <useSystemClassLoader>true</useSystemClassLoader>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <forkedProcessExitTimeoutInSeconds>200</forkedProcessExitTimeoutInSeconds>
+                    <excludes>
+                        <exclude>**/*IT.java</exclude>
+                    </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <configuration>
+                    <skipITs>${skip.integration-tests}</skipITs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -281,6 +345,9 @@
             <artifactId>poi-ooxml</artifactId>
             <version>4.1.2</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
     </dependencies>
 </project>
