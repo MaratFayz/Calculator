@@ -1,4 +1,4 @@
-INSERT INTO roles(id, name, user_changed_id, date_time_last_change) VALUES
+INSERT INTO roles(id, name, user_last_changed_id, date_time_last_change) VALUES
 (1, 'ROLE_SUPERADMIN', 1, '2020-05-27 21:05:12.937360');
 
 INSERT INTO role_authorities(role_id, authority_id) VALUES
@@ -11,7 +11,7 @@ INSERT INTO role_authorities(role_id, authority_id) VALUES
 (1, 55), (1, 56), (1, 57), (1, 58), (1, 59), (1, 60), (1, 61), (1, 62), (1, 63),
 (1, 64), (1, 65), (1, 66), (1, 67), (1, 68);
 
-INSERT INTO roles(id, name, user_changed_id, date_time_last_change) VALUES
+INSERT INTO roles(id, name, user_last_changed_id, date_time_last_change) VALUES
 (2, 'ROLE_STANDARD_USER', 1, '2020-05-27 21:05:12.937360');
 
 INSERT INTO role_authorities(role_id, authority_id) VALUES

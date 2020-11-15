@@ -1,23 +1,22 @@
 package LD.service;
 
 import LD.model.Period.Period;
-import LD.model.Period.PeriodDTO_in;
 import LD.model.Period.PeriodDTO_out;
-import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
-public interface PeriodService
-{
-	List<PeriodDTO_out> getAllPeriods();
+public interface PeriodService {
 
-	Period getPeriod(Long id);
+    List<PeriodDTO_out> getAllPeriods();
 
-	Period saveNewPeriod(Period period);
+    Period getPeriod(Long id);
 
-	Period updatePeriod(Long id, Period period);
+    Period saveNewPeriod(Period period);
 
-	boolean delete(Long id);
+    Period updatePeriod(Long id, Period period);
 
-	void autoCreatePeriods(String dateFrom, String dateTo);
+    void delete(Long id);
+
+    void autoCreatePeriods(String dateFrom, String dateTo);
 }

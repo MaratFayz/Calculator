@@ -8,7 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ScenarioRepository extends JpaRepository<Scenario, Long>, JpaSpecificationExecutor<Scenario>
-{
-	List<Scenario> findByisBlockedIsNull();
+public interface ScenarioRepository extends JpaRepository<Scenario, Long>, JpaSpecificationExecutor<Scenario> {
+
+    List<Scenario> findByisBlockedIsNull();
+
+    Scenario findByName(String name);
 }

@@ -10,15 +10,15 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PeriodsClosedDTO_out
-{
-	private Long scenario;
-	private Long period;
+public class PeriodsClosedDTO_out {
 
-	private String user;
+    private Long scenario;
+    private Long period;
 
-	private String lastChange;
+    private String user;
 
-	private STATUS_X ISCLOSED;
+    private String lastChange;
+
+    private STATUS_X ISCLOSED;
 }
 

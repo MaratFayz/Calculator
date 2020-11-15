@@ -1,6 +1,6 @@
 package LD.model.Scenario;
 
-import LD.config.Security.model.User.User;
+import LD.model.AbstractModelClass;
 import LD.model.Enums.STATUS_X;
 import LD.model.Enums.ScenarioStornoStatus;
 import lombok.AllArgsConstructor;
@@ -10,15 +10,14 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "Scenario")
 @Data
-@NoArgsConstructor()
+@NoArgsConstructor
 @Builder
 @AllArgsConstructor
-public class Scenario {
+public class Scenario extends AbstractModelClass {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,11 +36,4 @@ public class Scenario {
     @Enumerated(value = EnumType.STRING)
     @Type(type = "pgsql_enum")
     private STATUS_X isBlocked;
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false)
-    private User user;
-
-    @Column(name = "DateTime_lastChange", nullable = false)
-    private ZonedDateTime lastChange;
 }

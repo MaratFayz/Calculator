@@ -1,6 +1,5 @@
 package LD.rest;
 
-import LD.config.DateFormat;
 import LD.model.Entry.*;
 import LD.service.EntryService;
 import io.swagger.annotations.Api;
@@ -15,11 +14,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import javax.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+
+import static java.util.Objects.isNull;
 
 @Api(value = "Контроллер для транзакций по лизинговым депозитам")
 @RestController
@@ -37,7 +36,7 @@ public class EntryController {
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_READER)")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Все транзакции возвращаются в ответе."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     public List<EntryDTO_out> getAllEntries() {
         return entryService.getAllLDEntries();
@@ -48,7 +47,7 @@ public class EntryController {
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_READER)")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Все транзакции возвращаются в ответе."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     public List<EntryDTO_out_RegLD1> getAllEntries_RegLD1(
             @RequestParam @NonNull Long scenarioFromId,
@@ -61,7 +60,7 @@ public class EntryController {
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_READER)")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Все транзакции возвращаются в ответе."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     public List<EntryDTO_out_RegLD2> getAllEntries_RegLD2(
             @RequestParam @NonNull Long scenarioFromId,
@@ -74,7 +73,7 @@ public class EntryController {
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_READER)")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Все транзакции возвращаются в ответе."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     public List<EntryDTO_out_RegLD3> getAllEntries_RegLD3(
             @RequestParam @NonNull Long scenarioFromId,
@@ -104,7 +103,7 @@ public class EntryController {
     @ApiOperation(value = "Сохранение новой транзакции", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Новая транзакция была сохранена."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_ADDER)")
     public ResponseEntity saveNewEntry(@RequestBody EntryDTO_in entryDTO_in) {
@@ -120,32 +119,23 @@ public class EntryController {
             @ApiResponse(code = 500, message = "Произошла ошибка при расчете")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).CALCULATE)")
-    public ResponseEntity calculateAllEntries(
-            @RequestParam(name = "scenario_from") Long scenarioFrom,
-            @RequestParam(name = "scenario_to") Long scenarioTo,
-            @RequestParam(name = "dateCopyStart", required = false) String dateCopyStart)
-            throws ExecutionException, InterruptedException {
-        ZonedDateTime parsedCopyDate;
+    public ResponseEntity calculateAllEntries(@RequestBody @Valid CalculateEntriesRequestDto calculateEntriesRequestDto) {
+        LocalDate parsedCopyDate;
 
-        try {
-            parsedCopyDate = DateFormat.parsingDate(dateCopyStart)
-                    .plusMonths(1)
-                    .withDayOfMonth(1)
-                    .minusDays(1);
+        if (isNull(calculateEntriesRequestDto.getDateCopyStart())) {
+            parsedCopyDate = LocalDate.MIN;
+        } else {
+            parsedCopyDate = calculateEntriesRequestDto.getDateCopyStart();
         }
-        catch (Exception e) {
-            parsedCopyDate = ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC"));
-		}
 
         log.info("Дата начала копирования была запарсена в {}", parsedCopyDate);
         try {
             log.info("Расчет транзакций начался. Значения параметров: From = {}, To = {}",
-                    scenarioFrom, scenarioTo);
-            entryService.calculateEntries(parsedCopyDate, scenarioFrom, scenarioTo);
+                    calculateEntriesRequestDto.getScenarioFrom(), calculateEntriesRequestDto.getScenarioTo());
+            entryService.calculateEntries(parsedCopyDate, calculateEntriesRequestDto.getScenarioFrom(), calculateEntriesRequestDto.getScenarioTo());
             log.info("Расчет транзакций окончен. Значения параметров: From = {}, To = {}",
-                    scenarioFrom, scenarioTo);
-        }
-        catch (Exception any) {
+                    calculateEntriesRequestDto.getScenarioFrom(), calculateEntriesRequestDto.getScenarioTo());
+        } catch (Exception any) {
             log.info("Возникло исключение при расчете транзакций: {}", any.toString());
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -157,7 +147,7 @@ public class EntryController {
     @ApiOperation(value = "Изменение значений транзакции", response = ResponseEntity.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Транзакция была изменена."),
-            @ApiResponse(code = 404, message = "Доступ запрещён")
+            @ApiResponse(code = 403, message = "Доступ запрещён")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_EDITOR)")
     public ResponseEntity update(@RequestBody EntryDTO_in entryDTO_in) {
@@ -183,7 +173,7 @@ public class EntryController {
             @ApiResponse(code = 404, message = "Транзакция не была обнаружена")
     })
     @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).ENTRY_DELETER)")
-    public ResponseEntity delete(@RequestBody EntryDTO_in entryDTO_in) {
+    public void delete(@RequestBody EntryDTO_in entryDTO_in) {
         log.info("Поступил такой DTO = {}", entryDTO_in);
         EntryID id = entryTransform.getEntryID(entryDTO_in.getScenario(),
                 entryDTO_in.getLeasingDeposit(),
@@ -192,8 +182,6 @@ public class EntryController {
 
         log.info("id стал равен = {}", id);
 
-        return entryService.delete(id) ? ResponseEntity.ok()
-                .build() : ResponseEntity.status(404)
-                .build();
+        entryService.delete(id);
     }
 }

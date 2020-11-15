@@ -31,7 +31,7 @@ public class Currency_out
 				.short_name(currency.getShort_name())
 				.name(currency.getName())
 				.CBR_currency_code(currency.getCBRCurrencyCode())
-				.user(currency.getUser().getUsername())
+				.user(currency.getUserLastChanged().getUsername())
 				.lastChange(DateFormat.formatDate(currency.getLastChange()))
 				.build();
 

@@ -1,6 +1,7 @@
 package LD.service;
 
-import LD.config.Security.Repository.UserRepository;
+import LD.config.UserSource;
+import LD.model.AbstractModelClass_;
 import LD.model.Duration.Duration;
 import LD.model.Duration.DurationDTO_out;
 import LD.repository.DurationRepository;
@@ -8,7 +9,6 @@ import LD.rest.exceptions.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -18,84 +18,59 @@ import java.util.stream.Collectors;
 
 @Service
 @Log4j2
-public class DurationServiceImpl implements DurationService
-{
-	@Autowired
-	DurationRepository durationRepository;
-	@Autowired
-	UserRepository userRepository;
+public class DurationServiceImpl implements DurationService {
 
-	@Override
-	public List<DurationDTO_out> getAllDurations()
-	{
-		List<Duration> resultFormDB = durationRepository.findAll();
-		List<DurationDTO_out> resultFormDB_out = new ArrayList<>();
+    @Autowired
+    DurationRepository durationRepository;
+    @Autowired
+    UserSource userSource;
 
-		if(resultFormDB.size() == 0)
-		{
-			resultFormDB_out.add(new DurationDTO_out());
-		}
-		else
-		{
-			resultFormDB_out = resultFormDB.stream()
-					.map(c -> DurationDTO_out.Duration_to_DurationDTO_out(c))
-					.collect(Collectors.toList());
-		}
+    @Override
+    public List<DurationDTO_out> getAllDurations() {
+        List<Duration> resultFormDB = durationRepository.findAll();
+        List<DurationDTO_out> resultFormDB_out = new ArrayList<>();
 
-		return resultFormDB_out;
-	}
+        if (resultFormDB.size() == 0) {
+            resultFormDB_out.add(new DurationDTO_out());
+        } else {
+            resultFormDB_out = resultFormDB.stream()
+                    .map(c -> DurationDTO_out.Duration_to_DurationDTO_out(c))
+                    .collect(Collectors.toList());
+        }
 
-	@Override
-	public Duration getDuration(Long id)
-	{
-		return durationRepository.findById(id).orElseThrow(NotFoundException::new);
-	}
+        return resultFormDB_out;
+    }
 
-	@Override
-	public Duration saveNewDuration(Duration duration)
-	{
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		duration.setUser(userRepository.findByUsername(username));
+    @Override
+    public Duration getDuration(Long id) {
+        return durationRepository.findById(id).orElseThrow(NotFoundException::new);
+    }
 
-		duration.setLastChange(ZonedDateTime.now());
+    @Override
+    public Duration saveNewDuration(Duration duration) {
+        duration.setUserLastChanged(userSource.getAuthenticatedUser());
+        duration.setLastChange(ZonedDateTime.now());
 
-		log.info("Длительность для сохранения = {}", duration);
+        log.info("Длительность для сохранения = {}", duration);
 
-		return durationRepository.save(duration);
-	}
+        return durationRepository.save(duration);
+    }
 
-	@Override
-	public Duration updateDuration(Long id, Duration duration)
-	{
-		duration.setId(id);
+    @Override
+    public Duration updateDuration(Long id, Duration duration) {
+        duration.setId(id);
 
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		duration.setUser(userRepository.findByUsername(username));
+        Duration durationToUpdate = getDuration(id);
 
-		duration.setLastChange(ZonedDateTime.now());
+        BeanUtils.copyProperties(duration, durationToUpdate, AbstractModelClass_.LAST_CHANGE, AbstractModelClass_.USER_LAST_CHANGED);
 
-		Duration durationToUpdate = getDuration(id);
+        durationRepository.saveAndFlush(durationToUpdate);
 
-		BeanUtils.copyProperties(duration, durationToUpdate);
+        return durationToUpdate;
+    }
 
-		durationRepository.saveAndFlush(durationToUpdate);
-
-		return durationToUpdate;
-	}
-
-	@Override
-	public boolean delete(Long id)
-	{
-		try
-		{
-			durationRepository.deleteById(id);
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
-
-		return true;
-	}
-
+    @Override
+    public void delete(Long id) {
+        durationRepository.deleteById(id);
+    }
 }

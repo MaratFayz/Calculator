@@ -15,5 +15,5 @@ public interface CurrencyService
 
 	Currency updateCurrency(Long id, Currency currency);
 
-	boolean delete(Long id);
+	void delete(Long id);
 }

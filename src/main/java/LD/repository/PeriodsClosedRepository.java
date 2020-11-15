@@ -1,5 +1,6 @@
 package LD.repository;
 
+import LD.dao.PeriodClosedDao;
 import LD.model.PeriodsClosed.PeriodsClosed;
 import LD.model.PeriodsClosed.PeriodsClosedID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +13,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 @Repository
-public interface PeriodsClosedRepository extends JpaRepository<PeriodsClosed, PeriodsClosedID>, JpaSpecificationExecutor<PeriodsClosed>
+public interface PeriodsClosedRepository extends JpaRepository<PeriodsClosed, PeriodsClosedID>, JpaSpecificationExecutor<PeriodsClosed>,
+        PeriodClosedDao
 {
 }

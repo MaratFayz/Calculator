@@ -15,5 +15,5 @@ public interface IFRSAccountService
 
 	IFRSAccount updateIFRSAccount(Long id, IFRSAccount ifrsAccount);
 
-	boolean delete(Long id);
+	void delete(Long id);
 }

@@ -19,93 +19,88 @@ import java.util.List;
 @Api(value = "Контроллер для конечных дат")
 @RequestMapping("/endDates")
 @Log4j2
-public class EndDateController
-{
-	@Autowired
-	EndDateService endDateService;
-	@Autowired
-	EndDateTransform endDateTransform;
+public class EndDateController {
 
-	@GetMapping
-	@ApiOperation(value = "Получение всех конечных дат по лизинговым депозитам")
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_READER)")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Все конечные даты возвращаются в ответе."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
-	})
-	public List<EndDateDTO_out> getAllEndDates()
-	{
-		return endDateService.getAllEndDates();
-	}
+    @Autowired
+    EndDateService endDateService;
+    @Autowired
+    EndDateTransform endDateTransform;
 
-	@GetMapping("{leasingDeposit_id}/{scenario_id}/{period_id}")
-	@ApiOperation("Получение конечных дат с определённым id")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Конечная дата существует, возвращается в ответе."),
-			@ApiResponse(code = 403, message = "Доступ запрещён"),
-			@ApiResponse(code = 404, message = "Такая конечная дата отсутствует")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_READER)")
-	public ResponseEntity getEndDate(@PathVariable Long leasingDeposit_id,
-							  @PathVariable Long scenario_id,
-							  @PathVariable Long period_id)
-	{
-		EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(scenario_id, leasingDeposit_id, period_id);
-		return new ResponseEntity(endDateTransform.EndDates_to_EndDatesDTO_out(endDateService.getEndDate(id)), HttpStatus.OK);
-	}
+    @GetMapping
+    @ApiOperation(value = "Получение всех конечных дат по лизинговым депозитам")
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_READER)")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Все конечные даты возвращаются в ответе."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    public List<EndDateDTO_out> getAllEndDates() {
+        return endDateService.getAllEndDates();
+    }
 
-	@PostMapping
-	@ApiOperation(value = "Сохранение новой конечной даты", response = ResponseEntity.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Новая конечная дата была сохранена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_ADDER)")
-	public ResponseEntity saveNewEndDates(@RequestBody EndDateDTO_in endDateDTO_in)
-	{
-		log.info("endDateDTO_in = {}", endDateDTO_in);
-		EndDate endDate = endDateTransform.EndDatesDTO_in_to_EndDates(endDateDTO_in);
+    @GetMapping("{leasingDeposit_id}/{scenario_id}/{period_id}")
+    @ApiOperation("Получение конечных дат с определённым id")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Конечная дата существует, возвращается в ответе."),
+            @ApiResponse(code = 403, message = "Доступ запрещён"),
+            @ApiResponse(code = 404, message = "Такая конечная дата отсутствует")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_READER)")
+    public ResponseEntity getEndDate(@PathVariable Long leasingDeposit_id,
+                                     @PathVariable Long scenario_id,
+                                     @PathVariable Long period_id) {
+        EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(scenario_id, leasingDeposit_id, period_id);
+        return new ResponseEntity(endDateTransform.EndDates_to_EndDatesDTO_out(endDateService.getEndDate(id)), HttpStatus.OK);
+    }
 
-		log.info("endDate = {}", endDate);
-		EndDate newEndDate = endDateService.saveEndDate(endDate);
-		return new ResponseEntity(endDateTransform.EndDates_to_EndDatesDTO_out(newEndDate), HttpStatus.OK);
-	}
+    @PostMapping
+    @ApiOperation(value = "Сохранение новой конечной даты", response = ResponseEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Новая конечная дата была сохранена."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_ADDER)")
+    public ResponseEntity saveNewEndDates(@RequestBody EndDateDTO_in endDateDTO_in) {
+        log.info("endDateDTO_in = {}", endDateDTO_in);
+        EndDate endDate = endDateTransform.EndDatesDTO_in_to_EndDates(endDateDTO_in);
 
-	@PutMapping
-	@ApiOperation(value = "Изменение значений конечной даты", response = ResponseEntity.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Конечная дата была изменена."),
-			@ApiResponse(code = 404, message = "Доступ запрещён")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_EDITOR)")
-	public ResponseEntity update(@RequestBody EndDateDTO_in endDateDTO_in)
-	{
-		log.info("(update): Поступил объект endDateDTO_in = {}", endDateDTO_in);
+        log.info("endDate = {}", endDate);
+        EndDate newEndDate = endDateService.saveEndDate(endDate);
+        return new ResponseEntity(endDateTransform.EndDates_to_EndDatesDTO_out(newEndDate), HttpStatus.OK);
+    }
 
-		EndDate endDate = endDateTransform.EndDatesDTO_in_to_EndDates(endDateDTO_in);
+    @PutMapping
+    @ApiOperation(value = "Изменение значений конечной даты", response = ResponseEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Конечная дата была изменена."),
+            @ApiResponse(code = 403, message = "Доступ запрещён")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_EDITOR)")
+    public ResponseEntity update(@RequestBody EndDateDTO_in endDateDTO_in) {
+        log.info("(update): Поступил объект endDateDTO_in = {}", endDateDTO_in);
 
-		EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
-				endDateDTO_in.getLeasingDeposit_id(),
-				endDateDTO_in.getPeriod());
+        EndDate endDate = endDateTransform.EndDatesDTO_in_to_EndDates(endDateDTO_in);
 
-		EndDate updatedEndDate = endDateService.update(id, endDate);
-		return new ResponseEntity(endDateTransform.EndDates_to_EndDatesDTO_out(updatedEndDate), HttpStatus.OK);
-	}
+        EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
+                endDateDTO_in.getLeasingDeposit_id(),
+                endDateDTO_in.getPeriod());
 
-	@DeleteMapping
-	@ApiOperation(value = "Удаление значения")
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Конечная дата была успешно удалена"),
-			@ApiResponse(code = 403, message = "Доступ запрещён"),
-			@ApiResponse(code = 404, message = "Конечная дата не была обнаружена")
-	})
-	@PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_DELETER)")
-	public ResponseEntity delete(@RequestBody EndDateDTO_in endDateDTO_in)
-	{
-		EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
-				endDateDTO_in.getLeasingDeposit_id(),
-				endDateDTO_in.getPeriod());
+        EndDate updatedEndDate = endDateService.update(id, endDate);
+        return new ResponseEntity(endDateTransform.EndDates_to_EndDatesDTO_out(updatedEndDate), HttpStatus.OK);
+    }
 
-		return endDateService.delete(id) ? ResponseEntity.ok().build(): ResponseEntity.status(404).build();
-	}
+    @DeleteMapping
+    @ApiOperation(value = "Удаление значения")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Конечная дата была успешно удалена"),
+            @ApiResponse(code = 403, message = "Доступ запрещён"),
+            @ApiResponse(code = 404, message = "Конечная дата не была обнаружена")
+    })
+    @PreAuthorize("hasAuthority(T(LD.config.Security.model.Authority.ALL_AUTHORITIES).END_DATE_DELETER)")
+    public void delete(@RequestBody EndDateDTO_in endDateDTO_in) {
+        EndDateID id = endDateTransform.EndDatesDTO_to_EndDatesID(endDateDTO_in.getScenario(),
+                endDateDTO_in.getLeasingDeposit_id(),
+                endDateDTO_in.getPeriod());
+
+        endDateService.delete(id);
+    }
 }

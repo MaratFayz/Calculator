@@ -1,14 +1,22 @@
 version: '3.8'
 services:
+  gui:
+    image: maratfayzelgayanov/ld_front:1.0
+    restart: always
+    ports:
+      - "8000:80"
+    networks:
+      - guiNetwork
   calculator:
-    build: .
+    image: maratfayzelgayanov/ld_calculator:1.0
     restart: always
     ports:
       - "8080:8080"
     volumes:
       - ./dist:/dist
     networks:
-      - ifrsNetwork
+      - databaseNetwork
+      - guiNetwork
     depends_on:
       - database
   database:
@@ -17,7 +25,7 @@ services:
     restart:
       always
     networks:
-      - ifrsNetwork
+      - databaseNetwork
     expose:
       - "5432"
     volumes:
@@ -26,4 +34,5 @@ services:
       POSTGRES_PASSWORD: 'ZZZXXX5!#~a'
       POSTGRES_DB: 'leasingdepositsdb'
 networks:
-  ifrsNetwork:
+  databaseNetwork:
+  guiNetwork:

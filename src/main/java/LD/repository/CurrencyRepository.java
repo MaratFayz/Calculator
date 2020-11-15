@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CurrencyRepository extends JpaRepository<Currency, Long>
-{
-	List<Currency> findByCBRCurrencyCodeNotNull();
+public interface CurrencyRepository extends JpaRepository<Currency, Long> {
+
+    List<Currency> findByCBRCurrencyCodeNotNull();
 }

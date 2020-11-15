@@ -10,15 +10,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PeriodDTO_in
-{
-	private String date;
+public class PeriodDTO_in {
 
-	public static Period PeriodDTO_to_Period(PeriodDTO_in periodDTO_in)
-	{
-		return Period.builder()
-				.date(DateFormat.parsingDate(periodDTO_in.getDate()))
-				.build();
-	}
+    private String date;
 
+    public static Period PeriodDTO_to_Period(PeriodDTO_in periodDTO_in) {
+        return Period.builder()
+                .date(DateFormat.parsingDate(periodDTO_in.getDate()))
+                .build();
+    }
 }

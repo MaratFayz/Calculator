@@ -12,9 +12,12 @@ import LD.model.EndDate.EndDate;
 import LD.model.EndDate.EndDateID;
 import LD.model.Entry.Entry;
 import LD.model.Entry.EntryID;
+import LD.model.EntryIFRSAcc.EntryIFRSAcc;
+import LD.model.EntryIFRSAcc.EntryIFRSAccID;
 import LD.model.Enums.ScenarioStornoStatus;
 import LD.model.ExchangeRate.ExchangeRate;
 import LD.model.ExchangeRate.ExchangeRateID;
+import LD.model.IFRSAccount.IFRSAccount;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.Period.Period;
 import LD.model.Scenario.Scenario;
@@ -22,13 +25,14 @@ import Utils.Entities.*;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 @Data
 public class TestEntitiesKeeper {
@@ -41,41 +45,298 @@ public class TestEntitiesKeeper {
     Counterpartner counterpartner;
     LocalDate periods_start;
     LocalDate periods_end;
+    LocalDate firstOpenPeriodScenarioFrom;
+    LocalDate firstOpenPeriodScenarioTo;
+    LocalDate periodInScenarioFromForCopyingEntriesToScenarioTo;
     List<Period> periods = new ArrayList<>();
     List<Duration> durations = new ArrayList<>();
     List<DepositRate> depositRates = new ArrayList<>();
     List<LeasingDeposit> leasingDeposits = new ArrayList<>();
     List<EndDate> endDates = new ArrayList<>();
     List<ExchangeRate> exRates = new ArrayList<>();
+
     List<Entry> entries_into_leasingDeposit = new ArrayList<>();
     List<Entry> entries_expected = new ArrayList<>();
+    List<Entry> entriesForIfrsSumDaoTest = new ArrayList<>();
+    Entry entryForEntryIfrsCalculation;
 
-    public TestEntitiesKeeper(TestDataKeeper testDataKeeper) {
+    List<EntryIFRSAcc> entriesIfrsExcepted = new ArrayList<>();
+    List<EntryIFRSAcc> entriesIfrsForIfrsSumDaoTests = new ArrayList<>();
+
+    List<IFRSAccount> ifrsAccounts = new ArrayList<>();
+
+    public static TestEntitiesKeeper transformDataKeeperIntoEntitiesKeeper(TestDataKeeper testDataKeeper) {
+        return new TestEntitiesKeeper(testDataKeeper);
+    }
+
+    private TestEntitiesKeeper(TestDataKeeper testDataKeeper) {
         this.testDataKeeper = testDataKeeper;
+        transformDataIntoEntities();
+    }
 
-        user = toUser(testDataKeeper.getUser());
-        company = toCompany(testDataKeeper.getCompany());
-        testDataKeeper.getScenarios().forEach(sc -> scenarios.add(toScenario(sc)));
-        testDataKeeper.getCurrencies().forEach(cu -> currencies.add(toCurrency(cu)));
-        counterpartner = toCounterpartner(testDataKeeper.getCounterpartner());
-        periods_start = toLocalDate(testDataKeeper.getPeriods_start());
-        periods_end = toLocalDate(testDataKeeper.getPeriods_end());
+    private void transformDataIntoEntities() {
+        createUser();
+        createCompany();
+        createScenarios();
+        createCurrencies();
+        createCounterpartner();
+        createPeriods();
+        createFirstOpenPeriodForScenarioFrom();
+        createFirstOpenPeriodForScenarioTo();
+        createPeriodInScenarioFromForCopyingEntriesToScenarioTo();
+        createDurations();
+        createDepositRates();
+        createEntriesIntoLeasingDeposits();
+        createLeasingDeposits();
+        createEndDates();
+        addEntriesIntoLeasingDeposits();
+        addEndDatesIntoLeasingDeposits();
+        createExpectedEntries();
+        pasteLeasingDepositIntoExpectedEntries();
+        createExchangeRates();
+        createEntryForCalculationEntryIfrs();
+        createEntriesForEntryIfrsSumDaoTests();
+        createIfrsAccounts();
+        createEntriesIfrsAccounts();
+        createEntriesIfrsAccountsForDaoTests();
+    }
 
-        periods_start.datesUntil(periods_end, java.time.Period.ofMonths(1)).collect(Collectors.toList()).forEach(date -> {
-            LocalDate d = date.plusMonths(1).withDayOfMonth(1).minusDays(1);
+    private void createUser() {
+        if (nonNull(testDataKeeper.getUser())) {
+            user = toUser(testDataKeeper.getUser());
+        }
+    }
 
-            Period period = Period.builder().date(ZonedDateTime.of(d, LocalTime.MIDNIGHT, ZoneId.of("UTC")))
-                    .build();
-            periods.add(period);
-        });
+    private User toUser(UserTestData testUserToUser) {
+        User user = User.builder().id(testUserToUser.getId())
+                .username(testUserToUser.getUsername())
+                .password(testUserToUser.getPassword())
+                .build();
 
-        testDataKeeper.getDurations().forEach(d -> durations.add(toDuration(d)));
-        testDataKeeper.getDepositRates().forEach(dr -> depositRates.add(toDepositRates(dr)));
+        user.setLastChange(DateFormat.parsingZonedDateTime(testUserToUser.getLastChange()));
 
-        testDataKeeper.getEnd_dates().forEach(ed -> endDates.add(toEndDates(ed)));
-        testDataKeeper.getEntries_into_leasingDeposit().forEach(e -> entries_into_leasingDeposit.add(toEntry(e)));
-        testDataKeeper.getLeasingDeposits().forEach(ld -> leasingDeposits.add(toLeasingDeposits(ld)));
+        return user;
+    }
 
+    private void createCompany() {
+        if (nonNull(testDataKeeper.getCompany())) {
+            company = toCompany(testDataKeeper.getCompany());
+        }
+    }
+
+    private Company toCompany(CompanyTestData testCompanyToCompany) {
+        Company company = Company.builder().id(testCompanyToCompany.getId())
+                .name(testCompanyToCompany.getName())
+                .code(testCompanyToCompany.getCode())
+                .build();
+
+        company.setLastChange(DateFormat.parsingZonedDateTime(testCompanyToCompany.getLastChange()));
+        company.setUserLastChanged(this.user.getId().equals(testCompanyToCompany.getUserCode()) ? user : null);
+        return company;
+    }
+
+    private void createScenarios() {
+        if (nonNull(testDataKeeper.getScenarios())) {
+            testDataKeeper.getScenarios().forEach(sc -> scenarios.add(toScenario(sc)));
+        }
+    }
+
+    private Scenario toScenario(ScenarioTestData testScenarioToScenario) {
+        Scenario sc = Scenario.builder().id(testScenarioToScenario.getId())
+                .name(testScenarioToScenario.getName())
+                .status(ScenarioStornoStatus.valueOf(testScenarioToScenario.getStatus()))
+                .build();
+
+        sc.setLastChange(DateFormat.parsingZonedDateTime(testScenarioToScenario.getLastChange()));
+        sc.setUserLastChanged(this.user.getId().equals(testScenarioToScenario.getUserCode()) ? user : null);
+
+        return sc;
+    }
+
+    private void createCurrencies() {
+        if (nonNull(testDataKeeper.getCurrencies())) {
+            testDataKeeper.getCurrencies().forEach(cu -> currencies.add(toCurrency(cu)));
+        }
+    }
+
+    private Currency toCurrency(CurrencyTestData testCurrencyToCurrency) {
+        Currency cur = Currency.builder().id(testCurrencyToCurrency.getId())
+                .name(testCurrencyToCurrency.getName())
+                .short_name(testCurrencyToCurrency.getShort_name())
+                .CBRCurrencyCode(testCurrencyToCurrency.getCbrcurrencyCode())
+                .build();
+
+        cur.setLastChange(DateFormat.parsingZonedDateTime(testCurrencyToCurrency.getLastChange()));
+        cur.setUserLastChanged(this.user.getId().equals(testCurrencyToCurrency.getUserCode()) ? user : null);
+        return cur;
+    }
+
+    private void createCounterpartner() {
+        if (nonNull(testDataKeeper.getCounterpartner())) {
+            counterpartner = toCounterpartner(testDataKeeper.getCounterpartner());
+        }
+    }
+
+    private Counterpartner toCounterpartner(CounterpartnerTestData testCPtoCP) {
+        Counterpartner c = Counterpartner.builder().id(testCPtoCP.getId())
+                .name(testCPtoCP.getName())
+                .build();
+
+        c.setLastChange(DateFormat.parsingZonedDateTime(testCPtoCP.getLastChange()));
+        c.setUserLastChanged(this.user.getId().equals(testCPtoCP.getUserCode()) ? user : null);
+        return c;
+    }
+
+    private void createPeriods() {
+        if (nonNull(testDataKeeper.getPeriods_start()) && nonNull(testDataKeeper.getPeriods_end())) {
+            periods_start = toLocalDate(testDataKeeper.getPeriods_start());
+            periods_end = toLocalDate(testDataKeeper.getPeriods_end());
+            long id = 1L;
+
+            if (periods_start.plusDays(1).isBefore(periods_end) || periods_start.plusDays(1).isEqual(periods_end)) {
+                for (LocalDate date : periods_start.datesUntil(periods_end, java.time.Period.ofMonths(1)).collect(Collectors.toList())) {
+                    LocalDate d = date.plusMonths(1).withDayOfMonth(1).minusDays(1);
+
+                    Period period = Period.builder().id(id).date(d).build();
+                    periods.add(period);
+                    id++;
+                }
+            } else {
+                throw new IllegalStateException("Error: periods_start is greater than periods_end!");
+            }
+        }
+
+    }
+
+    private void createFirstOpenPeriodForScenarioFrom() {
+        if (nonNull(testDataKeeper.getFirstOpenPeriodScenarioFrom())) {
+            firstOpenPeriodScenarioFrom = DateFormat.parsingDate(testDataKeeper.getFirstOpenPeriodScenarioFrom());
+        }
+    }
+
+    private void createFirstOpenPeriodForScenarioTo() {
+        if (nonNull(testDataKeeper.getFirstOpenPeriodScenarioTo())) {
+            firstOpenPeriodScenarioTo = DateFormat.parsingDate(testDataKeeper.getFirstOpenPeriodScenarioTo());
+        }
+    }
+
+    private void createPeriodInScenarioFromForCopyingEntriesToScenarioTo() {
+        if (nonNull(testDataKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo())) {
+            periodInScenarioFromForCopyingEntriesToScenarioTo =
+                    DateFormat.parsingDate(testDataKeeper.getPeriodInScenarioFromForCopyingEntriesToScenarioTo());
+        }
+    }
+
+    private LocalDate toLocalDate(String dateToTransform) {
+        return DateFormat.parsingDate(dateToTransform);
+    }
+
+    private void createDurations() {
+        if (nonNull(testDataKeeper.getDurations())) {
+            testDataKeeper.getDurations().forEach(d -> durations.add(toDuration(d)));
+        }
+    }
+
+    private Duration toDuration(DurationTestData testDurationToDuration) {
+        Duration d = Duration.builder().id(testDurationToDuration.getId())
+                .name(testDurationToDuration.getName())
+                .MIN_MONTH(testDurationToDuration.getMin_MONTH())
+                .MAX_MONTH(testDurationToDuration.getMax_MONTH())
+                .build();
+
+        d.setLastChange(DateFormat.parsingZonedDateTime(testDurationToDuration.getLastChange()));
+        d.setUserLastChanged(this.user.getId().equals(testDurationToDuration.getUserCode()) ? user : null);
+        return d;
+    }
+
+    private void createDepositRates() {
+        if (nonNull(testDataKeeper.getDepositRates())) {
+            testDataKeeper.getDepositRates().forEach(dr -> depositRates.add(toDepositRates(dr)));
+        }
+    }
+
+    private DepositRate toDepositRates(DepositRateTestData testDepositRateToDepositRate) {
+        LocalDate end_period = DateFormat.parsingDate(testDepositRateToDepositRate.getEnd_PERIOD());
+        LocalDate start_period = DateFormat.parsingDate(testDepositRateToDepositRate.getStart_PERIOD());
+
+        if (start_period.isAfter(end_period)) {
+            throw new IllegalStateException("ОШИБКА! Дата начала действия ставки депозита позже, чем дата начала");
+        }
+
+        DepositRateID depositRatesID = DepositRateID.builder()
+                .company(this.company.getId().equals(testDepositRateToDepositRate.getCompanyCode()) ? company : null)
+                .currency(this.currencies.stream().filter(c -> c.getId().equals(testDepositRateToDepositRate.getCurrencyCode())).collect(Collectors.toList()).get(0))
+                .duration(this.durations.stream().filter(d -> d.getId().equals(testDepositRateToDepositRate.getDurationCode())).collect(Collectors.toList()).get(0))
+                .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testDepositRateToDepositRate.getScenarioCode())).collect(Collectors.toList()).get(0))
+                .START_PERIOD(start_period)
+                .END_PERIOD(end_period)
+                .build();
+
+        DepositRate dr = DepositRate.builder().depositRateID(depositRatesID)
+                .RATE(testDepositRateToDepositRate.getRate())
+                .build();
+
+        dr.setLastChange(DateFormat.parsingZonedDateTime(testDepositRateToDepositRate.getLastChange()));
+        dr.setUserLastChanged(this.user.getId().equals(testDepositRateToDepositRate.getUserCode()) ? user : null);
+        return dr;
+    }
+
+    private void createEntriesIntoLeasingDeposits() {
+        if (nonNull(testDataKeeper.getEntries_into_leasingDeposit())) {
+            testDataKeeper.getEntries_into_leasingDeposit().forEach(e -> entries_into_leasingDeposit.add(toEntry(e)));
+        }
+    }
+
+    private void createLeasingDeposits() {
+        if (nonNull(testDataKeeper.getLeasingDeposits())) {
+            testDataKeeper.getLeasingDeposits().forEach(ld -> leasingDeposits.add(toLeasingDeposits(ld)));
+        }
+    }
+
+    private LeasingDeposit toLeasingDeposits(LeasingDepositTestData testLeasingDepositToLeasingDeposit) {
+        LeasingDeposit ld = LeasingDeposit.builder().id(testLeasingDepositToLeasingDeposit.getId())
+                .company(this.company.getId().equals(testLeasingDepositToLeasingDeposit.getCompanyCode()) ? company : null)
+                .counterpartner(this.counterpartner.getId().equals(testLeasingDepositToLeasingDeposit.getCounterpartnerCode()) ? counterpartner : null)
+                .currency(this.currencies.stream().filter(c -> c.getId().equals(testLeasingDepositToLeasingDeposit.getCurrencyCode())).collect(Collectors.toList()).get(0))
+                .start_date(DateFormat.parsingDate(testLeasingDepositToLeasingDeposit.getStart_date()))
+                .deposit_sum_not_disc(testLeasingDepositToLeasingDeposit.getDeposit_sum_not_disc())
+                .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testLeasingDepositToLeasingDeposit.getScenarioCode())).collect(Collectors.toList()).get(0))
+                .is_created(testLeasingDepositToLeasingDeposit.getIs_created())
+                .is_deleted(testLeasingDepositToLeasingDeposit.getIs_deleted())
+                .end_dates(this.endDates.stream().filter(ed -> ed.getEndDateID().getLeasingDeposit_id().equals(testLeasingDepositToLeasingDeposit.getId())).collect(Collectors.toSet()))
+                .entries(new HashSet<>())
+                .build();
+
+        ld.setLastChange(DateFormat.parsingZonedDateTime(testLeasingDepositToLeasingDeposit.getLastChange()));
+        ld.setUserLastChanged(this.user.getId().equals(testLeasingDepositToLeasingDeposit.getUserCode()) ? user : null);
+        return ld;
+    }
+
+    private void createEndDates() {
+        if (nonNull(testDataKeeper.getEnd_dates())) {
+            testDataKeeper.getEnd_dates().forEach(ed -> endDates.add(toEndDates(ed)));
+        }
+    }
+
+    private EndDate toEndDates(EndDateTestData testEndDateToEndDate) {
+        EndDateID endDateID = EndDateID.builder()
+                .leasingDeposit_id(testEndDateToEndDate.getLeasingDepositCode())
+                .period(this.periods.stream().filter(p -> p.getDate().isEqual(DateFormat.parsingDate(testEndDateToEndDate.getPeriod()))).collect(Collectors.toList()).get(0))
+                .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testEndDateToEndDate.getScenarioCode())).collect(Collectors.toList()).get(0))
+                .build();
+
+        EndDate endDate = EndDate.builder()
+                .endDate(DateFormat.parsingDate(testEndDateToEndDate.getEnd_Date()))
+                .endDateID(endDateID)
+                .leasingDeposit(this.leasingDeposits.stream().filter(s -> s.getId().equals(testEndDateToEndDate.getLeasingDepositCode())).collect(Collectors.toList()).get(0))
+                .build();
+
+        endDate.setLastChange(DateFormat.parsingZonedDateTime(testEndDateToEndDate.getLastChange()));
+        endDate.setUserLastChanged(this.user.getId().equals(testEndDateToEndDate.getUserCode()) ? user : null);
+        return endDate;
+    }
+
+    private void addEntriesIntoLeasingDeposits() {
         leasingDeposits.forEach(ld -> {
             entries_into_leasingDeposit.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
                     .forEach(e -> {
@@ -83,25 +344,28 @@ public class TestEntitiesKeeper {
                         e.setLeasingDeposit(ld);
                     });
         });
+    }
 
+    private void addEndDatesIntoLeasingDeposits() {
         leasingDeposits.forEach(ld -> {
             endDates.stream().filter(e -> e.getEndDateID().getLeasingDeposit_id() == ld.getId())
                     .forEach(e -> ld.getEnd_dates().add(e));
         });
-
-        testDataKeeper.getEntries_expected().forEach(e -> entries_expected.add(toEntry(e)));
-
-        leasingDeposits.forEach(ld -> {
-            entries_expected.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
-                    .forEach(e -> e.setLeasingDeposit(ld));
-        });
-
-        testDataKeeper.getExchangeRates().forEach(er -> exRates.add((toExchangeRate(er))));
     }
 
-    Entry toEntry(EntryTestData testEntryToEntry) {
+    private void createExpectedEntries() {
+        if (nonNull(testDataKeeper.getEntries_expected())) {
+            testDataKeeper.getEntries_expected().forEach(e -> entries_expected.add(toEntry(e)));
+        }
+    }
+
+    private Entry toEntry(EntryTestData testEntryToEntry) {
+        if (isNull(testEntryToEntry)) {
+            return null;
+        }
+
         EntryID entryID = EntryID.builder()
-                .CALCULATION_TIME(DateFormat.parsingDate(testEntryToEntry.getCalculation_time()))
+                .CALCULATION_TIME(DateFormat.parsingZonedDateTime(testEntryToEntry.getCalculation_time()))
                 .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testEntryToEntry.getScenarioCode())).collect(Collectors.toList()).get(0))
                 .leasingDeposit_id(testEntryToEntry.getLeasingDepositCode())
                 .period(this.periods.stream().filter(p -> p.getDate().isEqual(DateFormat.parsingDate(testEntryToEntry.getPeriod()))).collect(Collectors.toList()).get(0))
@@ -109,6 +373,7 @@ public class TestEntitiesKeeper {
 
         return Entry.builder()
                 .entryID(entryID)
+                .leasingDeposit(this.leasingDeposits.isEmpty() ? null : this.leasingDeposits.stream().filter(s -> s.getId() == testEntryToEntry.getLeasingDepositCode()).collect(Collectors.toList()).get(0))
                 .status(testEntryToEntry.getStatus())
                 .end_date_at_this_period(DateFormat.parsingDate(testEntryToEntry.getEnd_date_at_this_period()))
                 .Status_EntryMadeDuringOrAfterClosedPeriod(testEntryToEntry.getStatus_EntryMadeDuringOrAfterClosedPeriod())
@@ -155,130 +420,100 @@ public class TestEntitiesKeeper {
                 .build();
     }
 
-    ExchangeRate toExchangeRate(ExchangeRateTestData testExchangeRateToExchangeRate) {
+    private void pasteLeasingDepositIntoExpectedEntries() {
+        leasingDeposits.forEach(ld -> {
+            entries_expected.stream().filter(e -> e.getEntryID().getLeasingDeposit_id() == ld.getId())
+                    .forEach(e -> e.setLeasingDeposit(ld));
+        });
+    }
+
+    private void createExchangeRates() {
+        if (nonNull(testDataKeeper.getExchangeRates())) {
+            testDataKeeper.getExchangeRates().forEach(er -> exRates.add((toExchangeRate(er))));
+        }
+    }
+
+    private ExchangeRate toExchangeRate(ExchangeRateTestData testExchangeRateToExchangeRate) {
         ExchangeRateID exchangeRateID = ExchangeRateID.builder()
                 .currency(this.currencies.stream().filter(c -> c.getId().equals(testExchangeRateToExchangeRate.getCurrencyCode())).collect(Collectors.toList()).get(0))
                 .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testExchangeRateToExchangeRate.getScenarioCode())).collect(Collectors.toList()).get(0))
                 .date(DateFormat.parsingDate(testExchangeRateToExchangeRate.getDate()))
                 .build();
 
-        return ExchangeRate.builder()
+        ExchangeRate exchangeRate = ExchangeRate.builder()
                 .exchangeRateID(exchangeRateID)
                 .rate_at_date(testExchangeRateToExchangeRate.getRate_at_date())
                 .average_rate_for_month(testExchangeRateToExchangeRate.getAverage_rate_for_month())
                 .build();
+
+        exchangeRate.setLastChange(ZonedDateTime.now());
+        exchangeRate.setUserLastChanged(user);
+        return exchangeRate;
     }
 
-    EndDate toEndDates(EndDateTestData testEndDateToEndDate) {
-        EndDateID endDateID = EndDateID.builder()
-                .leasingDeposit_id(testEndDateToEndDate.getLeasingDepositCode())
-                .period(this.periods.stream().filter(p -> p.getDate().isEqual(DateFormat.parsingDate(testEndDateToEndDate.getPeriod()))).collect(Collectors.toList()).get(0))
-                .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testEndDateToEndDate.getScenarioCode())).collect(Collectors.toList()).get(0))
-                .build();
-
-        return EndDate.builder()
-                .End_Date(DateFormat.parsingDate(testEndDateToEndDate.getEnd_Date()))
-                .endDateID(endDateID)
-                .user(this.user.getId().equals(testEndDateToEndDate.getUserCode()) ? user : null)
-                .lastChange(DateFormat.parsingDate(testEndDateToEndDate.getLastChange()))
-                .build();
+    private void createEntryForCalculationEntryIfrs() {
+        entryForEntryIfrsCalculation = toEntry(testDataKeeper.getEntryForEntryIfrsCalculation());
     }
 
-    LeasingDeposit toLeasingDeposits(LeasingDepositTestData testLeasingDepositToLeasingDeposit) {
-        return LeasingDeposit.builder().id(testLeasingDepositToLeasingDeposit.getId())
-                .company(this.company.getId().equals(testLeasingDepositToLeasingDeposit.getCompanyCode()) ? company : null)
-                .counterpartner(this.counterpartner.getId().equals(testLeasingDepositToLeasingDeposit.getCounterpartnerCode()) ? counterpartner : null)
-                .currency(this.currencies.stream().filter(c -> c.getId().equals(testLeasingDepositToLeasingDeposit.getCurrencyCode())).collect(Collectors.toList()).get(0))
-                .start_date(DateFormat.parsingDate(testLeasingDepositToLeasingDeposit.getStart_date()))
-                .deposit_sum_not_disc(testLeasingDepositToLeasingDeposit.getDeposit_sum_not_disc())
-                .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testLeasingDepositToLeasingDeposit.getScenarioCode())).collect(Collectors.toList()).get(0))
-                .is_created(testLeasingDepositToLeasingDeposit.getIs_created())
-                .is_deleted(testLeasingDepositToLeasingDeposit.getIs_deleted())
-                .user(this.user.getId().equals(testLeasingDepositToLeasingDeposit.getUserCode()) ? user : null)
-                .lastChange(DateFormat.parsingDate(testLeasingDepositToLeasingDeposit.getLastChange()))
-                .end_dates(this.endDates.stream().filter(ed -> ed.getEndDateID().getLeasingDeposit_id().equals(testLeasingDepositToLeasingDeposit.getId())).collect(Collectors.toSet()))
-                .entries(new HashSet<>())
-                .build();
-    }
-
-    DepositRate toDepositRates(DepositRateTestData testDepositRateToDepositRate) {
-        ZonedDateTime end_period = DateFormat.parsingDate(testDepositRateToDepositRate.getEnd_PERIOD());
-        ZonedDateTime start_period = DateFormat.parsingDate(testDepositRateToDepositRate.getStart_PERIOD());
-
-        if (start_period.isAfter(end_period)) {
-            throw new IllegalStateException("ОШИБКА! Дата начала действия ставки депозита позже, чем дата начала");
+    private void createIfrsAccounts() {
+        if (nonNull(testDataKeeper.getIfrsAccounts())) {
+            testDataKeeper.getIfrsAccounts().forEach(iAcc -> ifrsAccounts.add(toIfrsAcc(iAcc)));
         }
-
-        DepositRateID depositRatesID = DepositRateID.builder()
-                .company(this.company.getId().equals(testDepositRateToDepositRate.getCompanyCode()) ? company : null)
-                .currency(this.currencies.stream().filter(c -> c.getId().equals(testDepositRateToDepositRate.getCurrencyCode())).collect(Collectors.toList()).get(0))
-                .duration(this.durations.stream().filter(d -> d.getId().equals(testDepositRateToDepositRate.getDurationCode())).collect(Collectors.toList()).get(0))
-                .scenario(this.scenarios.stream().filter(s -> s.getId().equals(testDepositRateToDepositRate.getScenarioCode())).collect(Collectors.toList()).get(0))
-                .START_PERIOD(start_period)
-                .END_PERIOD(end_period)
-                .build();
-
-        return DepositRate.builder().depositRateID(depositRatesID)
-                .RATE(testDepositRateToDepositRate.getRate())
-                .user(this.user.getId().equals(testDepositRateToDepositRate.getUserCode()) ? user : null)
-                .lastChange(DateFormat.parsingDate(testDepositRateToDepositRate.getLastChange()))
-                .build();
     }
 
-    Duration toDuration(DurationTestData testDurationToDuration) {
-        return Duration.builder().id(testDurationToDuration.getId())
-                .name(testDurationToDuration.getName())
-                .MIN_MONTH(testDurationToDuration.getMin_MONTH())
-                .MAX_MONTH(testDurationToDuration.getMax_MONTH())
-                .user(this.user.getId().equals(testDurationToDuration.getUserCode()) ? user : null)
-                .lastChange(DateFormat.parsingDate(testDurationToDuration.getLastChange()))
+    private IFRSAccount toIfrsAcc(IfrsAccountTestData testIfrsAccountToIfrsAccount) {
+        IFRSAccount ifrsAccount = IFRSAccount.builder().id(testIfrsAccountToIfrsAccount.getId())
+                .account_code(testIfrsAccountToIfrsAccount.getAccount_code())
+                .account_name(testIfrsAccountToIfrsAccount.getAccount_name())
+                .ct(testIfrsAccountToIfrsAccount.getCt())
+                .dr(testIfrsAccountToIfrsAccount.getDr())
+                .flow_code(testIfrsAccountToIfrsAccount.getFlow_code())
+                .flow_name(testIfrsAccountToIfrsAccount.getFlow_name())
+                .isInverseSum(testIfrsAccountToIfrsAccount.isInverseSum())
+                .mappingFormAndColumn(testIfrsAccountToIfrsAccount.getMappingFormAndColumn())
+                .pa(testIfrsAccountToIfrsAccount.getPa())
+                .sh(testIfrsAccountToIfrsAccount.getSh())
                 .build();
+
+        ifrsAccount.setLastChange(ZonedDateTime.now());
+        ifrsAccount.setUserLastChanged(this.user.getId().equals(testIfrsAccountToIfrsAccount.getUserCode()) ? user : null);
+        return ifrsAccount;
     }
 
-    User toUser(UserTestData testUserToUser) {
-        return User.builder().id(testUserToUser.getId())
-                .username(testUserToUser.getUsername())
-                .password(testUserToUser.getPassword())
-                .lastChange(DateFormat.parsingDate(testUserToUser.getLastChange()))
-                .build();
+    private void createEntriesForEntryIfrsSumDaoTests() {
+        if (nonNull(testDataKeeper.getEntriesForIfrsSumDaoTest())) {
+            testDataKeeper.getEntriesForIfrsSumDaoTest().forEach(e -> entriesForIfrsSumDaoTest.add(toEntry(e)));
+        }
     }
 
-    Company toCompany(CompanyTestData testCompanyToCompany) {
-        return Company.builder().id(testCompanyToCompany.getId())
-                .name(testCompanyToCompany.getName())
-                .code(testCompanyToCompany.getCode())
-                .user(this.user.getId().equals(testCompanyToCompany.getUserCode()) ? user : null)
-                .lastChange(DateFormat.parsingDate(testCompanyToCompany.getLastChange()))
-                .build();
+    private void createEntriesIfrsAccounts() {
+        if (nonNull(testDataKeeper.getEntriesIfrsExcepted())) {
+            testDataKeeper.getEntriesIfrsExcepted().forEach(e -> entriesIfrsExcepted.add(toIfrsEntry(e)));
+        }
     }
 
-    Scenario toScenario(ScenarioTestData testScenarioToScenario) {
-        return Scenario.builder().id(testScenarioToScenario.getId())
-                .name(testScenarioToScenario.getName())
-                .status(ScenarioStornoStatus.valueOf(testScenarioToScenario.getStatus()))
-                .user(this.user.getId().equals(testScenarioToScenario.getUserCode()) ? user : null)
-                .lastChange(DateFormat.parsingDate(testScenarioToScenario.getLastChange()))
-                .build();
+    private void createEntriesIfrsAccountsForDaoTests() {
+        if (nonNull(testDataKeeper.getEntriesIfrsForIfrsSumDaoTests())) {
+            testDataKeeper.getEntriesIfrsForIfrsSumDaoTests().forEach(e -> entriesIfrsForIfrsSumDaoTests.add(toIfrsEntry(e)));
+        }
     }
 
-    Currency toCurrency(CurrencyTestData testCurrencyToCurrency) {
-        return Currency.builder().id(testCurrencyToCurrency.getId())
-                .name(testCurrencyToCurrency.getName())
-                .short_name(testCurrencyToCurrency.getShort_name())
-                .user(this.user.getId().equals(testCurrencyToCurrency.getUserCode()) ? user : null)
-                .lastChange(DateFormat.parsingDate(testCurrencyToCurrency.getLastChange()))
+    private EntryIFRSAcc toIfrsEntry(EntryIfrsAccTestData testEntryIfrsToEntryIfrs) {
+        EntryIFRSAccID entryIFRSAccID = EntryIFRSAccID.builder()
+                .entry(isNull(entryForEntryIfrsCalculation) ?
+                        entriesForIfrsSumDaoTest.stream()
+                                .filter(e -> e.getEntryID().getLeasingDeposit_id() == testEntryIfrsToEntryIfrs.getLeasingDepositCode())
+                                .findFirst().get() : entryForEntryIfrsCalculation)
+                .ifrsAccount(this.ifrsAccounts.stream().filter(i -> i.getId().equals(testEntryIfrsToEntryIfrs.getIfrsAccountCode())).collect(Collectors.toList()).get(0))
                 .build();
-    }
 
-    Counterpartner toCounterpartner(CounterpartnerTestData testCPtoCP) {
-        return Counterpartner.builder().id(testCPtoCP.getId())
-                .name(testCPtoCP.getName())
-                .user(this.user.getId().equals(testCPtoCP.getUserCode()) ? user : null)
-                .lastChange(DateFormat.parsingDate(testCPtoCP.getLastChange()))
+        EntryIFRSAcc entryIFRSAcc = EntryIFRSAcc.builder()
+                .entryIFRSAccID(entryIFRSAccID)
+                .sum(testEntryIfrsToEntryIfrs.getSum())
                 .build();
-    }
 
-    LocalDate toLocalDate(String dateToTransform) {
-        return DateFormat.parsingDate(dateToTransform).toLocalDate();
+        entryIFRSAcc.setLastChange(DateFormat.parsingZonedDateTime(testEntryIfrsToEntryIfrs.getLastChange()));
+        entryIFRSAcc.setUserLastChanged(this.user.getId().equals(testEntryIfrsToEntryIfrs.getUserCode()) ? user : null);
+        return entryIFRSAcc;
     }
 }

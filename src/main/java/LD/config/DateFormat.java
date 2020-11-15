@@ -16,17 +16,16 @@ public class DateFormat {
 
     static final String outputDateFormat = "dd-MM-yyyy";
 
-    public static ZonedDateTime parsingDate(String dateToParse) {
-        ZonedDateTime parsedDate = null;
+    public static LocalDate parsingDate(String dateToParse) {
+        LocalDate parsedDate = null;
 
         for (String df : inputDateFormats) {
             try {
                 parsedDate = parsingDate(dateToParse, df);
-				if (parsedDate != null) {
-					break;
-				}
-            }
-            catch (java.time.format.DateTimeParseException e) {
+                if (parsedDate != null) {
+                    break;
+                }
+            } catch (java.time.format.DateTimeParseException e) {
                 continue;
             }
         }
@@ -34,22 +33,29 @@ public class DateFormat {
         return parsedDate;
     }
 
-    public static String formatDate(ZonedDateTime dateTime) {
+    public static ZonedDateTime parsingZonedDateTime(String dateToParse) {
+        LocalDate parsedDate = parsingDate(dateToParse);
+        return ZonedDateTime.of(parsedDate, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
+    }
+
+    public static String formatDate(LocalDate dateTime) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern(outputDateFormat);
         dateTime.format(dtf);
 
         return dateTime.format(dtf);
     }
 
-    private static ZonedDateTime parsingDate(String dateTime, String dateformat) {
-        ZonedDateTime parsedDate = null;
+    public static String formatDate(ZonedDateTime dateTime) {
+        return formatDate(dateTime.toLocalDate());
+    }
+
+    private static LocalDate parsingDate(String dateTime, String dateformat) {
+        LocalDate parsedDate = null;
 
         try {
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(dateformat);
-            LocalDate localDate = LocalDate.parse(dateTime, dateTimeFormatter);
-            parsedDate = ZonedDateTime.of(localDate, LocalTime.MIDNIGHT, ZoneId.of("UTC"));
-        }
-        catch (java.time.format.DateTimeParseException e) {
+            parsedDate = LocalDate.parse(dateTime, dateTimeFormatter);
+        } catch (java.time.format.DateTimeParseException e) {
 
         }
 

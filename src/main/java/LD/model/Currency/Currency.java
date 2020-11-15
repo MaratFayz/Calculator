@@ -1,13 +1,12 @@
 package LD.model.Currency;
 
-import LD.config.Security.model.User.User;
+import LD.model.AbstractModelClass;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
 
 @Table(name = "Currency")
 @Entity
@@ -15,26 +14,19 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor()
 @Builder
 @AllArgsConstructor
-public class Currency
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, unique = true)
-	private Long id;
+public class Currency extends AbstractModelClass {
 
-	@Column(name = "short_name", nullable = false, length = 3)
-	private String short_name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true)
+    private Long id;
 
-	@Column(name = "name", nullable = false)
-	private String name;
+    @Column(name = "short_name", nullable = false, length = 3)
+    private String short_name;
 
-	@Column(name = "CBRCurrencyCode", length = 6)
-	private String CBRCurrencyCode;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @Column(name = "CBRCurrencyCode", length = 6)
+    private String CBRCurrencyCode;
 }

@@ -16,5 +16,5 @@ public interface DepositRatesService
 
 	DepositRate updateDepositRates(DepositRateID id, DepositRate depositRate);
 
-	boolean delete(DepositRateID id);
+	void delete(DepositRateID id);
 }

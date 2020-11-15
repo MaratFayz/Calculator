@@ -2,18 +2,19 @@ package LD.config.Security.model.User;
 
 import LD.config.PostgreSQLEnumType;
 import LD.config.Security.model.Role.Role;
+import LD.model.AbstractModelClass;
 import LD.model.Enums.STATUS_X;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,7 +26,8 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @TypeDef(name = "pgsql_enum", typeClass = PostgreSQLEnumType.class)
-public class User implements UserDetails {
+@Log4j2
+public class User extends AbstractModelClass implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -62,21 +64,19 @@ public class User implements UserDetails {
                     name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roles;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private User user_changed;
-
-    @Column(name = "DateTime_lastChange", nullable = false)
-    private ZonedDateTime lastChange;
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
         authorities.addAll(roles);
 
+        log.info("roles = {}", roles);
+
         for (Role role : this.roles) {
             role.getAuthorities().stream()
                     .forEach(authorities::add);
         }
+
+        log.info("authorities = {}", authorities);
 
         return authorities;
     }

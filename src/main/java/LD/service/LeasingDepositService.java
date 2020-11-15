@@ -3,8 +3,6 @@ package LD.service;
 import LD.model.LeasingDeposit.LeasingDeposit;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out;
 import LD.model.LeasingDeposit.LeasingDepositDTO_out_onPeriodFor2Scenarios;
-import lombok.NonNull;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -21,5 +19,5 @@ public interface LeasingDepositService
 
 	LeasingDeposit updateLeasingDeposit(Long id, LeasingDeposit leasingDeposit);
 
-	boolean delete(Long id);
+	void delete(Long id);
 }

@@ -7,7 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Embeddable;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import java.io.Serializable;
 
 @Data
@@ -15,14 +17,14 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Embeddable
-public class PeriodsClosedID implements Serializable
-{
-	static final Long serialVersionUID = 2L;
+public class PeriodsClosedID implements Serializable {
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private Scenario scenario;
+    static final Long serialVersionUID = 2L;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(name = "period_id", nullable = false)
-	private Period period;
+    @ManyToOne
+    private Scenario scenario;
+
+    @ManyToOne
+    @JoinColumn(name = "period_id", nullable = false)
+    private Period period;
 }

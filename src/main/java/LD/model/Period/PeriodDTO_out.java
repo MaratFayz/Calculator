@@ -10,20 +10,19 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PeriodDTO_out
-{
-	private Long id;
-	private String date;
-	private String user;
-	private String lastChange;
+public class PeriodDTO_out {
 
-	public static PeriodDTO_out Period_to_PeriodDTO_out(Period period)
-	{
-		return PeriodDTO_out.builder()
-				.id(period.getId())
-				.date(DateFormat.formatDate(period.getDate()))
-				.user(period.getUser().getUsername())
-				.lastChange(DateFormat.formatDate(period.getLastChange()))
-				.build();
-	}
+    private Long id;
+    private String date;
+    private String user;
+    private String lastChange;
+
+    public static PeriodDTO_out Period_to_PeriodDTO_out(Period period) {
+        return PeriodDTO_out.builder()
+                .id(period.getId())
+                .date(DateFormat.formatDate(period.getDate()))
+                .user(period.getUserLastChanged().getUsername())
+                .lastChange(DateFormat.formatDate(period.getLastChange()))
+                .build();
+    }
 }

@@ -5,15 +5,15 @@ import LD.model.Scenario.ScenarioDTO_out;
 
 import java.util.List;
 
-public interface ScenarioService
-{
-	List<ScenarioDTO_out> getAllScenarios();
+public interface ScenarioService {
 
-	Scenario getScenario(Long id);
+    List<ScenarioDTO_out> getAllScenarios();
 
-	Scenario saveNewScenario(Scenario scenario);
+    Scenario getScenario(Long id);
 
-	Scenario updateScenario(Long id, Scenario scenario);
+    Scenario saveNewScenario(Scenario scenario);
 
-	boolean delete(Long id);
+    Scenario updateScenario(Long id, Scenario scenario);
+
+    void delete(Long id);
 }

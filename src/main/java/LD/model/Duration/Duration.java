@@ -1,10 +1,12 @@
 package LD.model.Duration;
 
-import LD.config.Security.model.User.User;
-import lombok.*;
+import LD.model.AbstractModelClass;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "Duration")
@@ -12,26 +14,19 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor()
 @Builder
 @AllArgsConstructor
-public class Duration
-{
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, unique = true)
-	private Long id;
+public class Duration extends AbstractModelClass {
 
-	@Column(name = "MIN_MONTH", nullable = false)
-	private int MIN_MONTH;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true)
+    private Long id;
 
-	@Column(name = "MAX_MONTH", nullable = false)
-	private int MAX_MONTH;
+    @Column(name = "MIN_MONTH", nullable = false)
+    private int MIN_MONTH;
 
-	@Column(name = "name", nullable = false)
-	private String name;
+    @Column(name = "MAX_MONTH", nullable = false)
+    private int MAX_MONTH;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = false)
-	private User user;
-
-	@Column(name = "DateTime_lastChange", nullable = false)
-	private ZonedDateTime lastChange;
+    @Column(name = "name", nullable = false)
+    private String name;
 }
