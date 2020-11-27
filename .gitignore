@@ -214,8 +214,30 @@ buildNumber.properties
 **/nbproject/Package-*.bash
 build/
 nbbuild/
-dist/
+../dist/
 nbdist/
 .nb-gradle/
 
+.DS_Store
+node_modules
+/config
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij,eclipse,netbeans,maven

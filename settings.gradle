@@ -1,0 +1,4 @@
+rootProject.name = 'calculator'
+
+include('01 - GUI')
+include('02 - serviceCalculator')

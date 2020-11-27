@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PropertiesForLdProject>
+    <cbrUrl>http://www.cbr.ru/scripts/XML_dynamic.asp?</cbrUrl>
+    <dateFromFile>date_req1</dateFromFile>
+    <dateToName>date_req2</dateToName>
+    <currencyValue>VAL_NM_RQ</currencyValue>
+</PropertiesForLdProject>

@@ -1,0 +1,212 @@
+import groovy.text.GStringTemplateEngine
+
+import java.time.ZonedDateTime
+
+plugins {
+    id 'java'
+    id 'com.google.cloud.tools.jib' version '2.6.0'
+    id "org.springframework.boot" version "2.4.0"
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+}
+
+java {
+    group = 'calculator.ld'
+    version = '1.0'
+    sourceCompatibility = 'VERSION_14'
+}
+
+String fullImageName = project.property('SERVICE_CALCULATOR.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION')
+
+jib {
+    from {
+        image = "openjdk:14.0.2-oraclelinux8"
+    }
+    to {
+        image = fullImageName
+    }
+    container {
+        ports = ['8080']
+        volumes = ['/config']
+        creationTime = 'USE_CURRENT_TIMESTAMP'
+        args = ['-Dspring.profiles.active=release']
+    }
+}
+
+test {
+    useJUnitPlatform()
+//    testLogging.showStandardStreams = true
+    exclude '**/IntegrationTests'
+    failFast = true
+}
+
+task deleteImage(type: Exec) {
+    dependsOn(build)
+
+    doFirst {
+        println "Delete image called: " + fullImageName
+        commandLine 'cmd', '/c', 'docker rmi ' + fullImageName
+        ignoreExitValue true
+    }
+}
+
+task runIntegrationTests(type: Test) {
+    testLogging.showStandardStreams = true
+}
+
+task buildLocalDockerImage {
+    dependsOn(deleteImage)
+    dependsOn(jibDockerBuild)
+    dependsOn(runIntegrationTests)
+
+    doFirst {
+        println "Calculator local image building finished:"
+    }
+}
+
+task deleteImageIfErrorDuringTests(type: Exec) {
+    doFirst {
+        Properties props = new Properties()
+        props.load(new FileReader("$buildDir/test.properties"))
+        Integer errorCount = Integer.parseInt(props.get('errorCount'))
+
+        if (errorCount > 0) {
+            println "There are errors => delete docker image: " + fullImageName
+            println ZonedDateTime.now()
+            commandLine 'cmd', '/c', 'timeout /t 5'
+            println ZonedDateTime.now()
+            commandLine 'cmd', '/c', 'docker rmi ' + fullImageName
+            ignoreExitValue true
+        }
+    }
+}
+
+runIntegrationTests {
+    useJUnitPlatform()
+    failFast = true
+
+    filter {
+        includeTestsMatching '*IT'
+    }
+
+    beforeTest {
+        file("$buildDir/classes/java/test/application.properties").write("jib.dockerImagePath=" + fullImageName)
+    }
+
+    ext.errorCount = 0
+    afterTest { desc, result ->
+        if (result.resultType.name() == "FAILURE") {
+            errorCount++
+        }
+        println "errorCount=" + errorCount
+        file("$buildDir/test.properties").write("errorCount=" + errorCount)
+    }
+
+    finalizedBy(deleteImageIfErrorDuringTests)
+}
+
+task pushDockerImageIntoRemoteServer(type: Exec) {
+    dependsOn(buildLocalDockerImage)
+
+    doFirst {
+        println "---Push docker image into the remote docker hub starts---"
+        commandLine 'cmd', '/c', 'docker push ' + fullImageName
+        println "---Push docker image into the remote docker hub ends---"
+    }
+}
+
+task deleteDockerComposeYaml {
+    doFirst {
+        def envProdFile = new File(projectDir.toString() + "\\" + 'Docker-compose.yml')
+        if (envProdFile.exists()) {
+            envProdFile.delete()
+            println "File 'Docker-compose.yml' deleted"
+        } else {
+            println "File 'Docker-compose.yml' doesn't exist"
+        }
+    }
+}
+
+task replaceDockerComposeFileForRemoteRunning {
+    dependsOn(pushDockerImageIntoRemoteServer)
+    dependsOn(deleteDockerComposeYaml)
+
+    doFirst {
+        def binding = [
+                guiImageName       : project.property('GUI.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
+                guiPort            : project.property('GUI.REMOTE_PORT'),
+                calculatorImageName: project.property('SERVICE_CALCULATOR.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
+                calculatorPort     : project.property('SERVICE_CALCULATOR.REMOTE_PORT')
+        ]
+
+        def DockerComposeYmlTemplateFile = new File(projectDir.toString() + "\\" + 'Docker-compose.yml.template')
+        def engine = new GStringTemplateEngine()
+        def template = engine.createTemplate(DockerComposeYmlTemplateFile).make(binding)
+        def DockerComposeYmlFile = new File(projectDir.toString() + "\\" + 'Docker-compose.yml')
+        DockerComposeYmlFile.write(template.toString())
+        println "Created file 'Docker-compose.yml'"
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('testcontainersVersion', "1.15.0")
+    errorCount = 0
+}
+
+dependencies {
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.h2database:h2'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation "org.testcontainers:testcontainers"
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api"
+    testImplementation "org.junit.jupiter:junit-jupiter-params"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
+
+    annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.21.Final'
+
+    testImplementation "org.mockito:mockito-core:2.23.4"
+    testImplementation "org.mockito:mockito-junit-jupiter:2.23.0"
+    testImplementation "org.junit.platform:junit-platform-launcher:1.5.2"
+    testImplementation "org.junit.platform:junit-platform-runner:1.5.2"
+
+    implementation 'org.apache.poi:poi-ooxml:4.1.2'
+    implementation 'io.springfox:springfox-swagger2:2.9.2'
+    implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+    implementation 'org.jsoup:jsoup:1.13.1'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.10.3'
+    compileOnly 'javax.validation:validation-api:2.0.1.Final'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+    }
+}
