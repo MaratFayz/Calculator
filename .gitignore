@@ -241,3 +241,5 @@ pnpm-debug.log*
 *.sln
 *.sw?
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij,eclipse,netbeans,maven
+/01 - GUI/node_modules/
+/.gradle/

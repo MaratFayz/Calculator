@@ -12,7 +12,6 @@ remotes {
     }
 }
 
-
 task runProductionLocally(type: Exec) {
     dependsOn(':01 - GUI:buildLocalDockerImageForLocalRunning')
     dependsOn(':02 - serviceCalculator:buildLocalDockerImage')
@@ -44,7 +43,10 @@ task generateActualDockerComposeYamlForLocalRunning {
                 guiImageName       : project.property('GUI.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
                 guiPort            : project.property('GUI.LOCAL_PORT'),
                 calculatorImageName: project.property('SERVICE_CALCULATOR.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
-                calculatorPort     : project.property('SERVICE_CALCULATOR.LOCAL_PORT')
+                calculatorPort     : project.property('SERVICE_CALCULATOR.LOCAL_PORT'),
+                DATABASE_IMAGE     : project.property('DATABASE_IMAGE'),
+                POSTGRES_PASSWORD  : project.property('POSTGRES_PASSWORD'),
+                POSTGRES_DB        : project.property('POSTGRES_DB')
         ]
 
         def DockerComposeYmlTemplateFile = new File(projectDir.toString() + "\\" + 'Docker-compose.yml.template')
@@ -64,7 +66,10 @@ task generateActualDockerComposeYamlForRemoteRunning {
                 guiImageName       : project.property('GUI.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
                 guiPort            : project.property('GUI.REMOTE_PORT'),
                 calculatorImageName: project.property('SERVICE_CALCULATOR.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
-                calculatorPort     : project.property('SERVICE_CALCULATOR.REMOTE_PORT')
+                calculatorPort     : project.property('SERVICE_CALCULATOR.REMOTE_PORT'),
+                DATABASE_IMAGE     : project.property('DATABASE_IMAGE'),
+                POSTGRES_PASSWORD  : project.property('POSTGRES_PASSWORD'),
+                POSTGRES_DB        : project.property('POSTGRES_DB')
         ]
 
         def DockerComposeYmlTemplateFile = new File(projectDir.toString() + "\\" + 'Docker-compose.yml.template')
@@ -138,15 +143,35 @@ task runProductionAtRemoteServer() {
     }
 }
 
-task runDevelopLocally() {
-//    findProject('01 - GUI').
+task runLocalDatabaseImage(type: Exec) {
+    doFirst {
+        String command = 'docker run --name PDB -d -p 5432:5432 -e POSTGRES_PASSWORD=' + project.property('POSTGRES_PASSWORD') +
+                ' -e POSTGRES_DB=' + project.property('POSTGRES_DB') + ' ' + project.property('DATABASE_IMAGE')
+        println 'Run database:'
+        commandLine 'cmd', '/c', command
+    }
 }
 
-task changeRunningContainer_Gui() {
+task runDevelopLocally {
+    dependsOn(runLocalDatabaseImage)
+    dependsOn(':01 - GUI:runDevelopLocally')
+    dependsOn(':02 - serviceCalculator:bootRunDev')
 
+    doLast {
+        println 'You can develop!'
+    }
 }
 
-task changeRunningContainer_ServiceCalculator() {
-
+task stopLocalDatabaseContainer(type: Exec) {
+    doFirst {
+        commandLine 'cmd', '/c', 'docker stop PDB'
+    }
 }
 
+task stopAndRemoveLocalDatabaseContainer(type: Exec) {
+    dependsOn(stopLocalDatabaseContainer)
+
+    doFirst {
+        commandLine 'cmd', '/c', 'docker rm PDB'
+    }
+}

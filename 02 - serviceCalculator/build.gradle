@@ -135,7 +135,10 @@ task replaceDockerComposeFileForRemoteRunning {
                 guiImageName       : project.property('GUI.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
                 guiPort            : project.property('GUI.REMOTE_PORT'),
                 calculatorImageName: project.property('SERVICE_CALCULATOR.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
-                calculatorPort     : project.property('SERVICE_CALCULATOR.REMOTE_PORT')
+                calculatorPort     : project.property('SERVICE_CALCULATOR.REMOTE_PORT'),
+                DATABASE_IMAGE     : project.property('DATABASE_IMAGE'),
+                POSTGRES_PASSWORD  : project.property('POSTGRES_PASSWORD'),
+                POSTGRES_DB        : project.property('POSTGRES_DB')
         ]
 
         def DockerComposeYmlTemplateFile = new File(projectDir.toString() + "\\" + 'Docker-compose.yml.template')
@@ -145,6 +148,43 @@ task replaceDockerComposeFileForRemoteRunning {
         DockerComposeYmlFile.write(template.toString())
         println "Created file 'Docker-compose.yml'"
     }
+}
+
+task copyDockerComposeFileAtRemoteServer {
+    dependsOn(replaceDockerComposeFileForRemoteRunning)
+
+    doLast {
+        ssh.run {
+            session(remotes.webServer) {
+                put from: file('Docker-compose.yml'), into: '/'
+            }
+        }
+    }
+}
+
+task changeRunningContainer {
+    dependsOn(copyDockerComposeFileAtRemoteServer)
+
+    doLast {
+        ssh.run {
+            session(remotes.webServer) {
+                execute 'docker-compose ps' //lists all services (id, name)
+                execute 'docker-compose stop calculator' //this will stop only the selected container
+                execute 'docker-compose rm calculator' //this will remove the docker container permanently
+                execute 'docker-compose up' //builds/rebuilds all not already built container
+            }
+        }
+    }
+}
+
+task bootRunDev {
+    doFirst {
+        tasks.bootRun.configure {
+            systemProperty("spring.profiles.active", "dev")
+        }
+    }
+
+    finalizedBy("bootRun")
 }
 
 configurations {
