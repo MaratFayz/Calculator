@@ -1,0 +1,161 @@
+import groovy.text.GStringTemplateEngine
+
+String fullImageName = project.property('GUI.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION')
+String localBackEndUrl = "http://localhost:" + project.property('SERVICE_CALCULATOR.LOCAL_PORT')
+String remoteBackEndUrl = project.property('REMOTE_URL') + project.property('SERVICE_CALCULATOR.REMOTE_PORT')
+
+task runDevelopLocally(type: Exec) {
+    doFirst {
+        workingDir '.'
+        commandLine 'cmd', '/c', 'npm run serve'
+    }
+}
+
+task deleteEnvProdFile {
+    doFirst {
+        def envProdFile = new File(projectDir.toString() + "\\" + '.env.production')
+        if (envProdFile.exists()) {
+            envProdFile.delete()
+            println "File '.env.production' deleted"
+        } else {
+            println "File '.env.production' doesn't exist"
+        }
+    }
+}
+
+task generateEnvProductionFileWithLocalUrl {
+    dependsOn(deleteEnvProdFile)
+
+    doFirst {
+        def binding = [
+                url: localBackEndUrl
+        ]
+
+        def envProdTemplateFile = new File(projectDir.toString() + "\\" + '.env.production.template')
+        def engine = new GStringTemplateEngine()
+        def template = engine.createTemplate(envProdTemplateFile).make(binding)
+        def envProdFile = new File(projectDir.toString() + "\\" + '.env.production')
+        envProdFile.write(template.toString())
+        println "Created '.env.production' with url = '" + localBackEndUrl + "'"
+    }
+}
+
+task generateEnvProductionFileWithRemoteUrl {
+    dependsOn(deleteEnvProdFile)
+
+    doFirst {
+        def binding = [
+                url: remoteBackEndUrl
+        ]
+
+        def envProdTemplateFile = new File(projectDir.toString() + "\\" + '.env.production.template')
+        def engine = new GStringTemplateEngine()
+        def template = engine.createTemplate(envProdTemplateFile).make(binding)
+        def envProdFile = new File(projectDir.toString() + "\\" + '.env.production')
+        envProdFile.write(template.toString())
+        println "Created '.env.production' with url = '" + remoteBackEndUrl + "'"
+    }
+}
+
+task buildLocalDockerImage(type: Exec) {
+    doFirst {
+        println "GUI building starts:"
+        println "---Build docker image starts---"
+        commandLine 'cmd', '/c', 'docker build . -t ' + fullImageName
+        println "---Build docker image ends---"
+    }
+}
+
+task deleteImage(type: Exec) {
+    doFirst {
+        println "Delete image called: " + fullImageName
+
+        commandLine 'cmd', '/c', 'docker rmi ' + fullImageName
+        ignoreExitValue true
+    }
+}
+
+task buildLocalDockerImageForLocalRunning {
+    dependsOn(buildLocalDockerImage)
+    buildLocalDockerImage.dependsOn(deleteImage)
+    deleteImage.dependsOn(generateEnvProductionFileWithLocalUrl)
+}
+
+task buildLocalDockerImageForRemoteRunning {
+    dependsOn(buildLocalDockerImage)
+    buildLocalDockerImage.dependsOn(deleteImage)
+    deleteImage.dependsOn(generateEnvProductionFileWithRemoteUrl)
+}
+
+task pushDockerImageIntoRemoteServer(type: Exec) {
+    dependsOn(buildLocalDockerImageForRemoteRunning)
+
+    doFirst {
+        println "---Push docker image into the remote docker hub starts---"
+        commandLine 'cmd', '/c', 'docker push ' + fullImageName
+        println "---Push docker image into the remote docker hub ends---"
+    }
+}
+
+task deleteDockerComposeYaml {
+    doFirst {
+        def envProdFile = new File(projectDir.toString() + "\\" + 'Docker-compose.yml')
+        if (envProdFile.exists()) {
+            envProdFile.delete()
+            println "File 'Docker-compose.yml' deleted"
+        } else {
+            println "File 'Docker-compose.yml' doesn't exist"
+        }
+    }
+}
+
+task replaceDockerComposeFileForRemoteRunning {
+    dependsOn(pushDockerImageIntoRemoteServer)
+    dependsOn(deleteDockerComposeYaml)
+
+    doFirst {
+        def binding = [
+                guiImageName       : project.property('GUI.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
+                guiPort            : project.property('GUI.REMOTE_PORT'),
+                calculatorImageName: project.property('SERVICE_CALCULATOR.DOCKER_IMAGE_NAME') + ":" + project.property('BUILD_VERSION'),
+                calculatorPort     : project.property('SERVICE_CALCULATOR.REMOTE_PORT'),
+                DATABASE_IMAGE     : project.property('DATABASE_IMAGE'),
+                POSTGRES_PASSWORD  : project.property('POSTGRES_PASSWORD'),
+                POSTGRES_DB        : project.property('POSTGRES_DB')
+        ]
+
+        def DockerComposeYmlTemplateFile = new File(projectDir.toString() + "\\" + 'Docker-compose.yml.template')
+        def engine = new GStringTemplateEngine()
+        def template = engine.createTemplate(DockerComposeYmlTemplateFile).make(binding)
+        def DockerComposeYmlFile = new File(projectDir.toString() + "\\" + 'Docker-compose.yml')
+        DockerComposeYmlFile.write(template.toString())
+        println "Created file 'Docker-compose.yml'"
+    }
+}
+
+task copyDockerComposeFileAtRemoteServer {
+    dependsOn(replaceDockerComposeFileForRemoteRunning)
+
+    doLast {
+        ssh.run {
+            session(remotes.webServer) {
+                put from: file('Docker-compose.yml'), into: '/'
+            }
+        }
+    }
+}
+
+task changeRunningContainer {
+    dependsOn(copyDockerComposeFileAtRemoteServer)
+
+    doLast {
+        ssh.run {
+            session(remotes.webServer) {
+                execute 'docker-compose ps' //lists all services (id, name)
+                execute 'docker-compose stop gui' //this will stop only the selected container
+                execute 'docker-compose rm gui' //this will remove the docker container permanently
+                execute 'docker-compose up' //builds/rebuilds all not already built container
+            }
+        }
+    }
+}
